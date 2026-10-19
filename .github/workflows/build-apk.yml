@@ -7,6 +7,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,11 +21,38 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: 22
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install
 
       - name: Build web app
-        run: npm run build
+        run: bun run build
+
+      - name: Create Android project
+        run: bunx cap add android
+
+      - name: Sync Capacitor
+        run: bunx cap sync android
+
+      - name: Build debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KlasikTavla-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
