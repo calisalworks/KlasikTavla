@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
 
@@ -27,7 +27,7 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -40,6 +40,77 @@ jobs:
 
       - name: Create Android project
         run: bunx cap add android
+
+      - name: Configure landscape and fullscreen
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
+          content = manifest.read_text(encoding="utf-8")
+
+          pattern = r'<activity\b[^>]*android:name="[^"]*MainActivity"[^>]*>'
+          match = re.search(pattern, content)
+
+          if not match:
+              raise RuntimeError("MainActivity AndroidManifest.xml icinde bulunamadi")
+
+          activity_tag = match.group(0)
+
+          if "android:screenOrientation=" not in activity_tag:
+              new_tag = activity_tag[:-1] + ' android:screenOrientation="landscape">'
+              content = content[:match.start()] + new_tag + content[match.end():]
+              manifest.write_text(content, encoding="utf-8")
+
+          java_files = list(
+              Path("android/app/src/main/java").rglob("MainActivity.java")
+          )
+
+          if not java_files:
+              raise RuntimeError("MainActivity.java bulunamadi")
+
+          activity = java_files[0]
+          source = activity.read_text(encoding="utf-8")
+          marker = "public class MainActivity extends BridgeActivity {"
+
+          if marker not in source:
+              raise RuntimeError("MainActivity Java sinifi beklenen yapida degil")
+
+          if "private void hideSystemUI()" not in source:
+              addition = """
+              @Override
+              public void onCreate(android.os.Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  hideSystemUI();
+              }
+
+              private void hideSystemUI() {
+                  getWindow().getDecorView().setSystemUiVisibility(
+                      android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                      | android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
+                      | android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                      | android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                      | android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                      | android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                  );
+              }
+
+              @Override
+              public void onWindowFocusChanged(boolean hasFocus) {
+                  super.onWindowFocusChanged(hasFocus);
+                  if (hasFocus) {
+                      hideSystemUI();
+                  }
+              }
+              """
+
+              source = source.replace(marker, marker + addition, 1)
+              activity.write_text(source, encoding="utf-8")
+
+          print("Yatay ekran ve tam ekran ayarlari eklendi.")
+          PY
 
       - name: Sync Capacitor
         run: bunx cap sync android
