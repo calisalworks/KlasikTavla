@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUser(data, userId) {
+      return data.id == userId &&
+        (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 128)) &&
+        (!('photoURL' in data) || data.photoURL is string) &&
+        (!('email' in data) || data.email is string) &&
+        (!('wins' in data) || (data.wins is number && data.wins >= 0)) &&
+        (!('losses' in data) || (data.losses is number && data.losses >= 0)) &&
+        (!('abandoned' in data) || (data.abandoned is number && data.abandoned >= 0)) &&
+        (!('coins' in data) || (data.coins is number && data.coins >= 0)) &&
+        (!('level' in data) || (data.level is number && data.level >= 1 && data.level <= 100)) &&
+        (!('trophies' in data) || (data.trophies is number && data.trophies >= 0)) &&
+        (!('equippedFrame' in data) || (data.equippedFrame is string && data.equippedFrame.size() <= 64)) &&
+        (!('lastDailyRewardDate' in data) || (data.lastDailyRewardDate is string && data.lastDailyRewardDate.size() <= 32)) &&
+        (!('lastFreeCoinsClaimTimestamp' in data) || (data.lastFreeCoinsClaimTimestamp is number && data.lastFreeCoinsClaimTimestamp >= 0)) &&
+        (!('adRewardsToday' in data) || (data.adRewardsToday is number && data.adRewardsToday >= 0)) &&
+        (!('lastAdRewardDate' in data) || (data.lastAdRewardDate is string && data.lastAdRewardDate.size() <= 32)) &&
+        (!('createdAt' in data) || data.createdAt is string) &&
+        (!('lastLoginAt' in data) || data.lastLoginAt is string);
+    }
+
+    function isValidCoinTransaction(data, userId, txId) {
+      return data.id == txId &&
+        data.userId == userId &&
+        data.type in ['initial_bonus', 'daily_reward', 'ad_reward', 'match_fee', 'match_reward', 'match_refund'] &&
+        data.amount is number &&
+        data.balanceAfter is number &&
+        data.balanceAfter >= 0 &&
+        (!('description' in data) || (data.description is string && data.description.size() <= 256)) &&
+        data.date is string &&
+        data.createdAt is string;
+    }
+
+    // Public user profile (NO PII / email is stored here)
+    match /users/{userId} {
+      allow get: if true;
+      allow list: if false; // Deny broad query scraping
+      allow create: if isOwner(userId) && isValidUser(request.resource.data, userId);
+      allow update: if isOwner(userId) &&
+        isValidUser(request.resource.data, userId) &&
+        request.resource.data.id == resource.data.id &&
+        (!('createdAt' in resource.data) || request.resource.data.createdAt == resource.data.createdAt);
+      allow delete: if false;
+
+      // Immutable coin transaction records for this user
+      match /coinTransactions/{txId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidCoinTransaction(request.resource.data, userId, txId);
+        allow update, delete: if false; // Append-only ledger
+      }
+
+      // Private user subcollection for any sensitive or private settings
+      match /private/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

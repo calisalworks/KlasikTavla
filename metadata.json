@@ -1,0 +1,8 @@
+{
+  "name": "Remix Klasik Tavla (Backgammon)",
+  "description": "Mobil yatay ekran için optimize edilmiş, gerçekçi ahşap tasarımlı ve doğal sesli modern 2D Tavla oyunu.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

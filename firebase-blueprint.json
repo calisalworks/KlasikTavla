@@ -1,0 +1,134 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Registered player account profile with permanent UID, statistics, coins balance, and level",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Firebase Auth UID"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Public display name of the player"
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Avatar or profile picture URL"
+        },
+        "wins": {
+          "type": "number",
+          "description": "Total wins"
+        },
+        "losses": {
+          "type": "number",
+          "description": "Total losses"
+        },
+        "abandoned": {
+          "type": "number",
+          "description": "Total abandoned games"
+        },
+        "coins": {
+          "type": "number",
+          "description": "In-game coins or chips balance"
+        },
+        "level": {
+          "type": "number",
+          "description": "Player rank or progression level"
+        },
+        "trophies": {
+          "type": "number",
+          "description": "Total online trophies won"
+        },
+        "equippedFrame": {
+          "type": "string",
+          "description": "ID of equipped circular profile frame (frame-1 to frame-10)"
+        },
+        "lastDailyRewardDate": {
+          "type": "string",
+          "description": "Last date user claimed daily free coins (YYYY-MM-DD)"
+        },
+        "lastFreeCoinsClaimTimestamp": {
+          "type": "number",
+          "description": "Timestamp in milliseconds when 6-hour free coins reward was last claimed"
+        },
+        "adRewardsToday": {
+          "type": "number",
+          "description": "Count of rewarded ads watched today"
+        },
+        "lastAdRewardDate": {
+          "type": "string",
+          "description": "Last date user watched rewarded ads (YYYY-MM-DD)"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Account creation timestamp"
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last login timestamp"
+        }
+      },
+      "required": ["id", "displayName"]
+    },
+    "CoinTransaction": {
+      "title": "CoinTransaction",
+      "description": "Immutable ledger record of a coin balance modification",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique transaction ID"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Player UID that owns the transaction"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["initial_bonus", "daily_reward", "ad_reward", "match_fee", "match_reward", "match_refund"],
+          "description": "Transaction category"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Coins added or subtracted"
+        },
+        "balanceAfter": {
+          "type": "number",
+          "description": "Balance after the transaction"
+        },
+        "description": {
+          "type": "string",
+          "description": "Readable explanation of the transaction"
+        },
+        "date": {
+          "type": "string",
+          "description": "Date of transaction (YYYY-MM-DD UTC)"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when transaction was logged"
+        }
+      },
+      "required": ["id", "userId", "type", "amount", "balanceAfter", "date", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "User profile document keyed by their unique Firebase Auth UID"
+    },
+    "/users/{userId}/coinTransactions/{txId}": {
+      "schema": {
+        "$ref": "#/entities/CoinTransaction"
+      },
+      "description": "Immutable user transaction ledger for coins"
+    }
+  }
+}
