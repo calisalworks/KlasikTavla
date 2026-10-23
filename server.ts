@@ -1431,6 +1431,21 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
+    // A lobby socket may close just as the board opens a replacement socket for
+    // the same player. Do not interpret the old socket's delayed close event as
+    // an actual player disconnect when a replacement connection is already open.
+    const hasReplacementConnection = Array.from(clients.values()).some(
+      (other) =>
+        other.ws !== ws &&
+        other.playerId === session.playerId &&
+        other.ws.readyState === WebSocket.OPEN
+    );
+    if (hasReplacementConnection) {
+      clients.delete(ws);
+      broadcastRoomsList();
+      return;
+    }
+
     // Remove from any active matchmaking queue
     const queueTier = playerCurrentQueue.get(session.playerId);
     if (queueTier) {
