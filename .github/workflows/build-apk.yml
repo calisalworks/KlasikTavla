@@ -163,7 +163,7 @@ jobs:
 
           manifest = Path("android/app/src/main/AndroidManifest.xml")
           content = manifest.read_text(encoding="utf-8")
-          pattern = r'(<activity\\b[^>]*android:name="[^"]*MainActivity"[^>]*>)'
+          pattern = r'(<activity\b[^>]*android:name="[^"]*MainActivity"[^>]*>)'
           match = re.search(pattern, content)
           if not match:
               raise RuntimeError("MainActivity AndroidManifest.xml icinde bulunamadi")
