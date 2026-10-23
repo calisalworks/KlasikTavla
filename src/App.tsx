@@ -219,8 +219,8 @@ export default function App() {
     // Send request via WebSocket or REST to create room
     try {
       // Connect temporary ws to create room
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+      // Use the deployed WebSocket backend instead of the APK's local WebView host.
+      const ws = new WebSocket('wss://klasiktavla.onrender.com/ws');
 
       ws.onopen = () => {
         ws.send(JSON.stringify({
