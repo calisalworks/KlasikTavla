@@ -145,8 +145,8 @@ export const FriendRoomModal: React.FC<FriendRoomModalProps> = ({
     }
 
     transitionTriggeredRef.current = false;
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+    // In the Android Capacitor APK, window.location.host is local (usually localhost).
+    const ws = new WebSocket('wss://klasiktavla.onrender.com/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {
