@@ -1,6 +1,11 @@
-
 {
-  "appId": "com.calisalworks.tavla",
+  "appId": "com.klasiktavla.app",
   "appName": "KlasikTavla",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": true,
+      "providers": ["google.com"]
+    }
+  }
 }
