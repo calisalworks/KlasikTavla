@@ -625,6 +625,17 @@ app.get('/api/leaderboard', (_req, res) => {
   res.json({ leaderboard: seedLeaderboard });
 });
 
+// Keep long-lived WebSocket sessions alive through idle periods and mobile network pauses.
+// Browsers automatically answer protocol-level ping frames with pong frames.
+const websocketHeartbeat = setInterval(() => {
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.ping();
+    }
+  });
+}, 25000);
+websocketHeartbeat.unref?.();
+
 // WebSocket message dispatcher
 wss.on('connection', (ws) => {
   const session: ClientSession = {
