@@ -277,9 +277,9 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
 
   // WebSocket Connection
   useEffect(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    const ws = new WebSocket(wsUrl);
+    // In the Android Capacitor APK, window.location.host is local (usually localhost).
+    // Always connect to the deployed WebSocket backend.
+    const ws = new WebSocket('wss://klasiktavla.onrender.com/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {
