@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
 import { Board } from './components/Board';
 import { OnlineBoard } from './components/OnlineBoard';
 import { MainMenu } from './components/MainMenu';
@@ -66,6 +67,26 @@ export default function App() {
     } catch {
       // Ignore URL parsing errors
     }
+  }, []);
+
+  // Receive verified Android App Links and open the matching friend room in-app.
+  useEffect(() => {
+    let removeListener: (() => void) | undefined;
+    CapacitorApp.addListener('appUrlOpen', (event) => {
+      try {
+        const url = new URL(event.url);
+        const code = url.searchParams.get('friendRoom') || url.searchParams.get('invite');
+        if (code && code.trim().length >= 4) {
+          setUrlInviteCode(code.trim().toUpperCase());
+          setIsFriendRoomOpen(true);
+        }
+      } catch (error) {
+        console.warn('Invalid friend invite link:', error);
+      }
+    }).then((listener) => {
+      removeListener = () => { void listener.remove(); };
+    });
+    return () => removeListener?.();
   }, []);
 
   // Listen to Firebase Authentication state changes

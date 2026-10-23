@@ -22,8 +22,44 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws' });
 
+// Allow the Android Capacitor WebView and the public web app to read REST API responses.
+const allowedOrigins = new Set([
+  'https://localhost',
+  'http://localhost',
+  'capacitor://localhost',
+  'https://klasiktavla.onrender.com',
+]);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  }
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Android App Links domain verification for the installed KlasikTavla app.
+app.get('/.well-known/assetlinks.json', (_req, res) => {
+  res.type('application/json').send([{
+    relation: ['delegate_permission/common.handle_all_urls'],
+    target: {
+      namespace: 'android_app',
+      package_name: 'com.klasiktavla.app',
+      sha256_cert_fingerprints: [
+        'B5:6F:D3:58:69:44:E2:50:1D:B7:2D:4A:19:B1:73:99:B6:41:62:61:0C:4E:FC:9F:A3:CB:26:87:82:59:5D:FF'
+      ]
+    }
+  }]);
+});
 
 // 4 Official Online Room Tiers
 const ONLINE_ROOM_TIERS: Record<RoomTierId, { name: string; fee: number; prize: number }> = {
