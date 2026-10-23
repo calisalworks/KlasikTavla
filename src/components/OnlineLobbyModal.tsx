@@ -104,8 +104,9 @@ export const OnlineLobbyModal: React.FC<OnlineLobbyModalProps> = ({
       return;
     }
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+    // Use the deployed WebSocket server explicitly. In the Android Capacitor APK,
+    // window.location.host is usually localhost, not the Render service.
+    const ws = new WebSocket('wss://klasiktavla.onrender.com/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -119,6 +120,23 @@ export const OnlineLobbyModal: React.FC<OnlineLobbyModalProps> = ({
           playerCoins: profile.coins,
         })
       );
+    };
+
+    ws.onerror = () => {
+      setErrorMessage('Online sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.');
+      setSearchingTier(null);
+      setIsProcessingEntry(false);
+    };
+
+    ws.onclose = () => {
+      // Avoid leaving the lobby in an endless search state if the connection drops.
+      setSearchingTier((current) => {
+        if (current) {
+          setErrorMessage('Online sunucu bağlantısı kesildi. Lütfen tekrar deneyin.');
+          setIsProcessingEntry(false);
+        }
+        return null;
+      });
     };
 
     ws.onmessage = (event) => {
