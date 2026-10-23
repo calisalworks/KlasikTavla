@@ -41,6 +41,52 @@ jobs:
       - name: Create Android project
         run: bunx cap add android
 
+      - name: Configure Firebase Android app
+        shell: bash
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "::error::GOOGLE_SERVICES_JSON_BASE64 secret is missing. Add the Base64-encoded google-services.json from Firebase Console."
+            exit 1
+          fi
+
+          printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root_gradle = Path("android/build.gradle")
+          app_gradle = Path("android/app/build.gradle")
+
+          root = root_gradle.read_text(encoding="utf-8")
+          plugin_line = "classpath 'com.google.gms:google-services:4.4.2'"
+          if plugin_line not in root:
+              marker = "dependencies {"
+              if marker not in root:
+                  raise RuntimeError("android/build.gradle içinde buildscript dependencies bulunamadı")
+              root = root.replace(marker, marker + "\n        " + plugin_line, 1)
+              root_gradle.write_text(root, encoding="utf-8")
+
+          app = app_gradle.read_text(encoding="utf-8")
+          apply_line = "apply plugin: 'com.google.gms.google-services'"
+          if apply_line not in app and "id 'com.google.gms.google-services'" not in app:
+              app += "\n" + apply_line + "\n"
+              app_gradle.write_text(app, encoding="utf-8")
+
+          variables = Path("android/variables.gradle")
+          if variables.exists():
+              content = variables.read_text(encoding="utf-8")
+              additions = []
+              if "rgcfaIncludeGoogle" not in content:
+                  additions.append("        rgcfaIncludeGoogle = true")
+              if "androidxCredentialsVersion" not in content:
+                  additions.append("        androidxCredentialsVersion = '1.3.0'")
+              if additions:
+                  content = content.replace("ext {", "ext {\n" + "\n".join(additions), 1)
+                  variables.write_text(content, encoding="utf-8")
+          print("Firebase Android yapılandırması eklendi.")
+          PY
+
       - name: Configure landscape and fullscreen
         shell: bash
         run: |
