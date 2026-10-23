@@ -50,7 +50,6 @@ jobs:
 
           manifest = Path("android/app/src/main/AndroidManifest.xml")
           content = manifest.read_text(encoding="utf-8")
-
           pattern = r'<activity\b[^>]*android:name="[^"]*MainActivity"[^>]*>'
           match = re.search(pattern, content)
 
@@ -64,9 +63,7 @@ jobs:
               content = content[:match.start()] + new_tag + content[match.end():]
               manifest.write_text(content, encoding="utf-8")
 
-          java_files = list(
-              Path("android/app/src/main/java").rglob("MainActivity.java")
-          )
+          java_files = list(Path("android/app/src/main/java").rglob("MainActivity.java"))
 
           if not java_files:
               raise RuntimeError("MainActivity.java bulunamadi")
@@ -105,7 +102,6 @@ jobs:
                   }
               }
               """
-
               source = source.replace(marker, marker + addition, 1)
               activity.write_text(source, encoding="utf-8")
 
@@ -115,14 +111,23 @@ jobs:
       - name: Sync Capacitor
         run: bunx cap sync android
 
-      - name: Prepare Android debug keystore
+      - name: Prepare persistent debug keystore
+        id: signing
         shell: bash
+        env:
+          ANDROID_DEBUG_KEYSTORE_BASE64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_BASE64 }}
         run: |
-          mkdir -p "$HOME/.config/.android"
-          if [ ! -f "$HOME/.config/.android/debug.keystore" ]; then
+          KEYSTORE="$HOME/.config/.android/debug.keystore"
+          mkdir -p "$(dirname "$KEYSTORE")"
+
+          if [ -n "$ANDROID_DEBUG_KEYSTORE_BASE64" ]; then
+            printf '%s' "$ANDROID_DEBUG_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE"
+            echo "generated=false" >> "$GITHUB_OUTPUT"
+            echo "Kalici debug anahtari yuklendi."
+          else
             keytool -genkeypair \
               -v \
-              -keystore "$HOME/.config/.android/debug.keystore" \
+              -keystore "$KEYSTORE" \
               -storepass android \
               -alias AndroidDebugKey \
               -keypass android \
@@ -130,7 +135,21 @@ jobs:
               -keysize 2048 \
               -validity 10000 \
               -dname "CN=Android Debug,O=Android,C=US"
+
+            mkdir -p .signing-bootstrap
+            cp "$KEYSTORE" .signing-bootstrap/debug.keystore
+            echo "generated=true" >> "$GITHUB_OUTPUT"
+            echo "Ilk anahtar olusturuldu; Actions artifact olarak alin."
           fi
+
+      - name: Upload initial signing key
+        if: steps.signing.outputs.generated == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: KlasikTavla-debug-keystore
+          path: .signing-bootstrap/debug.keystore
+          retention-days: 1
+          if-no-files-found: error
 
       - name: Get Android SHA Fingerprints
         run: |
