@@ -129,7 +129,8 @@ export const OnlineLobbyModal: React.FC<OnlineLobbyModalProps> = ({
     };
 
     ws.onclose = () => {
-      // Avoid leaving the lobby in an endless search state if the connection drops.
+      // Ignore intentional closes (for example after a match is found or the modal closes).
+      if (wsRef.current !== ws) return;
       setSearchingTier((current) => {
         if (current) {
           setErrorMessage('Online sunucu bağlantısı kesildi. Lütfen tekrar deneyin.');
