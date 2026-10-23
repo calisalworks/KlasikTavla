@@ -154,6 +154,40 @@ jobs:
           print("Yatay ekran ve tam ekran ayarlari eklendi.")
           PY
 
+      - name: Configure Android App Links
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
+          content = manifest.read_text(encoding="utf-8")
+          pattern = r'(<activity\\b[^>]*android:name="[^"]*MainActivity"[^>]*>)'
+          match = re.search(pattern, content)
+          if not match:
+              raise RuntimeError("MainActivity AndroidManifest.xml icinde bulunamadi")
+
+          activity_start = match.end()
+          activity_end = content.find("</activity>", activity_start)
+          if activity_end < 0:
+              raise RuntimeError("MainActivity kapanis etiketi bulunamadi")
+
+          block = """
+                  <intent-filter android:autoVerify="true">
+                      <action android:name="android.intent.action.VIEW" />
+                      <category android:name="android.intent.category.DEFAULT" />
+                      <category android:name="android.intent.category.BROWSABLE" />
+                      <data android:scheme="https" android:host="klasiktavla.onrender.com" />
+                  </intent-filter>
+          """
+          activity_content = content[activity_start:activity_end]
+          if "klasiktavla.onrender.com" not in activity_content:
+              content = content[:activity_end] + block + content[activity_end:]
+              manifest.write_text(content, encoding="utf-8")
+          print("KlasikTavla Android App Links ayari eklendi.")
+          PY
+
       - name: Sync Capacitor
         run: bunx cap sync android
 
