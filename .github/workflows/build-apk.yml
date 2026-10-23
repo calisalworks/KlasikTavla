@@ -115,6 +115,12 @@ jobs:
       - name: Sync Capacitor
         run: bunx cap sync android
 
+      - name: Get Android SHA Fingerprints
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew signingReport
+
       - name: Build debug APK
         run: |
           cd android
