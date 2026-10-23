@@ -47,6 +47,20 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Android App Links domain verification for the installed KlasikTavla app.
+app.get('/.well-known/assetlinks.json', (_req, res) => {
+  res.type('application/json').send([{
+    relation: ['delegate_permission/common.handle_all_urls'],
+    target: {
+      namespace: 'android_app',
+      package_name: 'com.klasiktavla.app',
+      sha256_cert_fingerprints: [
+        'B5:6F:D3:58:69:44:E2:50:1D:B7:2D:4A:19:B1:73:99:B6:41:62:61:0C:4E:FC:9F:A3:CB:26:87:82:59:5D:FF'
+      ]
+    }
+  }]);
+});
+
 // 4 Official Online Room Tiers
 const ONLINE_ROOM_TIERS: Record<RoomTierId, { name: string; fee: number; prize: number }> = {
   beginner: { name: 'Yeni Başlayanlar', fee: 100, prize: 200 },
