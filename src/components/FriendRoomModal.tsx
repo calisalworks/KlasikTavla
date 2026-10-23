@@ -22,6 +22,8 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
+const GAME_SERVER_ORIGIN = 'https://klasiktavla.onrender.com';
+
 interface FriendRoomModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -384,7 +386,7 @@ export const FriendRoomModal: React.FC<FriendRoomModalProps> = ({
     if (!createdRoom) return;
     tavlaAudio.playButtonClick();
 
-    const shareUrl = `${window.location.origin}/?friendRoom=${createdRoom.inviteCode}`;
+    const shareUrl = `${GAME_SERVER_ORIGIN}/?friendRoom=${encodeURIComponent(createdRoom.inviteCode)}`;
     const shareText = `Tavla'da seninle kapışalım! Davet Kodum: ${createdRoom.inviteCode} (${createdRoom.entryFee} Jeton Bahisli)`;
 
     if (navigator.share) {
@@ -421,7 +423,7 @@ export const FriendRoomModal: React.FC<FriendRoomModalProps> = ({
     setErrorMessage(null);
 
     try {
-      const res = await fetch(`/api/friend-room/info?code=${encodeURIComponent(clean)}`);
+      const res = await fetch(`${GAME_SERVER_ORIGIN}/api/friend-room/info?code=${encodeURIComponent(clean)}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setRoomPreview(null);
@@ -434,6 +436,7 @@ export const FriendRoomModal: React.FC<FriendRoomModalProps> = ({
       setRoomPreview(roomData);
     } catch {
       setRoomPreview(null);
+      setErrorMessage('Oda bilgisi sunucudan alınamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.');
     } finally {
       setIsCheckingCode(false);
     }
