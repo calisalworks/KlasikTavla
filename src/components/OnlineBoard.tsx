@@ -275,14 +275,21 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
     tavlaAudio.setAmbientEnabled(settings.ambientSound);
   }, [settings.soundEnabled, settings.ambientSound]);
 
-  // WebSocket Connection
+  // WebSocket Connection with automatic recovery after brief network/server interruptions.
   useEffect(() => {
-    // In the Android Capacitor APK, window.location.host is local (usually localhost).
-    // Always connect to the deployed WebSocket backend.
-    const ws = new WebSocket('wss://klasiktavla.onrender.com/ws');
-    wsRef.current = ws;
+    let disposed = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let reconnectAttempts = 0;
+
+    const connect = () => {
+      if (disposed) return;
+      // In the Android Capacitor APK, window.location.host is local (usually localhost).
+      // Always connect to the deployed WebSocket backend.
+      const ws = new WebSocket('wss://klasiktavla.onrender.com/ws');
+      wsRef.current = ws;
 
     ws.onopen = () => {
+      reconnectAttempts = 0;
       // 1. Init player
       ws.send(
         JSON.stringify({
@@ -478,16 +485,28 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
       }
     };
 
-    ws.onclose = () => {
-      clearTurnTimer();
-      clearAutoPassTimers();
-      setStatusMessage('Bağlantı kesildi.');
+      ws.onclose = () => {
+        if (wsRef.current === ws) wsRef.current = null;
+        clearTurnTimer();
+        clearAutoPassTimers();
+        if (disposed) return;
+
+        setStatusMessage('Bağlantı koptu. Yeniden bağlanılıyor...');
+        reconnectAttempts += 1;
+        const delay = Math.min(1000 * Math.pow(2, Math.min(reconnectAttempts - 1, 3)), 8000);
+        reconnectTimer = setTimeout(connect, delay);
+      };
     };
 
+    connect();
+
     return () => {
+      disposed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
       clearTurnTimer();
       clearAutoPassTimers();
-      ws.close();
+      wsRef.current?.close();
+      wsRef.current = null;
     };
   }, [roomId, profile.id, profile.name]);
 
