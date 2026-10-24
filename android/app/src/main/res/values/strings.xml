@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Klasik Tavla</string>
+    <string name="title_activity_main">Klasik Tavla</string>
+    <string name="package_name">com.klasiktavla.app</string>
+    <string name="custom_url_scheme">com.klasiktavla.app</string>
+</resources>
