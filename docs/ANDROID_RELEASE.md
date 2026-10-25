@@ -8,26 +8,36 @@ Bu depo henüz bir imzalama anahtarı veya Firebase Android yapılandırması i�
 - Bun
 - Firebase Console'dan indirilen gerçek `android/app/google-services.json`
 - Google Play App Signing için güvenli şekilde saklanan upload keystore
-- Üretim çevrim içi sunucusu kararlaştırıldığında doğru WebSocket adresi
+- Üretim ortamında çalışan WebSocket adresi (`wss://...`); staging adresi yayın derlemesinde bilerek reddedilir
+- Gerçek AdMob Android App ID ve ödüllü reklam birimi kimliği
 
-## İmzalama bilgileri
+## Ortam değişkenleri
 
-Önce güvenli bir yerde upload keystore oluşturun veya mevcut anahtarı kullanın. Anahtar parolalarını kaynak koda yazmayın. Derlemeden önce ortam değişkenlerini tanımlayın:
+Önce güvenli bir yerde upload keystore oluşturun veya mevcut anahtarı kullanın. Anahtar parolalarını kaynak koda yazmayın. Aşağıdaki örneklerdeki değerleri kendi **üretim** bilgilerinizle değiştirin:
 
 ```bash
-export VITE_WS_SERVER_URL="wss://klasik-tavla-staging.onrender.com"
+export VITE_WS_SERVER_URL="wss://YOUR-PRODUCTION-HOST"
+export VITE_ADMOB_APP_ID="ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY"
+export VITE_ADMOB_REWARDED_AD_UNIT_ID="ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY"
+export VITE_ADMOB_TEST_MODE="false"
 export TAVLA_UPLOAD_STORE_FILE="/absolute/path/to/upload-key.jks"
 export TAVLA_UPLOAD_STORE_PASSWORD="..."
 export TAVLA_UPLOAD_KEY_ALIAS="upload"
 export TAVLA_UPLOAD_KEY_PASSWORD="..."
 ```
 
-Bu değişkenler hazırlık/ön kontrol betiği tarafından denetlenir. Android Gradle release signing yapılandırması bu ortam değişkenlerini kullanacak şekilde bağlandı. Bu ortam değişkenleri olmadan ön kontrol durur; keystore ve Android/Firebase yapılandırması sağlanmadan gerçek imzalı AAB oluşturulduğu söylenemez.
+- `VITE_WS_SERVER_URL` üretim WebSocket sunucusunu göstermeli; `klasik-tavla-staging.onrender.com` yayın ön kontrolünden geçmez.
+- `VITE_ADMOB_APP_ID` hem Android manifestine hem istemci yapılandırmasına bağlanır.
+- `VITE_ADMOB_REWARDED_AD_UNIT_ID` ödüllü reklam birimini ayarlar.
+- Uygulama geliştirme/CI derlemelerinde Google'ın resmî test kimliklerini ve test modunu varsayılan kullanır. Yayın ön kontrolü test kimliklerini ve `VITE_ADMOB_TEST_MODE=true` durumunu reddeder.
+- Örnek kimlikleri gerçek AdMob değerleriyle değiştirmek tek başına SSV doğrulamasını kurmaz. Jeton ekonomisi, sunucu tarafı AdMob SSV ve güvenli bakiye işlemleri tamamlanana kadar kapalı kalmalıdır.
 
-## Ön kontrol
+## Ön kontrol ve derleme
 
 ```bash
 bash scripts/android-release-preflight.sh
 ```
 
-Betik Firebase dosyası, paket adı, WebSocket URL'si ve imzalama girdileri eksikse erken durur; bu bir Play Console'a hazır olma garantisi değildir. Üretim reklam kimlikleri/SSV ve gerçek cihaz testleri ayrıca tamamlanmalıdır.
+Betik Firebase dosyasını, paket adını, üretim WebSocket adresini, gerçek AdMob kimliklerini, test dışı reklam modunu ve imzalama girdilerini denetler; ardından TypeScript/web build, Capacitor senkronizasyonu ve imzalı AAB derlemesini çalıştırır. Ön kontrol bir Play Console'a hazır olma garantisi değildir. Gerçek cihaz testleri ve Play Console politika/gizlilik hazırlıkları ayrıca tamamlanmalıdır.
+
+AAB çıktısı: `android/app/build/outputs/bundle/release/app-release.aab`.
