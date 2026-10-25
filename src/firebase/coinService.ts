@@ -71,6 +71,7 @@ async function requestCoinMutation(
 
   if (
     result.coinEconomyEnabled !== true ||
+    typeof result.balance !== 'number' ||
     !Number.isSafeInteger(result.balance) ||
     result.balance < 0 ||
     typeof result.transactionId !== 'string' ||
@@ -164,10 +165,12 @@ export async function claimAdRewardCoins(
   });
   if (
     result.coinsAdded !== COIN_SETTINGS.REWARDED_AD_COINS ||
+    typeof result.adRewardsToday !== 'number' ||
     !Number.isSafeInteger(result.adRewardsToday) ||
     typeof result.lastAdRewardDate !== 'string' ||
+    typeof result.adsRemainingToday !== 'number' ||
     !Number.isSafeInteger(result.adsRemainingToday) ||
-    result.adsRemainingToday! < 0
+    result.adsRemainingToday < 0
   ) {
     throw new Error('Sunucu reklam ödülü için eksiksiz doğrulanmış makbuz döndürmedi.');
   }
@@ -211,7 +214,7 @@ export async function awardMatchPrize(
   if (!isValidPositiveInteger(prizeAmount) || !roomId) throw new Error('Maç ödülü isteği geçersiz.');
 
   const result = await requestCoinMutation('/api/match/award-prize', profile, { roomId, prizeAmount, tierName });
-  if (!Number.isSafeInteger(result.wins) || result.wins! < 0) {
+  if (typeof result.wins !== 'number' || !Number.isSafeInteger(result.wins) || result.wins < 0) {
     throw new Error('Sunucu maç ödülü için doğrulanmış galibiyet sayısı döndürmedi.');
   }
 
