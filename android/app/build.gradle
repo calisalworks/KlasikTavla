@@ -6,6 +6,7 @@ def releaseStorePassword = System.getenv('TAVLA_UPLOAD_STORE_PASSWORD')
 def releaseKeyAlias = System.getenv('TAVLA_UPLOAD_KEY_ALIAS')
 def releaseKeyPassword = System.getenv('TAVLA_UPLOAD_KEY_PASSWORD')
 def hasReleaseSigning = releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+def admobAppId = System.getenv('VITE_ADMOB_APP_ID') ?: 'ca-app-pub-3940256099942544~3347511713'
 
 android {
     namespace = "com.klasiktavla.app"
@@ -16,6 +17,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        manifestPlaceholders = [ADMOB_APP_ID: admobAppId]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
