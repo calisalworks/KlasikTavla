@@ -99,28 +99,19 @@ export async function claimDailyCoins(profile: UserProfile): Promise<{
     }
   }
 
-  // Try server endpoint
-  try {
-    const response = await fetch('/api/coins/claim-daily', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: profile.id,
-        isGuest: !profile.isFirebaseUser,
-        claimTimestamp: now,
-      }),
-    });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      if (errData.error) {
-        throw new Error(errData.error);
-      }
-    }
-  } catch (err: any) {
-    if (err.message && err.message.includes('dakika sonra')) {
-      throw err;
-    }
+  // Fail closed: never grant coins when the server has not approved the claim.
+  const response = await fetch('/api/coins/claim-daily', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: profile.id,
+      isGuest: !profile.isFirebaseUser,
+      claimTimestamp: now,
+    }),
+  });
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || 'Günlük jeton ödülü şu anda kullanılamıyor.');
   }
 
   const newCoins = (profile.coins ?? COIN_SETTINGS.INITIAL_STARTING_COINS) + rewardAmount;
@@ -292,23 +283,15 @@ export async function deductMatchEntryFee(
     throw new Error(`Yetersiz bakiye! Bu odaya girmek için ${entryFee} jeton gerekiyor (Mevcut: ${currentCoins}).`);
   }
 
-  // 1. Notify server
-  try {
-    const res = await fetch('/api/match/deduct-fee', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: profile.id,
-        roomId,
-        entryFee,
-      }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      if (err.error) throw new Error(err.error);
-    }
-  } catch (err: any) {
-    if (err.message && err.message.includes('Yetersiz')) throw err;
+  // Fail closed: do not deduct locally or in Firestore unless the server approves.
+  const res = await fetch('/api/match/deduct-fee', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: profile.id, roomId, entryFee }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Maç giriş ücreti sunucu tarafından onaylanmadı.');
   }
 
   const finalCoins = Math.max(0, currentCoins - entryFee);
@@ -371,28 +354,15 @@ export async function awardMatchPrize(
   roomId: string,
   tierName: string
 ): Promise<UserProfile> {
-  // 1. Check with server to prevent duplicate prize claims
-  let serverValidated = true;
-  try {
-    const res = await fetch('/api/match/award-prize', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: profile.id,
-        roomId,
-        prizeAmount,
-      }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      if (err.error) {
-        throw new Error(err.error);
-      }
-    }
-  } catch (err: any) {
-    if (err.message && err.message.includes('zaten')) {
-      throw err;
-    }
+  // Fail closed: never award a match prize without server authorization.
+  const res = await fetch('/api/match/award-prize', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: profile.id, roomId, prizeAmount }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Maç ödülü sunucu tarafından onaylanmadı.');
   }
 
   const currentCoins = profile.coins ?? COIN_SETTINGS.INITIAL_STARTING_COINS;
@@ -462,18 +432,15 @@ export async function refundMatchEntryFee(
   roomId: string,
   tierName: string
 ): Promise<UserProfile> {
-  try {
-    await fetch('/api/match/refund-fee', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: profile.id,
-        roomId,
-        entryFee,
-      }),
-    });
-  } catch {
-    // network fallback
+  // Fail closed: refunds must be approved by the server as well.
+  const response = await fetch('/api/match/refund-fee', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: profile.id, roomId, entryFee }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || 'Maç ücreti iadesi sunucu tarafından onaylanmadı.');
   }
 
   const currentCoins = profile.coins ?? COIN_SETTINGS.INITIAL_STARTING_COINS;
