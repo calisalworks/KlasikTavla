@@ -1,0 +1,28 @@
+{
+  "project_info": {
+    "project_number": "716208793238",
+    "project_id": "klasiktavla",
+    "storage_bucket": "klasiktavla.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:716208793238:android:10a71c8743c2a121f984b7",
+        "android_client_info": {
+          "package_name": "com.klasiktavla.app"
+        }
+      },
+      "api_key": [
+        {
+          "current_key": "AIzaSyDl7oV8yk-QQKrC6uuDo_W5jZvRnU9nVZc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
