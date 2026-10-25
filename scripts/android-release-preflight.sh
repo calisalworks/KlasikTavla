@@ -38,7 +38,7 @@ bunx cap sync android
 printf '\n3/3 Release AAB oluşturuluyor...\n'
 (
   cd android
-  ./gradlew --no-daemon bundleRelease
+  bash ./gradlew --no-daemon bundleRelease
 )
 
 printf '\nAAB çıktısı: android/app/build/outputs/bundle/release/app-release.aab\n'
