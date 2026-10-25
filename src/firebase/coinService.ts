@@ -178,7 +178,7 @@ export async function claimAdRewardCoins(
   const updatedProfile: UserProfile = {
     ...profile,
     coins: result.balance!,
-    adRewardsToday: result.adRewardsToday,
+    adRewardsToday: result.adRewardsToday!,
     lastAdRewardDate: result.lastAdRewardDate,
   };
   saveUserProfile(updatedProfile);
