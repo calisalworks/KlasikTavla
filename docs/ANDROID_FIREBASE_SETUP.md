@@ -1,6 +1,6 @@
 # Android Firebase yapılandırması
 
-Bu depo, Android'e özel gerçek `google-services.json` dosyasını içermiyor. Güvenlik ve doğru OAuth bağlantısı için bu dosya tahmin edilerek üretilmemelidir. `google-services.json.example` yalnızca şema/yer tutucu örneğidir; doğrudan derlemede kullanılamaz.
+Bu depo, Android'e özel gerçek `google-services.json` dosyasını içermiyor. Güvenlik ve doğru OAuth bağlantısı için bu dosya tahmin edilerek üretilmemelidir. `google-services.json.example` yalnızca şema/yer tutucu örneğidir; doğrudan derlemede kullanılamaz. Depodaki `firebase-applet-config.json` yalnızca mevcut web yapılandırmasını gösterir (`ai-studio-applet-webapp-87ad7`); bunun Klasik Tavla için doğru üretim Firebase projesi olduğunu tek başına kanıtlamaz. Android yapılandırmasını indirmeden önce proje sahibi Firebase Console'da doğru projeyi doğrulamalıdır.
 
 ## Gerçek dosyayı oluşturma
 
