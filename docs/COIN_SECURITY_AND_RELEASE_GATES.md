@@ -3,7 +3,7 @@
 ## Mevcut güvenli varsayılan
 
 - API jeton değiştirme/ödül rotaları `503 COIN_ECONOMY_TEMPORARILY_DISABLED` ile kapalı kalmalıdır.
-- İstemci, jeton bakiyesini veya ödül sayaçlarını yetkili kaynak olarak belirleyemez.
+- İstemci, jeton bakiyesini veya ödül sayaçlarını yetkili kaynak olarak belirleyemez. `src/firebase/coinService.ts` artık Firebase ID token'ı olmadan mutasyon isteği göndermez, doğrudan Firestore bakiye/ledger yazmaz ve sunucudan `coinEconomyEnabled: true`, doğrulanmış bakiye ve işlem makbuzu almadan yerel bakiyeyi değiştirmez.
 - `firestore.rules` istemcilerin mevcut kullanıcı belgesindeki jeton bakiyesi/ödül zamanlarını değiştirmesini ve `coinTransactions` kayıtları yazmasını engeller. Yeni kullanıcı belgesi varsa başlangıç bakiyesi yalnızca 500 olabilir.
 - Firestore kuralları yalnızca Firebase projesine deploy edildikten sonra etkili olur. Bu dalda dosyanın bulunması, Firebase Console'daki kuralların güncellendiği anlamına gelmez.
 - Firebase Admin SDK kullanan güvenilir sunucu işlemleri Firestore kurallarını atlar; bu nedenle sunucu her istekte Firebase ID token doğrulamalı ve kullanıcı kimliğini doğrulanmış token'daki `uid` üzerinden belirlemelidir.
