@@ -446,7 +446,7 @@ function getServerTodayDate(): string {
 
 // 1. Get Coin Settings
 app.get('/api/coins/config', (_req, res) => {
-  res.json({ settings: SERVER_COIN_SETTINGS });
+  res.json({ settings: SERVER_COIN_SETTINGS, coinEconomyEnabled: false });
 });
 
 // 2. Query Reward Status
@@ -462,11 +462,12 @@ app.post('/api/coins/status', (req, res) => {
   const canClaimDaily = !lastClaim || now - lastClaim >= cooldown;
 
   res.json({
-    canClaimDaily,
+    canClaimDaily: false,
     dailyRewardCoins: SERVER_COIN_SETTINGS.FREE_COINS_AMOUNT,
-    adsRemainingToday: 999999,
+    adsRemainingToday: 0,
     adRewardCoins: SERVER_COIN_SETTINGS.REWARDED_AD_COINS,
-    maxDailyAds: 999999,
+    maxDailyAds: 0,
+    coinEconomyEnabled: false,
   });
 });
 
