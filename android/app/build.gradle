@@ -1,5 +1,12 @@
 apply plugin: 'com.android.application'
 
+// Release credentials are supplied through the build environment, never committed.
+def releaseStoreFile = System.getenv('TAVLA_UPLOAD_STORE_FILE')
+def releaseStorePassword = System.getenv('TAVLA_UPLOAD_STORE_PASSWORD')
+def releaseKeyAlias = System.getenv('TAVLA_UPLOAD_KEY_ALIAS')
+def releaseKeyPassword = System.getenv('TAVLA_UPLOAD_KEY_PASSWORD')
+def hasReleaseSigning = releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+
 android {
     namespace = "com.klasiktavla.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,8 +23,21 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (hasReleaseSigning) {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
