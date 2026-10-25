@@ -10,6 +10,12 @@ command -v java >/dev/null 2>&1 || fail "JDK kurulu değil."
 
 [[ -f android/app/google-services.json ]] || fail "android/app/google-services.json eksik. Firebase Console'dan gerçek dosyayı indirin; .example dosyası kullanılamaz."
 grep -q '"package_name"[[:space:]]*:[[:space:]]*"com.klasiktavla.app"' android/app/google-services.json || fail "google-services.json içindeki Android paket adı com.klasiktavla.app olmalı."
+grep -q '"project_id"[[:space:]]*:[[:space:]]*"[^"]\+"' android/app/google-services.json || fail "google-services.json içinde project_id bulunamadı."
+grep -q '"mobilesdk_app_id"[[:space:]]*:[[:space:]]*"[^"]\+"' android/app/google-services.json || fail "google-services.json içinde mobilesdk_app_id bulunamadı."
+grep -q '"current_key"[[:space:]]*:[[:space:]]*"[^"]\+"' android/app/google-services.json || fail "google-services.json içinde current_key bulunamadı."
+if grep -Eq 'REPLACE_WITH_|YOUR_FIREBASE_PROJECT_ID|YOUR_ANDROID_FIREBASE_APP_ID|YOUR_FIREBASE_ANDROID_API_KEY' android/app/google-services.json; then
+  fail "google-services.json yer tutucu değerler içeriyor; Firebase Console'dan indirilen gerçek dosyayı kullanın."
+fi
 
 [[ -n "${VITE_WS_SERVER_URL:-}" ]] || fail "VITE_WS_SERVER_URL tanımlı değil."
 [[ "${VITE_WS_SERVER_URL}" == wss://* ]] || fail "VITE_WS_SERVER_URL güvenli wss:// adresi olmalı."
