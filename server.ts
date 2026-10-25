@@ -314,8 +314,20 @@ app.get('/api/match/tiers', (_req, res) => {
   });
 });
 
+// Temporary release-safety guard: coin mutations must remain disabled until
+// Firebase identity verification, persistent balances, and AdMob SSV are implemented.
+function rejectUnsafeCoinMutation(res: express.Response) {
+  return res.status(503).json({
+    error: 'Jeton işlemleri güvenlik doğrulaması tamamlanana kadar geçici olarak devre dışıdır.',
+    code: 'COIN_ECONOMY_TEMPORARILY_DISABLED',
+  });
+}
+
 // Match Coin Security: Deduct Entry Fee
 app.post('/api/match/deduct-fee', (req, res) => {
+  return rejectUnsafeCoinMutation(res);
+
+  // Disabled legacy implementation retained temporarily for safe staged rollout.
   const { userId, roomId, entryFee } = req.body;
   if (!userId || !roomId || typeof entryFee !== 'number') {
     return res.status(400).json({ error: 'Geçersiz parametreler.' });
@@ -327,6 +339,9 @@ app.post('/api/match/deduct-fee', (req, res) => {
 
 // Match Coin Security: Award Match Prize (Server Authoritative & Idempotent)
 app.post('/api/match/award-prize', (req, res) => {
+  return rejectUnsafeCoinMutation(res);
+
+  // Disabled legacy implementation retained temporarily for safe staged rollout.
   const { userId, roomId, prizeAmount } = req.body;
   if (!userId || !roomId || typeof prizeAmount !== 'number') {
     return res.status(400).json({ error: 'Geçersiz parametreler.' });
@@ -346,6 +361,9 @@ app.post('/api/match/award-prize', (req, res) => {
 
 // Match Coin Security: Refund Entry Fee if aborted before start
 app.post('/api/match/refund-fee', (req, res) => {
+  return rejectUnsafeCoinMutation(res);
+
+  // Disabled legacy implementation retained temporarily for safe staged rollout.
   const { userId, roomId, entryFee } = req.body;
   if (!userId || !roomId) {
     return res.status(400).json({ error: 'Geçersiz parametreler.' });
@@ -454,6 +472,9 @@ app.post('/api/coins/status', (req, res) => {
 
 // 3. Claim Free Coins (Enforces 6-hour cooldown server-side)
 app.post('/api/coins/claim-daily', (req, res) => {
+  return rejectUnsafeCoinMutation(res);
+
+  // Disabled legacy implementation retained temporarily for safe staged rollout.
   const { userId } = req.body;
   if (!userId) {
     return res.status(400).json({ error: 'userId is required' });
@@ -482,6 +503,9 @@ app.post('/api/coins/claim-daily', (req, res) => {
 
 // 4. Claim Rewarded Ad Coins (Unlimited, validates completion token & adds 100 coins)
 app.post('/api/coins/claim-ad', (req, res) => {
+  return rejectUnsafeCoinMutation(res);
+
+  // Disabled legacy implementation retained temporarily for safe staged rollout.
   const { userId, adProof } = req.body;
   if (!userId) {
     return res.status(400).json({ error: 'userId is required' });
