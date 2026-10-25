@@ -1,6 +1,6 @@
 import { auth } from './config';
 import { UserProfile } from '../types/game';
-import { COIN_SETTINGS, getTodayDateString } from '../utils/coinSettings';
+import { COIN_SETTINGS } from '../utils/coinSettings';
 import { saveUserProfile } from '../utils/profileStorage';
 
 export interface CoinRewardStatus {
