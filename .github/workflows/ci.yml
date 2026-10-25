@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "audit/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+
+      - name: TypeScript check
+        run: bun run lint
+
+      - name: Build web app
+        run: bun run build
+
+      - name: Start local app for integration tests
+        run: |
+          bun run start > /tmp/klasik-tavla-server.log 2>&1 &
+          echo $! > /tmp/klasik-tavla-server.pid
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3000/api/health; then
+              echo
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/klasik-tavla-server.log
+          exit 1
+
+      - name: Run WebSocket and coin-flow integration tests
+        run: bun run test
+
+      - name: Print server log on failure
+        if: failure()
+        run: cat /tmp/klasik-tavla-server.log || true

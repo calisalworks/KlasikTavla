@@ -30,25 +30,32 @@ service cloud.firestore {
         (!('lastLoginAt' in data) || data.lastLoginAt is string);
     }
 
-    function isValidCoinTransaction(data, userId, txId) {
-      return data.id == txId &&
-        data.userId == userId &&
-        data.type in ['initial_bonus', 'daily_reward', 'ad_reward', 'match_fee', 'match_reward', 'match_refund'] &&
-        data.amount is number &&
-        data.balanceAfter is number &&
-        data.balanceAfter >= 0 &&
-        (!('description' in data) || (data.description is string && data.description.size() <= 256)) &&
-        data.date is string &&
-        data.createdAt is string;
+    // Coin balances and reward timestamps are server-owned. A client may edit
+    // ordinary profile fields, but cannot mint coins, reset cooldowns, or edit
+    // ad-reward counters. Map.get defaults also handle legacy documents where
+    // some of these fields do not exist yet.
+    function coinStateUnchanged() {
+      return request.resource.data.get('coins', null) == resource.data.get('coins', null) &&
+        request.resource.data.get('lastDailyRewardDate', null) == resource.data.get('lastDailyRewardDate', null) &&
+        request.resource.data.get('lastFreeCoinsClaimTimestamp', null) == resource.data.get('lastFreeCoinsClaimTimestamp', null) &&
+        request.resource.data.get('adRewardsToday', null) == resource.data.get('adRewardsToday', null) &&
+        request.resource.data.get('lastAdRewardDate', null) == resource.data.get('lastAdRewardDate', null);
+    }
+
+    function hasValidInitialBalance(data) {
+      return !('coins' in data) || data.coins == 500;
     }
 
     // Public user profile (NO PII / email is stored here)
     match /users/{userId} {
       allow get: if true;
       allow list: if false; // Deny broad query scraping
-      allow create: if isOwner(userId) && isValidUser(request.resource.data, userId);
+      allow create: if isOwner(userId) &&
+        isValidUser(request.resource.data, userId) &&
+        hasValidInitialBalance(request.resource.data);
       allow update: if isOwner(userId) &&
         isValidUser(request.resource.data, userId) &&
+        coinStateUnchanged() &&
         request.resource.data.id == resource.data.id &&
         (!('createdAt' in resource.data) || request.resource.data.createdAt == resource.data.createdAt);
       allow delete: if false;
@@ -56,8 +63,9 @@ service cloud.firestore {
       // Immutable coin transaction records for this user
       match /coinTransactions/{txId} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && isValidCoinTransaction(request.resource.data, userId, txId);
-        allow update, delete: if false; // Append-only ledger
+        // Only a trusted server using the Admin SDK may append ledger records.
+        // Client SDK writes are denied; Admin SDK operations bypass these rules.
+        allow create, update, delete: if false;
       }
 
       // Private user subcollection for any sensitive or private settings

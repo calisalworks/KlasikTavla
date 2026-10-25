@@ -39,8 +39,8 @@ async function runTestSuite() {
     body: JSON.stringify({ userId: testUserId, adProof: token1 }),
   });
   const dataAd1 = await resAd1.json();
-  expect(resAd1.status === 200, '1. Reklam izlendi ve onaylandı');
-  expect(dataAd1.coinsAdded === 100, 'Reklam ödülü 100 jeton olarak doğrulandı');
+  expect(resAd1.status === 503 && dataAd1.code === 'COIN_ECONOMY_TEMPORARILY_DISABLED', 'Reklam ödülü güvenlik doğrulaması bitene kadar kapalı');
+  expect(!dataAd1.success, 'Doğrulanmamış reklam kanıtı jeton üretmedi');
 
   // Replay attack with same token
   const resReplay = await fetch(`${BASE_URL}/api/coins/claim-ad`, {
@@ -48,7 +48,7 @@ async function runTestSuite() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId: testUserId, adProof: token1 }),
   });
-  expect(resReplay.status === 400, 'Aynı reklam kanıtı tokeniyle mükerrer ödül engellendi');
+  expect(resReplay.status === 503, 'Reklam ödülü endpointi güvenlik nedeniyle kapalı');
 
   // Claim 2nd ad (succeeds, no daily limit)
   const resAd2 = await fetch(`${BASE_URL}/api/coins/claim-ad`, {
@@ -56,7 +56,7 @@ async function runTestSuite() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId: testUserId, adProof: `proof_token_2_${Date.now()}` }),
   });
-  expect(resAd2.status === 200, '2. Reklam izlendi ve 100 jeton eklendi (sınırsız izleme)');
+  expect(resAd2.status === 503, 'İkinci reklam isteği jeton üretemedi');
 
   // Claim 3rd ad (succeeds, no daily limit)
   const resAd3 = await fetch(`${BASE_URL}/api/coins/claim-ad`, {
@@ -64,7 +64,7 @@ async function runTestSuite() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId: testUserId, adProof: `proof_token_3_${Date.now()}` }),
   });
-  expect(resAd3.status === 200, '3. Reklam izlendi ve 100 jeton eklendi (sınırsız izleme)');
+  expect(resAd3.status === 503, 'Üçüncü reklam isteği jeton üretemedi');
 
   // Status check should reflect unlimited ads available
   const statusRes = await fetch(`${BASE_URL}/api/coins/status`, {
@@ -73,7 +73,7 @@ async function runTestSuite() {
     body: JSON.stringify({ userId: testUserId }),
   });
   const statusData = await statusRes.json();
-  expect(statusData.adsRemainingToday >= 99999, 'Kullanıcının reklam hakkının sınırsız olduğu doğrulandı');
+  expect(statusData.adsRemainingToday === 0 && statusData.coinEconomyEnabled === false, 'Jeton ekonomisi kapalı olarak raporlandı');
 
   // --- TEST 2: ARKADAŞ ODASI OLUŞTURMA & İPTAL/İADE ---
   console.log('\n--- 2. Oda Oluşturma & Maç Öncesi İptal/İade Testi ---');
@@ -179,14 +179,14 @@ async function runTestSuite() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId: player1.id, roomId: activeRoomId, entryFee: 500 }),
   });
-  expect(deductP1.status === 200, 'Player 1 giriş ücreti (500) sunucuda düşüldü');
+  expect(deductP1.status === 503, 'Player 1 giriş ücreti güvenlik nedeniyle devre dışı');
 
   const deductP2 = await fetch(`${BASE_URL}/api/match/deduct-fee`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId: player2.id, roomId: activeRoomId, entryFee: 500 }),
   });
-  expect(deductP2.status === 200, 'Player 2 giriş ücreti (500) sunucuda düşüldü');
+  expect(deductP2.status === 503, 'Player 2 giriş ücreti güvenlik nedeniyle devre dışı');
 
   // Player 2 joins with code
   let p1Matched = false;
@@ -222,7 +222,7 @@ async function runTestSuite() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId: player1.id, roomId: activeRoomId, prizeAmount: 1000 }),
   });
-  expect(awardPrizeRes.status === 200, 'Kazanan oyuncuya 1000 jeton ödül havuzu aktarıldı');
+  expect(awardPrizeRes.status === 503, 'Ödül dağıtımı güvenlik nedeniyle devre dışı');
 
   // Attempt duplicate prize claim
   const duplicatePrizeRes = await fetch(`${BASE_URL}/api/match/award-prize`, {
@@ -230,7 +230,7 @@ async function runTestSuite() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId: player1.id, roomId: activeRoomId, prizeAmount: 1000 }),
   });
-  expect(duplicatePrizeRes.status === 400, 'Aynı maçın ödülü 2. kez alınamadı (idempotency koruması)');
+  expect(duplicatePrizeRes.status === 503, 'Ödül endpointi güvenlik nedeniyle kapalı');
 
   ws1.close();
   ws2.close();

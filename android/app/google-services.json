@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "716208793238",
+    "project_id": "klasiktavla",
+    "storage_bucket": "klasiktavla.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:716208793238:android:10a71c8743c2a121f984b7",
+        "android_client_info": {
+          "package_name": "com.klasiktavla.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "716208793238-vbhce6a6t5o0jt4aln3svpcajsu4edt9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.klasiktavla.app",
+            "certificate_hash": "994923d6eb7e2930056e472813845a8cfde8dffb"
+          }
+        },
+        {
+          "client_id": "716208793238-koqcidp45fqte528rmnqjpma3htavo7r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDl7oV8yk-QQKrC6uuDo_W5jZvRnU9nVZc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "716208793238-koqcidp45fqte528rmnqjpma3htavo7r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

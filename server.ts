@@ -314,50 +314,28 @@ app.get('/api/match/tiers', (_req, res) => {
   });
 });
 
+// Temporary release-safety guard: coin mutations must remain disabled until
+// Firebase identity verification, persistent balances, and AdMob SSV are implemented.
+function rejectUnsafeCoinMutation(res: express.Response) {
+  return res.status(503).json({
+    error: 'Jeton işlemleri güvenlik doğrulaması tamamlanana kadar geçici olarak devre dışıdır.',
+    code: 'COIN_ECONOMY_TEMPORARILY_DISABLED',
+  });
+}
+
 // Match Coin Security: Deduct Entry Fee
-app.post('/api/match/deduct-fee', (req, res) => {
-  const { userId, roomId, entryFee } = req.body;
-  if (!userId || !roomId || typeof entryFee !== 'number') {
-    return res.status(400).json({ error: 'Geçersiz parametreler.' });
-  }
-  // Server-authoritative audit log
-  console.log(`[MATCH FEE] User ${userId} paid ${entryFee} coins for room ${roomId}`);
-  res.json({ success: true, deducted: entryFee, roomId });
+app.post('/api/match/deduct-fee', (_req, res) => {
+  return rejectUnsafeCoinMutation(res);
 });
 
 // Match Coin Security: Award Match Prize (Server Authoritative & Idempotent)
-app.post('/api/match/award-prize', (req, res) => {
-  const { userId, roomId, prizeAmount } = req.body;
-  if (!userId || !roomId || typeof prizeAmount !== 'number') {
-    return res.status(400).json({ error: 'Geçersiz parametreler.' });
-  }
-
-  const room = rooms.get(roomId);
-  if (room) {
-    if (room.prizeClaimed) {
-      return res.status(400).json({ error: 'Bu maçın ödülü zaten tahsil edilmiş.' });
-    }
-    room.prizeClaimed = true;
-  }
-
-  console.log(`[MATCH PRIZE] Winner ${userId} awarded ${prizeAmount} coins for room ${roomId}`);
-  res.json({ success: true, prizeAwarded: prizeAmount, roomId });
+app.post('/api/match/award-prize', (_req, res) => {
+  return rejectUnsafeCoinMutation(res);
 });
 
 // Match Coin Security: Refund Entry Fee if aborted before start
-app.post('/api/match/refund-fee', (req, res) => {
-  const { userId, roomId, entryFee } = req.body;
-  if (!userId || !roomId) {
-    return res.status(400).json({ error: 'Geçersiz parametreler.' });
-  }
-
-  const room = rooms.get(roomId);
-  if (room) {
-    room.refunded = true;
-  }
-
-  console.log(`[MATCH REFUND] Refunded ${entryFee} coins to user ${userId} for room ${roomId}`);
-  res.json({ success: true, refunded: entryFee, roomId });
+app.post('/api/match/refund-fee', (_req, res) => {
+  return rejectUnsafeCoinMutation(res);
 });
 
 // REST fallback API for room list
@@ -428,7 +406,7 @@ function getServerTodayDate(): string {
 
 // 1. Get Coin Settings
 app.get('/api/coins/config', (_req, res) => {
-  res.json({ settings: SERVER_COIN_SETTINGS });
+  res.json({ settings: SERVER_COIN_SETTINGS, coinEconomyEnabled: false });
 });
 
 // 2. Query Reward Status
@@ -444,86 +422,23 @@ app.post('/api/coins/status', (req, res) => {
   const canClaimDaily = !lastClaim || now - lastClaim >= cooldown;
 
   res.json({
-    canClaimDaily,
+    canClaimDaily: false,
     dailyRewardCoins: SERVER_COIN_SETTINGS.FREE_COINS_AMOUNT,
-    adsRemainingToday: 999999,
+    adsRemainingToday: 0,
     adRewardCoins: SERVER_COIN_SETTINGS.REWARDED_AD_COINS,
-    maxDailyAds: 999999,
+    maxDailyAds: 0,
+    coinEconomyEnabled: false,
   });
 });
 
-// 3. Claim Free Coins (Enforces 6-hour cooldown server-side)
-app.post('/api/coins/claim-daily', (req, res) => {
-  const { userId } = req.body;
-  if (!userId) {
-    return res.status(400).json({ error: 'userId is required' });
-  }
-
-  const now = Date.now();
-  const lastClaim = serverFreeCoinClaims.get(userId);
-  const cooldown = SERVER_COIN_SETTINGS.FREE_COINS_COOLDOWN_MS;
-
-  if (lastClaim && now - lastClaim < cooldown) {
-    const minutesLeft = Math.ceil((cooldown - (now - lastClaim)) / 60000);
-    return res.status(400).json({
-      error: `Ücretsiz ödülünüz için henüz süre dolmadı. Lütfen ${minutesLeft} dakika sonra tekrar deneyin!`,
-    });
-  }
-
-  serverFreeCoinClaims.set(userId, now);
-
-  res.json({
-    success: true,
-    coinsAdded: SERVER_COIN_SETTINGS.FREE_COINS_AMOUNT,
-    claimTimestamp: now,
-    message: `${SERVER_COIN_SETTINGS.FREE_COINS_AMOUNT} jeton hesabınıza tanımlandı.`,
-  });
+// 3. Claim Free Coins (temporarily disabled pending identity and persistent balance verification)
+app.post('/api/coins/claim-daily', (_req, res) => {
+  return rejectUnsafeCoinMutation(res);
 });
 
-// 4. Claim Rewarded Ad Coins (Unlimited, validates completion token & adds 100 coins)
-app.post('/api/coins/claim-ad', (req, res) => {
-  const { userId, adProof } = req.body;
-  if (!userId) {
-    return res.status(400).json({ error: 'userId is required' });
-  }
-
-  if (!adProof || typeof adProof !== 'string' || adProof.length < 8) {
-    return res.status(400).json({ error: 'Geçersiz reklam tamamlama kanıtı.' });
-  }
-
-  const today = getServerTodayDate();
-  let userAdRecord = serverAdClaims.get(userId);
-
-  if (!userAdRecord || userAdRecord.date !== today) {
-    userAdRecord = { date: today, count: 0, usedTokens: new Set<string>() };
-    serverAdClaims.set(userId, userAdRecord);
-  }
-
-  // 1. Replay prevention check: Reject single-use proof token if already claimed
-  if (userAdRecord.usedTokens.has(adProof)) {
-    return res.status(400).json({ error: 'Bu reklam tamamlama kanıtı zaten kullanılmış.' });
-  }
-
-  // 2. Prevent rapid-fire automated spamming (minimum 15s between consecutive ads in production)
-  const now = Date.now();
-  const isProd = process.env.NODE_ENV === 'production';
-  const isTestBypass = req.headers['x-test-suite'] === 'true';
-  if (isProd && !isTestBypass && userAdRecord.lastClaimTime && now - userAdRecord.lastClaimTime < 15000) {
-    return res.status(429).json({ error: 'Reklam ödülleri arasında lütfen en az 15 saniye bekleyiniz.' });
-  }
-
-  userAdRecord.usedTokens.add(adProof);
-  userAdRecord.count += 1;
-  userAdRecord.lastClaimTime = now;
-
-  res.json({
-    success: true,
-    coinsAdded: SERVER_COIN_SETTINGS.REWARDED_AD_COINS,
-    adsWatchedToday: userAdRecord.count,
-    remainingAds: 999999,
-    date: today,
-    message: `Tebrikler! ${SERVER_COIN_SETTINGS.REWARDED_AD_COINS} jeton kazandınız.`,
-  });
+// 4. Claim Rewarded Ad Coins (temporarily disabled pending AdMob SSV verification)
+app.post('/api/coins/claim-ad', (_req, res) => {
+  return rejectUnsafeCoinMutation(res);
 });
 
 // 5. Leaderboard API

@@ -1,0 +1,12 @@
+.git
+.github
+node_modules
+dist
+android/.gradle
+android/app/build
+android/build
+coverage
+*.log
+.env
+.env.*
+!.env.example

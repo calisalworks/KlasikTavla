@@ -1,12 +1,11 @@
 {
-  "projectId": "ai-studio-applet-webapp-87ad7",
-  "appId": "1:275303836895:web:ba42461ea35f99f4828d6a",
-  "apiKey": "AIzaSyCqTTqr3Na6biqautMwRMjOyFv8DRV6Da4",
-  "authDomain": "ai-studio-applet-webapp-87ad7.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-remixklasiktavla-8ae752ed-80b4-44ef-8128-b0e31839f407",
-  "storageBucket": "ai-studio-applet-webapp-87ad7.firebasestorage.app",
-  "messagingSenderId": "275303836895",
-  "measurementId": "",
-  "oAuthClientId": "275303836895-kmjilsrc1rmj7vnulclobff4b3vjefrr.apps.googleusercontent.com",
+  "projectId": "klasiktavla",
+  "appId": "1:716208793238:web:e2ac9cdd161101fcf984b7",
+  "apiKey": "AIzaSyCEf-NGORY9hDK6AQXy1GhTGQOl51Cns6s",
+  "authDomain": "klasiktavla.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "klasiktavla.firebasestorage.app",
+  "messagingSenderId": "716208793238",
+  "measurementId": "G-3RTBZPXX6Z",
   "recaptchaSiteKey": ""
 }
