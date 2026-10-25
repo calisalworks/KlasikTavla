@@ -10,7 +10,7 @@ Bu kontrol listesi 25 Ekim 2026 tarihinde güncellendi. Render ücretsiz staging
 - [ ] Maç giriş ücreti, ödül ve iade işlemlerini istemcinin gönderdiği `userId`, `entryFee` veya `prizeAmount` değerlerine güvenmeden sunucu tarafında doğrula. Kimlik doğrulama ve kalıcı, atomik bakiye kaydı olmadan jeton ekonomisi güvenli değildir.
 - [ ] AdMob üretim yapılandırmasını tamamla. `src/services/admobService.ts` Google'ın test uygulama/reklam kimliklerini kullanıyor ve `initializeForTesting: true` ayarlı. Gerçek reklam kimlikleri ve Android manifestindeki uygulama kimliği yapılandırılmadan üretim reklamı beklenmemeli.
 - [ ] Google AdMob ödülünü mümkünse sunucu tarafı doğrulama (SSV) ile doğrula; istemcinin ürettiği `proof_...` değerini güvenilir kanıt kabul etme.
-- [ ] Google ile Android girişi için Firebase Console uygulama kaydı, SHA parmak izleri ve doğru `google-services.json` dosyasını kontrol et.
+- [ ] Google ile Android girişi için Firebase Console uygulama kaydı, SHA parmak izleri ve doğru `google-services.json` dosyasını kontrol et. Kurulum adımları `docs/ANDROID_FIREBASE_SETUP.md` dosyasına eklendi; `android/app/google-services.json.example` yalnızca yer tutucu örnektir, gerçek dosyanın yerine kullanılamaz.
 - [ ] Play Console için imzalı Android App Bundle (AAB) üret ve gerçek cihazda giriş, tekli oyun, çevrim içi eşleşme, arkadaş odası, uygulamayı arka plana alma/yeniden bağlanma ve ödüllü reklam akışlarını test et.
 
 ## Doğrulanmış kaynak kodu gözlemleri
@@ -24,7 +24,7 @@ Bu kontrol listesi 25 Ekim 2026 tarihinde güncellendi. Render ücretsiz staging
 
 ## Sıradaki uygulama adımları
 
-1. Android için Firebase `google-services.json` ve Google giriş yapılandırmasını doğrula.
+1. `docs/ANDROID_FIREBASE_SETUP.md` adımlarını izleyip Firebase Console'dan gerçek Android `google-services.json` dosyasını indir; örnek şablonu gerçek yapılandırma gibi kullanma.
 2. Gerçek AdMob uygulama/reklam kimliklerini ayarla ve SSV callback doğrulamasını kur.
 3. Kimlik doğrulama + kalıcı bakiye altyapısını tamamlayıp jeton ekonomisini güvenle yeniden etkinleştir.
 4. Android AAB üret, imzala ve yatay tam ekran gerçek cihaz testlerini yap.
