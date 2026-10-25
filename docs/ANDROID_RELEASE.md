@@ -22,7 +22,7 @@ export TAVLA_UPLOAD_KEY_ALIAS="upload"
 export TAVLA_UPLOAD_KEY_PASSWORD="..."
 ```
 
-Bu değişkenler hazırlık/ön kontrol betiği tarafından denetlenir. **Not:** Android Gradle projesinin release signing yapılandırması bu ortam değişkenlerini henüz kullanacak şekilde bağlanmadı; bu yüzden imzalı Play Store AAB'si oluştuğunu varsaymayın. Önce `android/app/build.gradle` içindeki release signing yapılandırmasını bu değişkenlere bağlamak ve ardından gerçek keystore ile derlemeyi doğrulamak gerekir.
+Bu değişkenler hazırlık/ön kontrol betiği tarafından denetlenir. Android Gradle release signing yapılandırması bu ortam değişkenlerini kullanacak şekilde bağlandı. Bu ortam değişkenleri olmadan ön kontrol durur; keystore ve Android/Firebase yapılandırması sağlanmadan gerçek imzalı AAB oluşturulduğu söylenemez.
 
 ## Ön kontrol
 
