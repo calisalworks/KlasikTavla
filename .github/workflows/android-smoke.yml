@@ -1,0 +1,54 @@
+name: Android smoke build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "audit/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-smoke-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android-debug:
+    name: Build Android debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      VITE_WS_SERVER_URL: wss://klasik-tavla-staging.onrender.com
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check release preflight script syntax
+        run: bash -n scripts/android-release-preflight.sh
+
+      - name: TypeScript check and web build
+        run: |
+          bun run lint
+          bun run build
+
+      - name: Sync Capacitor Android project
+        run: bunx cap sync android
+
+      - name: Build Android debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
