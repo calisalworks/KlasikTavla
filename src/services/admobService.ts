@@ -8,15 +8,16 @@ import {
 } from '@capacitor-community/admob';
 
 /**
- * Google Mobile Ads (AdMob) Integration Service
- * Configured with Google's official sample test unit IDs.
- * DO NOT replace with real production AdMob IDs until ready for Play Store release.
+ * AdMob is deliberately in Google's test mode by default.
+ * Production builds must supply real IDs and explicitly set VITE_ADMOB_TEST_MODE=false.
  */
+const TEST_APP_ID = 'ca-app-pub-3940256099942544~3347511713';
+const TEST_REWARDED_AD_UNIT_ID = 'ca-app-pub-3940256099942544/5224354917';
+
 export const ADMOB_CONFIG = {
-  // Google Official Test App ID (Android)
-  TEST_APP_ID: 'ca-app-pub-3940256099942544~3347511713',
-  // Google Official Sample Rewarded Ad Unit ID (Android)
-  TEST_REWARDED_AD_UNIT_ID: 'ca-app-pub-3940256099942544/5224354917',
+  APP_ID: import.meta.env.VITE_ADMOB_APP_ID || TEST_APP_ID,
+  REWARDED_AD_UNIT_ID: import.meta.env.VITE_ADMOB_REWARDED_AD_UNIT_ID || TEST_REWARDED_AD_UNIT_ID,
+  TEST_MODE: import.meta.env.VITE_ADMOB_TEST_MODE !== 'false',
   // Reward amount matching game settings (100 Jeton)
   REWARD_AMOUNT: 100,
 };
@@ -36,16 +37,12 @@ class AdMobService {
   private activeSessionToken: string | null = null;
   private sessionRewarded = false;
 
-  /**
-   * Checks if running on a native Android device/APK.
-   */
+  /** Checks if running on a native Android device/APK. */
   public isNativeAndroid(): boolean {
     return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
   }
 
-  /**
-   * Initializes the Google Mobile Ads SDK on native platform.
-   */
+  /** Initializes the Google Mobile Ads SDK on native platform. */
   public async initialize(): Promise<boolean> {
     if (!this.isNativeAndroid()) {
       return false;
@@ -57,8 +54,8 @@ class AdMobService {
 
     try {
       await AdMob.initialize({
-        testingDevices: ['EMULATOR'],
-        initializeForTesting: true,
+        testingDevices: ADMOB_CONFIG.TEST_MODE ? ['EMULATOR'] : [],
+        initializeForTesting: ADMOB_CONFIG.TEST_MODE,
       });
 
       this.setupEventListeners();
@@ -70,9 +67,7 @@ class AdMobService {
     }
   }
 
-  /**
-   * Sets up native AdMob lifecycle event listeners.
-   */
+  /** Sets up native AdMob lifecycle event listeners. */
   private setupEventListeners(): void {
     AdMob.addListener(RewardAdPluginEvents.Loaded, (info: AdLoadInfo) => {
       console.log('[AdMob] Rewarded Ad loaded successfully:', info);
@@ -88,7 +83,7 @@ class AdMobService {
 
     AdMob.addListener(RewardAdPluginEvents.Rewarded, (reward: AdMobRewardItem) => {
       console.log('[AdMob] User earned reward:', reward);
-      // Strictly set session reward flag when Google SDK fires the rewarded event
+      // This client event is UX-only; it is not authoritative proof for coin credit.
       this.sessionRewarded = true;
     });
 
@@ -103,9 +98,7 @@ class AdMobService {
     });
   }
 
-  /**
-   * Preloads a rewarded video ad in background.
-   */
+  /** Preloads a rewarded video ad in background. */
   public async prepareRewardedAd(userId?: string): Promise<{ success: boolean; errorMessage?: string }> {
     if (!this.isNativeAndroid()) {
       return { success: false, errorMessage: 'AdMob yalnızca yerel Android uygulamasında çalışır.' };
@@ -118,8 +111,8 @@ class AdMobService {
       this.sessionRewarded = false;
 
       await AdMob.prepareRewardVideoAd({
-        adId: ADMOB_CONFIG.TEST_REWARDED_AD_UNIT_ID,
-        isTesting: true,
+        adId: ADMOB_CONFIG.REWARDED_AD_UNIT_ID,
+        isTesting: ADMOB_CONFIG.TEST_MODE,
         ssv: userId ? { userId } : undefined,
       });
 
@@ -135,10 +128,7 @@ class AdMobService {
     }
   }
 
-  /**
-   * Displays the loaded rewarded ad and waits for native completion event.
-   * Only returns success: true and a valid adProofToken if the user actually watched until the reward was earned.
-   */
+  /** Displays the loaded rewarded ad and waits for native completion event. */
   public async showRewardedAd(userId?: string): Promise<AdMobRewardResult> {
     if (!this.isNativeAndroid()) {
       return {
@@ -152,7 +142,6 @@ class AdMobService {
     try {
       await this.initialize();
 
-      // Ensure ad is prepared if not already
       if (!this.isAdLoaded) {
         const prep = await this.prepareRewardedAd(userId);
         if (!prep.success) {
@@ -165,31 +154,28 @@ class AdMobService {
         }
       }
 
-      // Generate a single-use session nonce to prevent replay attacks
+      // This nonce is for local session correlation only, never trusted as server-side ad proof.
       const sessionNonce = `admob_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
       this.activeSessionToken = sessionNonce;
       this.sessionRewarded = false;
 
-      // Show native full-screen rewarded video
       const rewardItem = await AdMob.showRewardVideoAd();
 
-      // Verify that Google AdMob SDK acknowledged the reward
       if (this.sessionRewarded || (rewardItem && rewardItem.amount > 0)) {
-        const proofToken = `proof_${sessionNonce}`;
         return {
           success: true,
           rewarded: true,
           rewardAmount: ADMOB_CONFIG.REWARD_AMOUNT,
-          adProofToken: proofToken,
-        };
-      } else {
-        return {
-          success: false,
-          rewarded: false,
-          rewardAmount: 0,
-          errorMessage: 'Reklam ödülü kazanmak için reklamı sonuna kadar izlemelisiniz. Jeton verilmedi.',
+          adProofToken: `proof_${sessionNonce}`,
         };
       }
+
+      return {
+        success: false,
+        rewarded: false,
+        rewardAmount: 0,
+        errorMessage: 'Reklam ödülü kazanmak için reklamı sonuna kadar izlemelisiniz. Jeton verilmedi.',
+      };
     } catch (err: any) {
       console.warn('[AdMob] showRewardedAd error:', err);
       return {
@@ -205,9 +191,6 @@ class AdMobService {
     }
   }
 
-  /**
-   * Returns current ad load state.
-   */
   public getStatus() {
     return {
       isNativeAndroid: this.isNativeAndroid(),
