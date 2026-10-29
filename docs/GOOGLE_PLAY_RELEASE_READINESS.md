@@ -61,3 +61,31 @@ Bu liste otomatik olarak yayın onayı vermez. CI sonucu, gerçek cihaz testi ve
 6. **Geçiş ve doğrulama:** eski istemci sürümleri ve mevcut bakiyeler için geçiş politikası belirle; emülatör/entegrasyon testleri, Android cihaz testleri ve kurallar testleri tamamlanmadan üretime taşıma yapma.
 
 **Durum:** Bu adımda yalnızca yazma noktaları ve sıralı geçiş planı belgelendi; uygulama davranışı ve Firestore kuralları değiştirilmedi. Güvenli sunucu kimlik doğrulaması, kalıcı veritabanı ve maç sonucu doğrulaması olmadan jeton ekonomisi üretime hazır değildir.
+
+
+## Güvenlik test matrisi — uygulanmadan önce beklenen davranış
+
+Bu testler henüz otomatik test olarak uygulanmış veya geçilmiş değildir. Bunlar güvenli ekonomi API'si ve kalıcı işlem defteri eklendiğinde kabul kriteri olarak kullanılmalıdır.
+
+| Senaryo | Beklenen güvenli davranış | Mevcut durum |
+| --- | --- | --- |
+| Kimlik token'ı olmadan ücret/ödül/iade isteği | 401/403; hiçbir bakiye veya işlem kaydı değişmemeli | Engelleyici: mevcut uçlar kimliği doğrulamıyor |
+| İstek gövdesinde başka bir kullanıcının userId değeri | Kimlik token'ındaki UID esas alınmalı; başka UID'ye işlem yapılmamalı | Engelleyici: UID gövdeden kabul ediliyor |
+| İstemcinin değiştirdiği entryFee / prizeAmount | Tutar reddedilmeli veya sunucu oda seviyesi/maç sonucundan hesaplamalı | Engelleyici: tutarlar istemciden kabul ediliyor |
+| Oda bulunmuyor veya maç bitmemiş | Ödül/iade reddedilmeli; bakiye değişmemeli | Engelleyici: ödül uç noktası oda yokken başarı döndürebiliyor |
+| İstek kazanan olmayan oyuncudan geliyor | Ödül reddedilmeli | Engelleyici: kazanan doğrulaması yok |
+| Aynı maç ödülü eşzamanlı iki kez isteniyor | Tek atomik işlem; yalnızca bir bakiye artışı ve bir ledger kaydı | Engelleyici: yalnızca bellek içi oda bayrağı var |
+| Bakiye giriş ücretinden az | Sunucu işlemi reddetmeli; negatif bakiye oluşmamalı | Engelleyici: sunucu kalıcı bakiyeyi kontrol etmiyor |
+| İstemci HTTP isteği başarısız oluyor | UI başarı göstermemeli; yerel/Firestore bakiyesi artırılmamalı | Engelleyici: bazı istemci akışları ağ hatasını yutup devam ediyor |
+| Sunucu yeniden başlıyor | Bakiye, cooldown ve idempotency geçmişi kalıcı kalmalı | Engelleyici: ilgili kayıtlar bellek içi |
+| Aynı ücretsiz ödül isteği tekrar gönderiliyor | Sunucu saati ve kalıcı UID bazlı cooldown ile ikinci ödül reddedilmeli | Engelleyici: kimlik doğrulama yok ve cooldown bellek içi |
+
+### Güvenli uygulama için teknik ön koşullar
+
+- Firebase Admin SDK veya eşdeğer güvenilir sunucu doğrulaması ile Firebase ID token doğrulanmalı; uid yalnızca doğrulanmış token'dan alınmalı.
+- Kalıcı veritabanında atomik bakiye güncellemesi ve idempotency anahtarı birlikte uygulanmalı. Sunucu belleğindeki Map üretim muhasebesi olarak kullanılmamalı.
+- Oyun sonucunu sunucudaki oda/tahta durumundan doğrulayan tek bir sonuç akışı olmalı. İstemcinin “kazandım” bildirimi tek başına ödül tetiklememeli.
+- Firestore Admin/server yazmaları için gerekli kimlik bilgileri gizli ortam değişkenlerinde tutulmalı; servis hesabı anahtarı repoya commit edilmemeli.
+- Yeni davranışlar önce test ortamında ve Firestore emulator kurallarıyla doğrulanmalı. Testler geçmeden ekonomik yazma kuralları daraltılmamalı; aksi hâlde eski istemci akışları kırılabilir.
+
+Bu matristeki mevcut durum notları kod incelemesine dayanır; gerçek saldırı testi veya üretim doğrulaması yapıldığı anlamına gelmez.
