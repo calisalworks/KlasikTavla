@@ -116,7 +116,10 @@ function verifyClaimsAndSignature(
     typeof claims.iat !== 'number' ||
     claims.iat > now + MAX_CLOCK_SKEW_SECONDS ||
     claims.iat <= 0 ||
+    claims.exp <= claims.iat ||
     typeof claims.auth_time !== 'number' ||
+    claims.auth_time <= 0 ||
+    claims.auth_time > claims.iat ||
     claims.auth_time > now + MAX_CLOCK_SKEW_SECONDS
   ) {
     throw new Error('Firebase ID token claims are invalid or expired.');
