@@ -23,7 +23,9 @@ const verified = await verifyAdMobSsvCallback(makeCallback(), { fetchKeys, nowMs
 assert(verified.transactionId === 'transaction-unique-1', 'valid ECDSA signature returns transaction ID');
 assert(verified.rewardAmount === 100 && verified.userId === 'player-1', 'verified callback fields are parsed');
 let rejected = false;
-try { await verifyAdMobSsvCallback(makeCallback({ user_id: 'attacker' }), { fetchKeys, nowMs: now }); } catch { rejected = true; }
+const originalCallback = makeCallback();
+const tamperedCallback = originalCallback.replace('user_id=player-1', 'user_id=attacker');
+try { await verifyAdMobSsvCallback(tamperedCallback, { fetchKeys, nowMs: now }); } catch { rejected = true; }
 assert(rejected, 'modified callback payload is rejected');
 rejected = false;
 try { await verifyAdMobSsvCallback(makeCallback(), { fetchKeys: async () => [{ keyId: 456, pem }], nowMs: now }); } catch { rejected = true; }
