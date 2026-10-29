@@ -306,7 +306,7 @@ app.get('/api/health', (_req, res) => {
 // never a userId supplied in the request body. This endpoint exposes no profile data.
 app.get('/api/auth/session', async (req, res) => {
   const authorization = req.header('authorization') || '';
-  const match = authorization.match(/^Bearer\\s+(.+)$/i);
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
   if (!match) {
     return res.status(401).json({ error: 'Firebase ID token is required.', code: 'AUTH_TOKEN_REQUIRED' });
   }
