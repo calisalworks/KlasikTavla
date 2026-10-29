@@ -86,7 +86,7 @@ jobs:
         run: |
           set -euo pipefail
           app_id=$(sed -nE 's/^[[:space:]]*applicationId "([^"]+)"/\1/p' android/app/build.gradle | head -n 1)
-          capacitor_app_id=$(sed -nE "s/^[[:space:]]*appId: '([^']+)'/\\1/p" capacitor.config.ts | head -n 1)
+          capacitor_app_id=$(sed -nE "s/^[[:space:]]*appId: '([^']+)',/\\1/p" capacitor.config.ts | head -n 1)
           min_sdk=$(sed -nE 's/^[[:space:]]*minSdkVersion = ([0-9]+)[[:space:]]*$/\1/p' android/variables.gradle | head -n 1)
           target_sdk=$(sed -nE 's/^[[:space:]]*targetSdkVersion = ([0-9]+)[[:space:]]*$/\1/p' android/variables.gradle | head -n 1)
           test "$app_id" = "com.klasiktavla.app" || { echo "Unexpected Android application ID: $app_id"; exit 1; }
