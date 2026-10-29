@@ -75,6 +75,19 @@ jobs:
         run: bun run build
       - name: Sync Capacitor Android project
         run: bunx cap sync android
+      - name: Verify Android application ID and minimum SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          app_id=$(sed -nE 's/^[[:space:]]*applicationId "([^"]+)"/\1/p' android/app/build.gradle | head -n 1)
+          min_sdk=$(sed -nE 's/^[[:space:]]*minSdkVersion = ([0-9]+)[[:space:]]*$/\1/p' android/variables.gradle | head -n 1)
+          target_sdk=$(sed -nE 's/^[[:space:]]*targetSdkVersion = ([0-9]+)[[:space:]]*$/\1/p' android/variables.gradle | head -n 1)
+          test "$app_id" = "com.klasiktavla.app" || { echo "Unexpected Android application ID: $app_id"; exit 1; }
+          [[ "$min_sdk" =~ ^[0-9]+$ ]] || { echo "Could not read minSdkVersion"; exit 1; }
+          [[ "$target_sdk" =~ ^[0-9]+$ ]] || { echo "Could not read targetSdkVersion"; exit 1; }
+          (( min_sdk >= 24 )) || { echo "minSdkVersion must be at least 24; found $min_sdk"; exit 1; }
+          (( target_sdk >= 35 )) || { echo "targetSdkVersion must be at least 35; found $target_sdk"; exit 1; }
+          echo "Android ID: $app_id; minSdkVersion: $min_sdk; targetSdkVersion: $target_sdk"
       - name: Build debug APK and release AAB
         working-directory: android
         run: bash ./gradlew --no-daemon assembleDebug bundleRelease
