@@ -24,7 +24,7 @@ Bu belge, `release/play-readiness-security` dalındaki yayın öncesi kontrol li
 - [ ] Ödül kayıtlarını kalıcı bir veritabanında sakla; yalnızca istemciden gelen `userId`, `adProof`, jeton miktarı veya ödül sonucuna güvenme.
 - [ ] Firestore kurallarını ve istemci yazma akışını yeniden tasarla: kullanıcı istemcisi kendi jeton bakiyesini, maç istatistiklerini veya ödül defterini doğrudan değiştirememeli; güvenilir yazmalar doğrulanmış sunucu tarafı işlemlerle yapılmalı.
 - [ ] Oyun odası, jeton bakiyesi, giriş ücreti, ödül ve iade işlemlerini sunucuda doğrula. Mevcut HTTP endpoint'lerinin yalnızca log yazıp başarı dönmesi gerçek bakiye yönetimi yerine geçmez.
-- [ ] Üretim API ve WebSocket URL'lerini, HTTPS/WSS kullanımını, ortam değişkenlerini ve sunucunun kalıcı depolama/ölçekleme ayarlarını doğrula.
+- [ ] Üretim API ve WebSocket URL'lerini, HTTPS/WSS kullanımını, ortam değişkenlerini ve sunucunun kalıcı depolama/ölçekleme ayarlarını doğrula. Şu anki CI Android derlemesinde `VITE_WS_SERVER_URL` tanımlanmıyor; bu nedenle üretilen doğrulama APK'sında uzak çevrim içi sunucu adresi yoktur ve Android'de çevrim içi eşleşme çalışması beklenmemelidir. Gerçek HTTPS/WSS sunucu adresi belirlendikten sonra derleme ortamına eklenip yeniden derlenmelidir.
 - [ ] Firebase Android app kaydı, Google sağlayıcısı, SHA-1/SHA-256 imza parmak izleri ve Google ile giriş akışını test et.
 - [ ] Release imzalı AAB üret; Android cihazda reklam, giriş, yatay ekran, çevrim içi eşleşme, bağlantı kopması/yeniden bağlanma ve uygulama yeniden başlatma testlerini yap.
 - [ ] Play Console içerik derecelendirmesi, veri güvenliği formu, reklam beyanı, gizlilik politikası, uygulama erişimi ve mağaza kayıtlarını doldur.
