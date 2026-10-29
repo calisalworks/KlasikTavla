@@ -36,15 +36,22 @@ The temporary economy endpoints deliberately return HTTP 503 outside `NODE_ENV=t
 - Automated tests exercise Firestore rules and the server endpoints; the release AAB is signed with the intended release key before store submission.
 
 
-## PostgreSQL schema groundwork (not yet active)
+## PostgreSQL schema groundwork (staging only; not yet active in the app)
 
-A first schema migration is staged at `migrations/001_coin_ledger.sql`. It defines:
+The migration at `migrations/001_coin_ledger.sql` defines:
 - one authoritative non-negative balance row per Firebase UID;
 - an append-only ledger with constrained transaction types;
 - a per-user unique idempotency key to prevent replayed grants/settlements;
 - optional reference IDs and JSON metadata for audit context.
 
-**Deployment status:** the connected Render workspace currently has no PostgreSQL instance. This migration has not been applied, no database connection is configured, and no production coin endpoint uses this schema. Do not create a database or change billing without explicitly choosing a plan and approving the cost. Next steps are to provision a staging PostgreSQL database, add a server-side PostgreSQL driver/configuration, implement transaction helpers that lock the account row and write balance + ledger atomically, then add integration tests against a real staging database before migrating any live balances.
+**Staging database status (2026-10-29):**
+- A Render PostgreSQL database named `klasik-tavla-ledger-test` was provisioned on the Free plan in Frankfurt, with an expiry date of 2026-11-28.
+- The user connected from a local Windows machine using TLS 1.3.
+- `migrations/001_coin_ledger.sql` was applied manually to this staging database.
+- Verification confirmed the `public.coin_accounts` and `public.coin_ledger` tables exist and both contain zero rows.
+- The database is temporary test infrastructure: it expires after the Render Free-plan period and must not be treated as durable production storage.
+
+**Application integration status:** the app still has no PostgreSQL driver or `DATABASE_URL` configuration, and no economy endpoint reads or writes these tables. The current HTTP 503 guards must remain in place. Do not add staging credentials to source control, client code, logs, or chat. Before code integration, add a server-side PostgreSQL driver and lockfile entry, configure a secret `DATABASE_URL` on the staging server only, implement verified-UID-bound transactions with row locking and idempotency, and test against this staging database. Do not migrate live balances or enable production coin endpoints as part of this staging work.
 
 ## Do not do
 
