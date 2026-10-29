@@ -13,7 +13,7 @@ INSERT INTO public.coin_ledger (
   '__coin_ledger_integrity_test__', 'integrity-valid-fee', 'match_fee', -100, 400, 'integrity-test'
 );
 
-DO $
+DO $$
 BEGIN
   BEGIN
     INSERT INTO public.coin_accounts (firebase_uid, balance)
