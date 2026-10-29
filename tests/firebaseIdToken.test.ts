@@ -43,6 +43,24 @@ async function run(): Promise<void> {
   })) as typeof fetch;
 
   try {
+    let malformedRejected = false;
+    try {
+      await verifyFirebaseIdToken('not-a-jwt');
+    } catch {
+      malformedRejected = true;
+    }
+    assert(malformedRejected, 'rejects malformed token input');
+
+    delete process.env.FIREBASE_PROJECT_ID;
+    let missingConfigRejected = false;
+    try {
+      await verifyFirebaseIdToken(makeToken());
+    } catch {
+      missingConfigRejected = true;
+    }
+    assert(missingConfigRejected, 'fails closed when Firebase project configuration is missing');
+    process.env.FIREBASE_PROJECT_ID = projectId;
+
     const valid = await verifyFirebaseIdToken(makeToken());
     assert(valid.uid === 'test-user-123', 'verifies a correctly signed Firebase ID token and returns its UID');
 
