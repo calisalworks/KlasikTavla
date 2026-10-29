@@ -124,6 +124,17 @@ async function run(): Promise<void> {
       unknownKeyRejected = true;
     }
     assert(unknownKeyRejected, 'rejects tokens signed with an unknown key ID after refreshing Google keys');
+
+    globalThis.fetch = (async () => {
+      throw new Error('Simulated Google signing-key endpoint outage.');
+    }) as typeof fetch;
+    let keyFetchFailureRejected = false;
+    try {
+      await verifyFirebaseIdToken(makeToken({}, 'fetch-failure-key'));
+    } catch {
+      keyFetchFailureRejected = true;
+    }
+    assert(keyFetchFailureRejected, 'fails closed when Google signing keys cannot be fetched');
   } finally {
     globalThis.fetch = originalFetch;
     if (originalProjectId === undefined) delete process.env.FIREBASE_PROJECT_ID;
