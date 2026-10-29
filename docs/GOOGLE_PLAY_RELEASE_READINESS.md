@@ -96,3 +96,10 @@ Bu matristeki mevcut durum notları kod incelemesine dayanır; gerçek saldırı
 - Bu kontrol, AdMob SSV entegrasyonunun tamamlandığını göstermez; yalnızca yapılandırma yokken ödül verilmemesini doğrular.
 - Mevcut `friendRoomAndCoins.test.ts` senaryosunda `NODE_ENV=test` altında kullanılan `proof_...` reklam token'ları test simülasyonudur; Google tarafından imzalanmış reklam kanıtı veya gerçek jeton muhasebesi değildir.
 - Bu yeni test, `bun run test` komutuna eklendi. CI sonucu gelmeden yeni testin geçtiği varsayılmamalıdır.
+
+## Production match-settlement guard
+
+The production server now returns HTTP 503 with `MATCH_SETTLEMENT_NOT_CONFIGURED` for `/api/match/deduct-fee`, `/api/match/award-prize`, and `/api/match/refund-fee` until an authenticated, persistent, server-authoritative coin ledger is implemented. These routes previously could return success-shaped responses without actually changing a trusted balance; the prize route could also return success for a nonexistent room. The production guard runs before request validation or room-state mutation.
+
+The production fail-closed integration test covers all three routes and verifies that they return 503, identify the missing settlement configuration, and do not report a successful deduction, prize, or refund. This intentionally disables these economy actions in production for now; it does not implement the final wallet/ledger system. Test-mode legacy route behavior remains a mock and must not be interpreted as a real coin transaction.
+
