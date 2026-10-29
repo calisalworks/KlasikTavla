@@ -14,6 +14,7 @@ import {
   rollDice,
 } from './src/utils/backgammonLogic.ts';
 import { Die, GameRoom, PlayerColor, RoomPlayer, RoomTierId, TargetScore } from './src/types/game.ts';
+import { verifyFirebaseIdToken } from './src/server/firebaseIdToken.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -299,6 +300,25 @@ app.get('/api/health', (_req, res) => {
     activeRooms: rooms.size,
     connectedClients: clients.size,
   });
+});
+
+// Firebase Authentication session probe. Future economy routes must use the verified UID,
+// never a userId supplied in the request body. This endpoint exposes no profile data.
+app.get('/api/auth/session', async (req, res) => {
+  const authorization = req.header('authorization') || '';
+  const match = authorization.match(/^Bearer\\s+(.+)$/i);
+  if (!match) {
+    return res.status(401).json({ error: 'Firebase ID token is required.', code: 'AUTH_TOKEN_REQUIRED' });
+  }
+  if (!process.env.FIREBASE_PROJECT_ID?.trim()) {
+    return res.status(503).json({ error: 'Firebase server authentication is not configured.', code: 'FIREBASE_AUTH_NOT_CONFIGURED' });
+  }
+  try {
+    const verified = await verifyFirebaseIdToken(match[1].trim());
+    return res.json({ authenticated: true, uid: verified.uid });
+  } catch {
+    return res.status(401).json({ error: 'Firebase ID token is invalid or expired.', code: 'AUTH_TOKEN_INVALID' });
+  }
 });
 
 // REST endpoints for room tiers & matchmaking info
