@@ -9,7 +9,7 @@ android {
     namespace = "com.klasiktavla.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.calisalworks.tersimpistir"
+        applicationId "com.klasiktavla.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
