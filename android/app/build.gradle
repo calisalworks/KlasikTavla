@@ -28,8 +28,8 @@ android {
         }
     }
     signingConfigs {
-        release {
-            if (releaseSigningConfigured) {
+        if (releaseSigningConfigured) {
+            release {
                 storeFile file(releaseStoreFile)
                 storePassword releaseStorePassword
                 keyAlias releaseKeyAlias
