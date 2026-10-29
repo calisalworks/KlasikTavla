@@ -53,6 +53,42 @@ async function run(): Promise<void> {
     assert(body.code === 'ADMOB_SSV_NOT_CONFIGURED', 'response identifies missing AdMob SSV configuration');
     assert(body.success !== true && body.coinsAdded === undefined, 'response grants no client-claimed ad reward');
 
+    const coinSafetyCases = [
+      {
+        path: '/api/coins/status',
+        payload: { userId: 'security-test-user' },
+        code: 'COIN_STATUS_NOT_CONFIGURED',
+        label: 'coin status',
+      },
+      {
+        path: '/api/coins/claim-daily',
+        payload: { userId: 'security-test-user' },
+        code: 'COIN_REWARD_NOT_CONFIGURED',
+        label: 'daily coin reward',
+      },
+    ];
+
+    for (const item of coinSafetyCases) {
+      const coinResponse = await fetch(`${BASE_URL}${item.path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item.payload),
+      });
+      const coinBody = await coinResponse.json() as {
+        code?: string;
+        success?: boolean;
+        coinsAdded?: number;
+        adsRemainingToday?: number;
+      };
+
+      assert(coinResponse.status === 503, `production ${item.label} returns 503 (got ${coinResponse.status})`);
+      assert(coinBody.code === item.code, `production ${item.label} identifies missing trusted coin infrastructure`);
+      assert(
+        coinBody.success !== true && coinBody.coinsAdded === undefined && coinBody.adsRemainingToday === undefined,
+        `production ${item.label} does not report an unverified balance or reward`,
+      );
+    }
+
     const matchSettlementCases = [
       {
         path: '/api/match/deduct-fee',
