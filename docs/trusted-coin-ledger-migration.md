@@ -9,7 +9,7 @@ The temporary economy endpoints deliberately return HTTP 503 outside `NODE_ENV=t
 - Firestore clients can currently create user profiles with arbitrary starting `coins`, stats, trophies, and level.
 - Firestore clients can currently update their own economic fields, including `coins`, `wins`, `losses`, `abandoned`, `trophies`, and `level`.
 - A signed-in user's client can create arbitrary append-only `coinTransactions` documents. Append-only prevents edits, not forged entries.
-- The current Express economy endpoints do not verify Firebase ID tokens and do not persist an authoritative ledger.
+- The current Express economy endpoints do not yet verify Firebase ID tokens and do not persist an authoritative ledger. The client now attaches a fresh Firebase ID token to its five coin/match REST calls when a Firebase user is signed in; guest requests remain unauthenticated. This is transport groundwork only: until the server verifies each token and derives the UID from the verified claims, the body `userId` is not trusted and the production 503 guards must remain.
 - WebSocket player IDs and profile data are client supplied. Never use them as proof of account ownership or a verified match result.
 - AdMob reward claims must be based on a verified server-side verification (SSV) callback, not a client-generated proof string.
 
