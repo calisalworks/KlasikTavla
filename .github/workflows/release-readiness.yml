@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   web-checks:
-    name: TypeScript and web build
+    name: TypeScript, build and integration tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -30,3 +30,25 @@ jobs:
         run: bun run lint
       - name: Build web app
         run: bun run build
+      - name: Start test server
+        env:
+          NODE_ENV: test
+          PORT: 3000
+        run: |
+          bun run dev > /tmp/klasik-tavla-test-server.log 2>&1 &
+          echo $! > /tmp/klasik-tavla-test-server.pid
+          for attempt in $(seq 1 30); do
+            if curl --silent --fail http://localhost:3000/api/health > /dev/null; then
+              echo "Test server is ready."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Test server did not become healthy."
+          cat /tmp/klasik-tavla-test-server.log
+          exit 1
+      - name: Run online game integration tests
+        run: bun run test
+      - name: Show server log on failure
+        if: failure()
+        run: cat /tmp/klasik-tavla-test-server.log || true
