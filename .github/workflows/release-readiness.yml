@@ -98,3 +98,40 @@ jobs:
             android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
           retention-days: 7
+
+  ledger-sql-tests:
+    name: PostgreSQL coin ledger integrity tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: klasiktavla_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d klasiktavla_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: klasiktavla_test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Apply coin ledger schema
+        run: psql -v ON_ERROR_STOP=1 -f migrations/001_coin_ledger.sql
+      - name: Apply ledger integrity guards
+        run: psql -v ON_ERROR_STOP=1 -f migrations/002_coin_ledger_integrity.sql
+      - name: Verify constraints and append-only ledger
+        run: psql -v ON_ERROR_STOP=1 -f tests/coinLedgerIntegrity.test.sql
