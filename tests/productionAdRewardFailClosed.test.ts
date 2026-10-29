@@ -35,6 +35,12 @@ async function run(): Promise<void> {
   try {
     await waitForHealth(serverProcess);
 
+    const unauthenticatedSession = await fetch(`${BASE_URL}/api/auth/session`);
+    const unauthenticatedBody = await unauthenticatedSession.json() as { code?: string; authenticated?: boolean; uid?: string };
+    assert(unauthenticatedSession.status === 401, `session endpoint rejects requests without a bearer token (got ${unauthenticatedSession.status})`);
+    assert(unauthenticatedBody.code === 'AUTH_TOKEN_REQUIRED', 'session endpoint identifies missing Firebase ID token');
+    assert(unauthenticatedBody.authenticated !== true && unauthenticatedBody.uid === undefined, 'session endpoint does not trust an unauthenticated identity');
+
     const response = await fetch(`${BASE_URL}/api/coins/claim-ad`, {
       method: 'POST',
       headers: {
