@@ -25,12 +25,16 @@ async function fetchGoogleKeys(): Promise<AdMobSsvKey[]> {
   return keys;
 }
 
-async function getGoogleKeys(fetchKeys: KeyFetcher): Promise<AdMobSsvKey[]> {
-  if (fetchKeys !== fetchGoogleKeys) return fetchKeys();
-  if (cachedKeys.length && Date.now() - keysFetchedAt < KEY_CACHE_TTL_MS) return cachedKeys;
+async function getGoogleKeys(fetchKeys: KeyFetcher, forceRefresh = false): Promise<AdMobSsvKey[]> {
+  if (!forceRefresh && fetchKeys === fetchGoogleKeys &&
+      cachedKeys.length && Date.now() - keysFetchedAt < KEY_CACHE_TTL_MS) {
+    return cachedKeys;
+  }
   const keys = await fetchKeys();
-  cachedKeys = keys;
-  keysFetchedAt = Date.now();
+  if (fetchKeys === fetchGoogleKeys) {
+    cachedKeys = keys;
+    keysFetchedAt = Date.now();
+  }
   return keys;
 }
 
@@ -52,9 +56,18 @@ export async function verifyAdMobSsvCallback(
   if (!signatureValue || !Number.isSafeInteger(keyId) || keyId <= 0) {
     throw new Error('Missing AdMob SSV signature or key ID');
   }
-  const keys = await getGoogleKeys(options.fetchKeys ?? fetchGoogleKeys);
-  const key = keys.find((candidate) => candidate.keyId === keyId);
+  const fetchKeys = options.fetchKeys ?? fetchGoogleKeys;
+  let keys = await getGoogleKeys(fetchKeys);
+  let key = keys.find((candidate) => candidate.keyId === keyId);
+  if (!key) {
+    // Google can rotate verifier keys before the in-memory cache expires.
+    keys = await getGoogleKeys(fetchKeys, true);
+    key = keys.find((candidate) => candidate.keyId === keyId);
+  }
   if (!key) throw new Error('Unknown AdMob SSV key ID');
+  if (!/^[A-Za-z0-9_-]+$/.test(signatureValue) || signatureValue.length % 4 === 1) {
+    throw new Error('Malformed AdMob SSV signature encoding');
+  }
 
   const signature = Buffer.from(signatureValue.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
   const validSignature = verifySignature('sha256', Buffer.from(signedData, 'utf8'), createPublicKey(key.pem), signature);
