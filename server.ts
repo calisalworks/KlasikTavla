@@ -480,11 +480,21 @@ app.post('/api/coins/claim-daily', (req, res) => {
   });
 });
 
-// 4. Claim Rewarded Ad Coins (Unlimited, validates completion token & adds 100 coins)
+// 4. Claim Rewarded Ad Coins.
+// IMPORTANT: A client-generated token is not proof that Google served a completed ad.
+// Until AdMob Server-Side Verification (SSV) callbacks are implemented and verified,
+// fail closed in production rather than granting coins to forged client requests.
 app.post('/api/coins/claim-ad', (req, res) => {
   const { userId, adProof } = req.body;
   if (!userId) {
     return res.status(400).json({ error: 'userId is required' });
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(503).json({
+      error: 'Reklam ödülleri geçici olarak kullanılamıyor. Güvenli reklam doğrulaması henüz yapılandırılmadı.',
+      code: 'ADMOB_SSV_NOT_CONFIGURED',
+    });
   }
 
   if (!adProof || typeof adProof !== 'string' || adProof.length < 8) {
