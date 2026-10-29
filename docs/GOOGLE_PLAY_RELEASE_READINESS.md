@@ -89,3 +89,10 @@ Bu testler henüz otomatik test olarak uygulanmış veya geçilmiş değildir. B
 - Yeni davranışlar önce test ortamında ve Firestore emulator kurallarıyla doğrulanmalı. Testler geçmeden ekonomik yazma kuralları daraltılmamalı; aksi hâlde eski istemci akışları kırılabilir.
 
 Bu matristeki mevcut durum notları kod incelemesine dayanır; gerçek saldırı testi veya üretim doğrulaması yapıldığı anlamına gelmez.
+
+## Otomatik reklam güvenlik kontrolü
+
+- `tests/productionAdRewardFailClosed.test.ts`, ayrı bir test sunucusunu `NODE_ENV=production` ile başlatır ve SSV yapılandırılmamışken reklam ödülü isteğinin `503 ADMOB_SSV_NOT_CONFIGURED` döndürdüğünü doğrular. Ayrıca `x-test-suite: true` başlığının üretim korumasını aşamadığını kontrol eder.
+- Bu kontrol, AdMob SSV entegrasyonunun tamamlandığını göstermez; yalnızca yapılandırma yokken ödül verilmemesini doğrular.
+- Mevcut `friendRoomAndCoins.test.ts` senaryosunda `NODE_ENV=test` altında kullanılan `proof_...` reklam token'ları test simülasyonudur; Google tarafından imzalanmış reklam kanıtı veya gerçek jeton muhasebesi değildir.
+- Bu yeni test, `bun run test` komutuna eklendi. CI sonucu gelmeden yeni testin geçtiği varsayılmamalıdır.
