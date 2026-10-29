@@ -35,14 +35,15 @@ The temporary economy endpoints deliberately return HTTP 503 outside `NODE_ENV=t
 - All missing-configuration and verification failures fail closed.
 - Automated tests exercise Firestore rules and the server endpoints; the release AAB is signed with the intended release key before store submission.
 
-
 ## PostgreSQL schema groundwork (staging only; not yet active in the app)
 
 The migration at `migrations/001_coin_ledger.sql` defines:
 - one authoritative non-negative balance row per Firebase UID;
-- an append-only ledger with constrained transaction types;
+- a ledger with constrained transaction types;
 - a per-user unique idempotency key to prevent replayed grants/settlements;
 - optional reference IDs and JSON metadata for audit context.
+
+The follow-up migration `migrations/002_coin_ledger_integrity.sql` adds database-side checks for transaction amount direction (fees negative, rewards/refunds positive) and a trigger rejecting ledger-row updates/deletes. Corrections must be recorded as compensating entries. This migration is committed to the release-readiness branch but **has not yet been applied to the staging database**.
 
 **Staging database status (2026-10-29):**
 - A Render PostgreSQL database named `klasik-tavla-ledger-test` was provisioned on the Free plan in Frankfurt, with an expiry date of 2026-11-28.
