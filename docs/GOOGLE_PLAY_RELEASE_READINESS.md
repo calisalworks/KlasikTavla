@@ -97,6 +97,10 @@ Bu matristeki mevcut durum notları kod incelemesine dayanır; gerçek saldırı
 - Mevcut `friendRoomAndCoins.test.ts` senaryosunda `NODE_ENV=test` altında kullanılan `proof_...` reklam token'ları test simülasyonudur; Google tarafından imzalanmış reklam kanıtı veya gerçek jeton muhasebesi değildir.
 - Bu yeni test, `bun run test` komutuna eklendi. CI sonucu gelmeden yeni testin geçtiği varsayılmamalıdır.
 
+### Client-side fail-closed behavior
+
+The client coin service now propagates non-2xx responses and network failures for daily rewards, match entry-fee deductions, prize awards, and refunds instead of continuing to update local profile balances or Firestore after a rejected server request. This is required because a server-side 503 guard is ineffective if the client ignores it and proceeds with its own balance mutation. This change does not make client-written Firestore balances authoritative; Firestore rules and the final server ledger still require a coordinated migration.
+
 ## Production match-settlement guard
 
 The production server now returns HTTP 503 with `COIN_STATUS_NOT_CONFIGURED` for `/api/coins/status`, `COIN_REWARD_NOT_CONFIGURED` for `/api/coins/claim-daily`, and `MATCH_SETTLEMENT_NOT_CONFIGURED` for `/api/match/deduct-fee`, `/api/match/award-prize`, and `/api/match/refund-fee` until an authenticated, persistent, server-authoritative coin ledger is implemented. These routes previously could return success-shaped responses without actually changing a trusted balance; the prize route could also return success for a nonexistent room. The production guard runs before request validation or room-state mutation.
