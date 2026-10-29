@@ -549,13 +549,9 @@ app.post('/api/coins/claim-ad', (req, res) => {
     return res.status(400).json({ error: 'Bu reklam tamamlama kanıtı zaten kullanılmış.' });
   }
 
-  // 2. Prevent rapid-fire automated spamming (minimum 15s between consecutive ads in production)
+  // This mock path is reachable only in NODE_ENV=test. Production and all other
+  // environments fail closed before this test-only in-memory logic is reached.
   const now = Date.now();
-  const isProd = process.env.NODE_ENV === 'production';
-  const isTestBypass = req.headers['x-test-suite'] === 'true';
-  if (isProd && !isTestBypass && userAdRecord.lastClaimTime && now - userAdRecord.lastClaimTime < 15000) {
-    return res.status(429).json({ error: 'Reklam ödülleri arasında lütfen en az 15 saniye bekleyiniz.' });
-  }
 
   userAdRecord.usedTokens.add(adProof);
   userAdRecord.count += 1;
