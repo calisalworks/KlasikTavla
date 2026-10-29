@@ -13,8 +13,41 @@ INSERT INTO public.coin_ledger (
   '__coin_ledger_integrity_test__', 'integrity-valid-fee', 'match_fee', -100, 400, 'integrity-test'
 );
 
-DO $$
+DO $
 BEGIN
+  BEGIN
+    INSERT INTO public.coin_accounts (firebase_uid, balance)
+    VALUES ('__coin_ledger_negative_balance_test__', -1);
+    RAISE EXCEPTION 'Expected the balance constraint to reject a negative account balance.';
+  EXCEPTION
+    WHEN check_violation THEN
+      RAISE NOTICE 'PASS: negative account balance rejected';
+  END;
+
+  BEGIN
+    INSERT INTO public.coin_ledger (
+      firebase_uid, idempotency_key, transaction_type, amount, balance_after
+    ) VALUES (
+      '__coin_ledger_integrity_test__', 'integrity-valid-fee', 'match_fee', -100, 300
+    );
+    RAISE EXCEPTION 'Expected the per-user idempotency constraint to reject a duplicate key.';
+  EXCEPTION
+    WHEN unique_violation THEN
+      RAISE NOTICE 'PASS: duplicate per-user idempotency key rejected';
+  END;
+
+  BEGIN
+    INSERT INTO public.coin_ledger (
+      firebase_uid, idempotency_key, transaction_type, amount, balance_after
+    ) VALUES (
+      '__coin_ledger_integrity_test__', 'integrity-zero-amount', 'match_fee', 0, 400
+    );
+    RAISE EXCEPTION 'Expected the amount constraint to reject a zero-value ledger row.';
+  EXCEPTION
+    WHEN check_violation THEN
+      RAISE NOTICE 'PASS: zero-value ledger entry rejected';
+  END;
+
   BEGIN
     INSERT INTO public.coin_ledger (
       firebase_uid, idempotency_key, transaction_type, amount, balance_after
