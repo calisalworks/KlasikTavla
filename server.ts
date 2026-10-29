@@ -454,6 +454,13 @@ app.get('/api/coins/config', (_req, res) => {
 
 // 2. Query Reward Status
 app.post('/api/coins/status', (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(503).json({
+      error: 'Jeton durumu geçici olarak kullanılamıyor. Kalıcı ve kimliği doğrulanmış jeton defteri henüz yapılandırılmadı.',
+      code: 'COIN_STATUS_NOT_CONFIGURED',
+    });
+  }
+
   const { userId } = req.body;
   if (!userId) {
     return res.status(400).json({ error: 'userId is required' });
@@ -475,6 +482,13 @@ app.post('/api/coins/status', (req, res) => {
 
 // 3. Claim Free Coins (Enforces 6-hour cooldown server-side)
 app.post('/api/coins/claim-daily', (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(503).json({
+      error: 'Ücretsiz jeton ödülü geçici olarak kullanılamıyor. Kalıcı ve kimliği doğrulanmış jeton defteri henüz yapılandırılmadı.',
+      code: 'COIN_REWARD_NOT_CONFIGURED',
+    });
+  }
+
   const { userId } = req.body;
   if (!userId) {
     return res.status(400).json({ error: 'userId is required' });
