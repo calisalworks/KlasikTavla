@@ -1,0 +1,32 @@
+name: Release readiness checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [release/play-readiness-security]
+
+permissions:
+  contents: read
+
+jobs:
+  web-checks:
+    name: TypeScript and web build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: TypeScript check
+        run: bun run lint
+      - name: Build web app
+        run: bun run build
