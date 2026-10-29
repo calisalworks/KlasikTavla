@@ -107,3 +107,6 @@ The production server now returns HTTP 503 with `COIN_STATUS_NOT_CONFIGURED` for
 
 The production fail-closed integration test covers the coin-status and daily-reward routes plus all three match-settlement routes. It verifies that they return 503, identify the missing trusted infrastructure, and do not report a balance, reward, deduction, prize, or refund as completed. This intentionally disables these economy actions in production for now; it does not implement the final wallet/ledger system. Test-mode legacy route behavior remains a mock and must not be interpreted as a real coin transaction.
 
+### Misafir hesabı bakiyesi aktarımı — ledger türü uyumu
+
+`syncUserWithFirestore()` ilk kez oturum açan kullanıcı için `guest_migration` türünde bir `coinTransactions` kaydı oluşturabiliyordu; Firestore kuralındaki izin verilen türler listesinde bu değer yoktu ve kayıt reddediliyordu. Kural listesine `guest_migration` eklendi; bu yalnızca mevcut istemci akışının ledger kaydını yazabilmesini sağlar. **Bu değişiklik bakiyeyi güvenilir hâle getirmez:** istemci hâlâ kendi başlangıç bakiyesini ve ledger kaydını belirleyebiliyor. Güvenli üretim ekonomisi için yukarıdaki sunucu tarafı kimlik doğrulama, kalıcı ledger ve koordineli kural geçişi hâlâ zorunludur.
