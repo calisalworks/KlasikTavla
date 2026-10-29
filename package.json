@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "bun tests/friendRoomAndCoins.test.ts && bun tests/onlineMatchRobustness.test.ts && bun tests/productionAdRewardFailClosed.test.ts"
+    "test": "bun tests/friendRoomAndCoins.test.ts && bun tests/onlineMatchRobustness.test.ts && bun tests/firebaseIdToken.test.ts && bun tests/productionAdRewardFailClosed.test.ts"
   },
   "dependencies": {
     "@capacitor-community/admob": "8.2.1",
