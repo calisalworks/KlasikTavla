@@ -8,12 +8,23 @@ import { handleFirestoreError, OperationType } from './firestoreErrors';
 /** Attach a fresh Firebase ID token to server API calls when the player is signed in.
  * Guest requests intentionally have no bearer token and must never be treated as verified users.
  */
-async function getServerAuthHeaders(): Promise<Record<string, string>> {
+async function getServerAuthHeaders(profile: UserProfile): Promise<Record<string, string>> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   const currentUser = auth.currentUser;
-  if (currentUser) {
+
+  if (profile.isFirebaseUser) {
+    if (!currentUser) {
+      throw new Error('Oturum doğrulanamadı. Lütfen tekrar giriş yapın.');
+    }
+    if (currentUser.uid !== profile.id) {
+      throw new Error('Oturum ile oyuncu hesabı eşleşmiyor. Lütfen tekrar giriş yapın.');
+    }
     headers.Authorization = `Bearer ${await currentUser.getIdToken()}`;
+  } else if (currentUser) {
+    // Do not silently send a signed-in Firebase identity for a guest profile.
+    throw new Error('Misafir hesabı ile oturum açılmış hesap eşleşmiyor. Lütfen hesabınızı yenileyin.');
   }
+
   return headers;
 }
 
@@ -115,7 +126,7 @@ export async function claimDailyCoins(profile: UserProfile): Promise<{
   try {
     const response = await fetch('/api/coins/claim-daily', {
       method: 'POST',
-      headers: await getServerAuthHeaders(),
+      headers: await getServerAuthHeaders(profile),
       body: JSON.stringify({
         userId: profile.id,
         isGuest: !profile.isFirebaseUser,
@@ -214,7 +225,7 @@ export async function claimAdRewardCoins(
   // Call server verification API
   const response = await fetch('/api/coins/claim-ad', {
     method: 'POST',
-    headers: await getServerAuthHeaders(),
+    headers: await getServerAuthHeaders(profile),
     body: JSON.stringify({
       userId: profile.id,
       adProof: adCompletionProof,
@@ -305,7 +316,7 @@ export async function deductMatchEntryFee(
   try {
     const res = await fetch('/api/match/deduct-fee', {
       method: 'POST',
-      headers: await getServerAuthHeaders(),
+      headers: await getServerAuthHeaders(profile),
       body: JSON.stringify({
         userId: profile.id,
         roomId,
@@ -386,7 +397,7 @@ export async function awardMatchPrize(
   try {
     const res = await fetch('/api/match/award-prize', {
       method: 'POST',
-      headers: await getServerAuthHeaders(),
+      headers: await getServerAuthHeaders(profile),
       body: JSON.stringify({
         userId: profile.id,
         roomId,
@@ -473,7 +484,7 @@ export async function refundMatchEntryFee(
 ): Promise<UserProfile> {
   const refundResponse = await fetch('/api/match/refund-fee', {
     method: 'POST',
-    headers: await getServerAuthHeaders(),
+    headers: await getServerAuthHeaders(profile),
     body: JSON.stringify({
       userId: profile.id,
       roomId,
