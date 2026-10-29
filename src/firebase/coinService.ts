@@ -325,7 +325,7 @@ export async function deductMatchEntryFee(
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      if (err.error) throw new Error(err.error);
+      throw new Error(err.error || 'Maç giriş ücreti sunucu tarafından doğrulanamadı.');
     }
   } catch (err) {
     // A failed or unavailable server must never be treated as a successful fee deduction.
@@ -393,7 +393,6 @@ export async function awardMatchPrize(
   tierName: string
 ): Promise<UserProfile> {
   // 1. Check with server to prevent duplicate prize claims
-  let serverValidated = true;
   try {
     const res = await fetch('/api/match/award-prize', {
       method: 'POST',
@@ -406,9 +405,7 @@ export async function awardMatchPrize(
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      if (err.error) {
-        throw new Error(err.error);
-      }
+      throw new Error(err.error || 'Maç ödülü sunucu tarafından doğrulanamadı.');
     }
   } catch (err) {
     // Do not continue to local/Firestore prize updates unless the server accepted the award.
