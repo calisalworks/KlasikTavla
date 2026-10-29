@@ -88,7 +88,7 @@ jobs:
           app_id=$(sed -nE 's/^[[:space:]]*applicationId "([^"]+)"/\1/p' android/app/build.gradle | head -n 1)
           min_sdk=$(sed -nE 's/^[[:space:]]*minSdkVersion = ([0-9]+)[[:space:]]*$/\1/p' android/variables.gradle | head -n 1)
           target_sdk=$(sed -nE 's/^[[:space:]]*targetSdkVersion = ([0-9]+)[[:space:]]*$/\1/p' android/variables.gradle | head -n 1)
-          test "$app_id" = "com.klasiktavla.app" || { echo "Unexpected Android application ID: $app_id"; exit 1; }
+          test "$app_id" = "com.calisalworks.tersimpistir" || { echo "Unexpected Android application ID: $app_id"; exit 1; }
           [[ "$min_sdk" =~ ^[0-9]+$ ]] || { echo "Could not read minSdkVersion"; exit 1; }
           [[ "$target_sdk" =~ ^[0-9]+$ ]] || { echo "Could not read targetSdkVersion"; exit 1; }
           (( min_sdk >= 24 )) || { echo "minSdkVersion must be at least 24; found $min_sdk"; exit 1; }
