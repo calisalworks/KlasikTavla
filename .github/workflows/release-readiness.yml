@@ -54,6 +54,14 @@ jobs:
   android-build:
     name: Android debug APK and release AAB compile
     runs-on: ubuntu-latest
+    # This artifact is explicitly a validation build using Google's sample IDs.
+    # Real Play Store bundles must use production IDs and pass Gradle's release guard.
+    env:
+      ADMOB_AD_MODE: test
+      ADMOB_ANDROID_APP_ID: ca-app-pub-3940256099942544~3347511713
+      VITE_ADMOB_MODE: test
+      VITE_ADMOB_ANDROID_APP_ID: ca-app-pub-3940256099942544~3347511713
+      VITE_ADMOB_REWARDED_AD_UNIT_ID: ca-app-pub-3940256099942544/5224354917
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

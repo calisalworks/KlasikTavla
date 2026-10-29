@@ -6,17 +6,28 @@ import {
   AdMobError,
   AdMobRewardItem,
 } from '@capacitor-community/admob';
+import {
+  GOOGLE_TEST_ADMOB_APP_ID,
+  GOOGLE_TEST_REWARDED_AD_UNIT_ID,
+  resolveAdMobConfig,
+} from './admobConfig';
 
-/**
- * Google Mobile Ads (AdMob) Integration Service
- * Configured with Google's official sample test unit IDs.
- * DO NOT replace with real production AdMob IDs until ready for Play Store release.
- */
+const runtimeAdMobConfig = resolveAdMobConfig({
+  VITE_ADMOB_MODE: import.meta.env.VITE_ADMOB_MODE || (import.meta.env.DEV ? 'test' : 'disabled'),
+  VITE_ADMOB_ANDROID_APP_ID: import.meta.env.VITE_ADMOB_ANDROID_APP_ID,
+  VITE_ADMOB_REWARDED_AD_UNIT_ID: import.meta.env.VITE_ADMOB_REWARDED_AD_UNIT_ID,
+});
+
+/** Runtime-selected AdMob configuration; production never silently falls back to sample IDs. */
 export const ADMOB_CONFIG = {
-  // Google Official Test App ID (Android)
-  TEST_APP_ID: 'ca-app-pub-3940256099942544~3347511713',
-  // Google Official Sample Rewarded Ad Unit ID (Android)
-  TEST_REWARDED_AD_UNIT_ID: 'ca-app-pub-3940256099942544/5224354917',
+  TEST_APP_ID: GOOGLE_TEST_ADMOB_APP_ID,
+  TEST_REWARDED_AD_UNIT_ID: GOOGLE_TEST_REWARDED_AD_UNIT_ID,
+  APP_ID: runtimeAdMobConfig.appId,
+  REWARDED_AD_UNIT_ID: runtimeAdMobConfig.rewardedAdUnitId,
+  mode: runtimeAdMobConfig.mode,
+  enabled: runtimeAdMobConfig.enabled,
+  isTesting: runtimeAdMobConfig.isTesting,
+  errorMessage: runtimeAdMobConfig.errorMessage,
   // Reward amount matching game settings (100 Jeton)
   REWARD_AMOUNT: 100,
 };
@@ -51,14 +62,19 @@ class AdMobService {
       return false;
     }
 
+    if (!ADMOB_CONFIG.enabled) {
+      console.warn('[AdMob] Ads disabled:', ADMOB_CONFIG.errorMessage);
+      return false;
+    }
+
     if (this.isInitialized) {
       return true;
     }
 
     try {
       await AdMob.initialize({
-        testingDevices: ['EMULATOR'],
-        initializeForTesting: true,
+        testingDevices: ADMOB_CONFIG.isTesting ? ['EMULATOR'] : [],
+        initializeForTesting: ADMOB_CONFIG.isTesting,
       });
 
       this.setupEventListeners();
@@ -111,15 +127,25 @@ class AdMobService {
       return { success: false, errorMessage: 'AdMob yalnızca yerel Android uygulamasında çalışır.' };
     }
 
+    if (!ADMOB_CONFIG.enabled) {
+      return {
+        success: false,
+        errorMessage: ADMOB_CONFIG.errorMessage || 'AdMob yapılandırması eksik.',
+      };
+    }
+
     try {
-      await this.initialize();
+      const initialized = await this.initialize();
+      if (!initialized) {
+        return { success: false, errorMessage: ADMOB_CONFIG.errorMessage || 'AdMob başlatılamadı.' };
+      }
       this.isLoading = true;
       this.isAdLoaded = false;
       this.sessionRewarded = false;
 
       await AdMob.prepareRewardVideoAd({
-        adId: ADMOB_CONFIG.TEST_REWARDED_AD_UNIT_ID,
-        isTesting: true,
+        adId: ADMOB_CONFIG.REWARDED_AD_UNIT_ID,
+        isTesting: ADMOB_CONFIG.isTesting,
         ssv: userId ? { userId } : undefined,
       });
 
@@ -149,8 +175,25 @@ class AdMobService {
       };
     }
 
+    if (!ADMOB_CONFIG.enabled) {
+      return {
+        success: false,
+        rewarded: false,
+        rewardAmount: 0,
+        errorMessage: ADMOB_CONFIG.errorMessage || 'AdMob yapılandırması eksik.',
+      };
+    }
+
     try {
-      await this.initialize();
+      const initialized = await this.initialize();
+      if (!initialized) {
+        return {
+          success: false,
+          rewarded: false,
+          rewardAmount: 0,
+          errorMessage: ADMOB_CONFIG.errorMessage || 'AdMob başlatılamadı.',
+        };
+      }
 
       // Ensure ad is prepared if not already
       if (!this.isAdLoaded) {
