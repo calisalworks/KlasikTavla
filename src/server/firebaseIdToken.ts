@@ -112,18 +112,17 @@ function verifyClaimsAndSignature(
     uid.length < 1 ||
     uid.length > 128 ||
     typeof claims.exp !== 'number' ||
-    claims.exp <= now - MAX_CLOCK_SKEW_SECONDS ||
+    claims.exp <= now ||
     typeof claims.iat !== 'number' ||
     claims.iat > now + MAX_CLOCK_SKEW_SECONDS ||
     claims.iat <= 0 ||
     typeof claims.auth_time !== 'number' ||
-    claims.auth_time > now + MAX_CLOCK_SKEW_SECONDS ||
-    typeof claims.email_verified === 'undefined' && claims.firebase === undefined
+    claims.auth_time > now + MAX_CLOCK_SKEW_SECONDS
   ) {
     throw new Error('Firebase ID token claims are invalid or expired.');
   }
 
-  const publicKey = createPublicKey({ key: jwk as JsonWebKey, format: 'jwk' });
+  const publicKey = createPublicKey({ key: jwk as import('node:crypto').JsonWebKey, format: 'jwk' });
   const signedContent = `${parts[0]}.${parts[1]}`;
   const signature = Buffer.from(parts[2], 'base64url');
   if (!verifySignature('RSA-SHA256', Buffer.from(signedContent), publicKey, signature)) {
