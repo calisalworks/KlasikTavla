@@ -316,7 +316,7 @@ app.get('/api/match/tiers', (_req, res) => {
 
 // Match Coin Security: Deduct Entry Fee
 app.post('/api/match/deduct-fee', (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV !== 'test') {
     return res.status(503).json({
       error: 'Maç giriş ücreti işlemleri geçici olarak kullanılamıyor. Güvenli sunucu tarafı jeton defteri henüz yapılandırılmadı.',
       code: 'MATCH_SETTLEMENT_NOT_CONFIGURED',
@@ -334,7 +334,7 @@ app.post('/api/match/deduct-fee', (req, res) => {
 
 // Match Coin Security: Award Match Prize (Server Authoritative & Idempotent)
 app.post('/api/match/award-prize', (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV !== 'test') {
     return res.status(503).json({
       error: 'Maç ödülü işlemleri geçici olarak kullanılamıyor. Güvenli sunucu tarafı jeton defteri henüz yapılandırılmadı.',
       code: 'MATCH_SETTLEMENT_NOT_CONFIGURED',
@@ -360,7 +360,7 @@ app.post('/api/match/award-prize', (req, res) => {
 
 // Match Coin Security: Refund Entry Fee if aborted before start
 app.post('/api/match/refund-fee', (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV !== 'test') {
     return res.status(503).json({
       error: 'Maç ücreti iade işlemleri geçici olarak kullanılamıyor. Güvenli sunucu tarafı jeton defteri henüz yapılandırılmadı.',
       code: 'MATCH_SETTLEMENT_NOT_CONFIGURED',
@@ -454,7 +454,7 @@ app.get('/api/coins/config', (_req, res) => {
 
 // 2. Query Reward Status
 app.post('/api/coins/status', (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV !== 'test') {
     return res.status(503).json({
       error: 'Jeton durumu geçici olarak kullanılamıyor. Kalıcı ve kimliği doğrulanmış jeton defteri henüz yapılandırılmadı.',
       code: 'COIN_STATUS_NOT_CONFIGURED',
@@ -482,7 +482,7 @@ app.post('/api/coins/status', (req, res) => {
 
 // 3. Claim Free Coins (Enforces 6-hour cooldown server-side)
 app.post('/api/coins/claim-daily', (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV !== 'test') {
     return res.status(503).json({
       error: 'Ücretsiz jeton ödülü geçici olarak kullanılamıyor. Kalıcı ve kimliği doğrulanmış jeton defteri henüz yapılandırılmadı.',
       code: 'COIN_REWARD_NOT_CONFIGURED',
@@ -525,7 +525,7 @@ app.post('/api/coins/claim-ad', (req, res) => {
     return res.status(400).json({ error: 'userId is required' });
   }
 
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV !== 'test') {
     return res.status(503).json({
       error: 'Reklam ödülleri geçici olarak kullanılamıyor. Güvenli reklam doğrulaması henüz yapılandırılmadı.',
       code: 'ADMOB_SSV_NOT_CONFIGURED',
