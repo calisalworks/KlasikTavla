@@ -19,9 +19,9 @@ const signingKey = {
   use: 'sig',
 };
 
-function makeToken(overrides: Record<string, unknown> = {}, keyId = 'test-signing-key'): string {
+function makeToken(overrides: Record<string, unknown> = {}, keyId = 'test-signing-key', algorithm = 'RS256'): string {
   const now = Math.floor(Date.now() / 1000);
-  const header = Buffer.from(JSON.stringify({ alg: 'RS256', kid: keyId, typ: 'JWT' })).toString('base64url');
+  const header = Buffer.from(JSON.stringify({ alg: algorithm, kid: keyId, typ: 'JWT' })).toString('base64url');
   const claims = Buffer.from(JSON.stringify({
     iss: `https://securetoken.google.com/${projectId}`,
     aud: projectId,
@@ -50,6 +50,14 @@ async function run(): Promise<void> {
       malformedRejected = true;
     }
     assert(malformedRejected, 'rejects malformed token input');
+
+    let unsupportedAlgorithmRejected = false;
+    try {
+      await verifyFirebaseIdToken(makeToken({}, 'test-signing-key', 'HS256'));
+    } catch {
+      unsupportedAlgorithmRejected = true;
+    }
+    assert(unsupportedAlgorithmRejected, 'rejects tokens that request an unsupported JWT signing algorithm');
 
     delete process.env.FIREBASE_PROJECT_ID;
     let missingConfigRejected = false;
