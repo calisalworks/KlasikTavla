@@ -28,7 +28,7 @@ async function waitForHealth(child: ChildProcess): Promise<void> {
 
 async function run(): Promise<void> {
   serverProcess = spawn('bun', ['run', 'start'], {
-    env: { ...process.env, NODE_ENV: 'production', PORT: String(PORT) },
+    env: { ...process.env, NODE_ENV: 'production', PORT: String(PORT), FIREBASE_PROJECT_ID: 'klassik-tavla-auth-test' },
     stdio: 'ignore',
   });
 
@@ -40,6 +40,14 @@ async function run(): Promise<void> {
     assert(unauthenticatedSession.status === 401, `session endpoint rejects requests without a bearer token (got ${unauthenticatedSession.status})`);
     assert(unauthenticatedBody.code === 'AUTH_TOKEN_REQUIRED', 'session endpoint identifies missing Firebase ID token');
     assert(unauthenticatedBody.authenticated !== true && unauthenticatedBody.uid === undefined, 'session endpoint does not trust an unauthenticated identity');
+
+    const malformedSession = await fetch(`${BASE_URL}/api/auth/session`, {
+      headers: { Authorization: 'Bearer not-a-jwt' },
+    });
+    const malformedSessionBody = await malformedSession.json() as { code?: string; authenticated?: boolean; uid?: string };
+    assert(malformedSession.status === 401, `session endpoint rejects malformed bearer tokens (got ${malformedSession.status})`);
+    assert(malformedSessionBody.code === 'AUTH_TOKEN_INVALID', 'session endpoint identifies malformed Firebase ID token');
+    assert(malformedSessionBody.authenticated !== true && malformedSessionBody.uid === undefined, 'session endpoint never exposes an identity for malformed tokens');
 
     const response = await fetch(`${BASE_URL}/api/coins/claim-ad`, {
       method: 'POST',
