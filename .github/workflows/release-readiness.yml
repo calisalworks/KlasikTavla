@@ -52,3 +52,38 @@ jobs:
       - name: Show server log on failure
         if: failure()
         run: cat /tmp/klasik-tavla-test-server.log || true
+
+  android-build:
+    name: Android debug APK and release AAB compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Install JavaScript dependencies
+        run: bun install --frozen-lockfile
+      - name: Build web app
+        run: bun run build
+      - name: Sync Capacitor Android project
+        run: bunx cap sync android
+      - name: Build debug APK and release AAB
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug bundleRelease
+      - name: Upload Android build outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-validation-builds
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 7
