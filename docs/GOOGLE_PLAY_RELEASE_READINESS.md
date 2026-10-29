@@ -40,3 +40,24 @@ Depoda tanımlı mevcut komutlar:
 - `npm test` — mevcut Bun tabanlı entegrasyon senaryoları; test sunucusunun `localhost:3000` adresinde ayrıca başlatılması gerekebilir.
 
 Bu liste otomatik olarak yayın onayı vermez. CI sonucu, gerçek cihaz testi ve Play Console doğrulamaları ayrıca kontrol edilmelidir.
+
+
+## Jeton ekonomisi — istemci yazma noktaları ve güvenli geçiş sırası
+
+İstemci tarafındaki akış incelemesinde aşağıdaki yazma noktaları tespit edildi:
+
+- `src/firebase/coinService.ts`: ücretsiz ödül, reklam ödülü, maç giriş ücreti, maç ödülü ve iade işlemlerinde hem HTTP endpoint'lerine istek atıyor hem de oturum açılmış kullanıcılar için `users/{uid}` ve `coinTransactions` belgelerini doğrudan güncelliyor. Bazı ağ/HTTP hataları yutulduktan sonra yerel profil bakiyesi yine değiştirilebiliyor. İstemci saatine ve istemcinin verdiği tutarlara güvenilemez.
+- `src/firebase/userService.ts`: kullanıcı oluşturma/senkronizasyonu yanında maç galibiyet/mağlubiyet/terk istatistiklerini ve kupa değişimini doğrudan Firestore'a yazıyor. Yeni kullanıcı oluşturulurken başlangıç bonusu işlem belgesi de istemciden yazılıyor.
+- `src/utils/profileStorage.ts`: jeton ve istatistikler yerel depoda tutuluyor; bu değerler çevrim dışı/konuk deneyimi için gösterim amaçlı olabilir, fakat sunucu açısından güvenilir bakiye veya maç sonucu sayılmamalı.
+- `firestore.rules`: kullanıcı kendi profilindeki ekonomik/statistik alanlarını değiştirebiliyor ve kendi işlem defterine kayıt ekleyebiliyor. Yalnızca istemciyi değiştirmek yeterli olmaz; kurallar da güvenli geçişin parçasıdır.
+
+### Mevcut uygulamayı kırmadan önerilen sıra
+
+1. **Önce test ve sözleşme:** jeton akışları için mevcut davranışı kapsayan testler ekle; başarısız HTTP yanıtı, yinelenen istek, aynı maç için ikinci ödül, yetersiz bakiye ve bağlantı kesilmesi senaryolarını tanımla.
+2. **Kimlik doğrulama:** sunucu, Firebase ID token'ını doğrulayıp UID'yi token'dan çıkarsın. İstemcinin gövdesindeki `userId` kimlik kanıtı sayılmasın. Konuk kullanıcılar için ayrı, açıkça sınırlanmış bir politika belirlenmeden kalıcı ekonomi açılmasın.
+3. **Sunucu tarafı bakiye defteri:** ücret/ödül/iade miktarları istemciden alınmak yerine sunucu yapılandırmasından ve doğrulanmış maç durumundan hesaplansın. Kalıcı depoda idempotency anahtarıyla bakiye ve işlem kaydı tek atomik işlemde yazılsın.
+4. **İstemciyi taşı:** `coinService.ts` ekonomik yazmaları Firestore'dan kaldırıp sunucu API yanıtındaki doğrulanmış bakiyeyi kullansın. İstatistikler/kupalar için de sunucu tarafından doğrulanan maç sonucu API'si oluşturulsun. Yerel profil yalnızca önbellek olarak güncellensin; API başarısızsa ödül/bakiye artışı yapılmasın.
+5. **Kuralları sıkılaştır:** sunucu tarafı akış ve gerekli testler hazırlandıktan sonra kullanıcı istemcisi için `coins`, ödül sayaçları, maç istatistikleri ve `coinTransactions` yazmaları kapatılsın. Profildeki güvenli alanlar (ör. görünen ad/avatar) ayrı izinlerle korunmalı. Kuralları bundan önce daraltmak mevcut uygulamanın giriş ve jeton akışını bozabilir.
+6. **Geçiş ve doğrulama:** eski istemci sürümleri ve mevcut bakiyeler için geçiş politikası belirle; emülatör/entegrasyon testleri, Android cihaz testleri ve kurallar testleri tamamlanmadan üretime taşıma yapma.
+
+**Durum:** Bu adımda yalnızca yazma noktaları ve sıralı geçiş planı belgelendi; uygulama davranışı ve Firestore kuralları değiştirilmedi. Güvenli sunucu kimlik doğrulaması, kalıcı veritabanı ve maç sonucu doğrulaması olmadan jeton ekonomisi üretime hazır değildir.
