@@ -22,6 +22,13 @@ const fetchKeys = async () => [{ keyId: 123, pem }];
 const verified = await verifyAdMobSsvCallback(makeCallback(), { fetchKeys, nowMs: now });
 assert(verified.transactionId === 'transaction-unique-1', 'valid ECDSA signature returns transaction ID');
 assert(verified.rewardAmount === 100 && verified.userId === 'player-1', 'verified callback fields are parsed');
+let keyFetchCount = 0;
+const rotatingKeys = async () => {
+  keyFetchCount += 1;
+  return keyFetchCount === 1 ? [{ keyId: 456, pem }] : [{ keyId: 123, pem }];
+};
+const rotatedKeyResult = await verifyAdMobSsvCallback(makeCallback(), { fetchKeys: rotatingKeys, nowMs: now });
+assert(rotatedKeyResult.transactionId === 'transaction-unique-1' && keyFetchCount === 2, 'unknown key triggers one verifier-key refresh');
 let rejected = false;
 const originalCallback = makeCallback();
 const tamperedCallback = originalCallback.replace('user_id=player-1', 'user_id=attacker');
@@ -36,3 +43,6 @@ assert(rejected, 'stale callback is rejected');
 rejected = false;
 try { await verifyAdMobSsvCallback(makeCallback() + '&extra=bad', { fetchKeys, nowMs: now }); } catch { rejected = true; }
 assert(rejected, 'unexpected parameters after key ID are rejected');
+rejected = false;
+try { await verifyAdMobSsvCallback(makeCallback().replace(/signature=[^&]+/, 'signature=bad!signature'), { fetchKeys, nowMs: now }); } catch { rejected = true; }
+assert(rejected, 'malformed signature encoding is rejected');
