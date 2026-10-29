@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.calisalworks.tersimpistir',
+  appId: 'com.klasiktavla.app',
   appName: 'Klasik Tavla',
   webDir: 'dist',
   server: {
