@@ -9,6 +9,8 @@ Bu belge, `release/play-readiness-security` dalındaki yayın öncesi kontrol li
 - Uygulama Google AdMob test App ID ve test rewarded-ad unit ID kullanıyor.
 - `src/services/admobService.ts` istemci tarafında `proof_...` biçiminde bir token oluşturuyor. Bu token Google tarafından imzalanmış bir reklam tamamlama kanıtı değildir.
 - Sunucunun oda durumu, eşleştirme ve jeton/ödül verileri bellekte tutuluyor; sunucu yeniden başlatıldığında kaybolabilir. Bu, çevrim içi oyun ve ödül ekonomisi için kalıcı veri deposu ve sunucu tarafı yetkilendirme gereksinimini doğurur.
+- `firestore.rules` içindeki mevcut kurallar, oturum açmış kullanıcının kendi `users/{uid}` belgesindeki `coins`, `wins`, `losses`, `trophies` gibi alanları şekil kontrolleri geçtikçe doğrudan değiştirmesine izin veriyor. Kullanıcı kendi `coinTransactions` alt koleksiyonuna da yeni kayıt ekleyebiliyor. Bu nedenle istemci tarafından gönderilen bakiyeler ve işlem kayıtları güvenilir muhasebe kanıtı değildir; üretim öncesi bakiye/ekonomi yazma yetkisi sunucuya taşınmalı ve Firestore kuralları buna göre daraltılmalıdır.
+- Firebase web yapılandırma dosyası istemciye gömülüdür; Firebase web API anahtarı tek başına sunucu sırrı sayılmaz. Güvenlik, uygun Authentication ve Firestore Security Rules ile sağlanmalıdır. Özel servis hesap anahtarları veya diğer sunucu sırları repoya eklenmemelidir.
 - Google ile giriş yapılandırması için Firebase Android uygulaması, imza sertifikası parmak izleri ve `google-services.json` kontrol edilmelidir. Gizli/hesaba özel dosyalar depoya eklenmemelidir.
 
 ## Güvenlik değişikliği
@@ -20,6 +22,7 @@ Bu belge, `release/play-readiness-security` dalındaki yayın öncesi kontrol li
 - [ ] AdMob'da Android uygulaması ve ödüllü reklam birimi oluştur; gerçek kimlikleri yalnızca doğru üretim yapılandırmasına yerleştir.
 - [ ] AdMob SSV callback endpoint'i ekle; Google imzasını, gerekli parametreleri ve tekrar oynatma/idempotency durumunu doğrula.
 - [ ] Ödül kayıtlarını kalıcı bir veritabanında sakla; yalnızca istemciden gelen `userId`, `adProof`, jeton miktarı veya ödül sonucuna güvenme.
+- [ ] Firestore kurallarını ve istemci yazma akışını yeniden tasarla: kullanıcı istemcisi kendi jeton bakiyesini, maç istatistiklerini veya ödül defterini doğrudan değiştirememeli; güvenilir yazmalar doğrulanmış sunucu tarafı işlemlerle yapılmalı.
 - [ ] Oyun odası, jeton bakiyesi, giriş ücreti, ödül ve iade işlemlerini sunucuda doğrula. Mevcut HTTP endpoint'lerinin yalnızca log yazıp başarı dönmesi gerçek bakiye yönetimi yerine geçmez.
 - [ ] Üretim API ve WebSocket URL'lerini, HTTPS/WSS kullanımını, ortam değişkenlerini ve sunucunun kalıcı depolama/ölçekleme ayarlarını doğrula.
 - [ ] Firebase Android app kaydı, Google sağlayıcısı, SHA-1/SHA-256 imza parmak izleri ve Google ile giriş akışını test et.
