@@ -19,9 +19,9 @@ const signingKey = {
   use: 'sig',
 };
 
-function makeToken(overrides: Record<string, unknown> = {}): string {
+function makeToken(overrides: Record<string, unknown> = {}, keyId = 'test-signing-key'): string {
   const now = Math.floor(Date.now() / 1000);
-  const header = Buffer.from(JSON.stringify({ alg: 'RS256', kid: 'test-signing-key', typ: 'JWT' })).toString('base64url');
+  const header = Buffer.from(JSON.stringify({ alg: 'RS256', kid: keyId, typ: 'JWT' })).toString('base64url');
   const claims = Buffer.from(JSON.stringify({
     iss: `https://securetoken.google.com/${projectId}`,
     aud: projectId,
@@ -98,6 +98,32 @@ async function run(): Promise<void> {
       wrongIssuerRejected = true;
     }
     assert(wrongIssuerRejected, 'rejects a token with the wrong issuer');
+
+    const now = Math.floor(Date.now() / 1000);
+    const invalidClaimsCases = [
+      { overrides: { iat: now + 120 }, label: 'rejects a token issued too far in the future' },
+      { overrides: { auth_time: 0 }, label: 'rejects a token with a non-positive authentication time' },
+      { overrides: { auth_time: now + 60 }, label: 'rejects authentication time later than token issue time' },
+      { overrides: { exp: now + 10, iat: now + 20 }, label: 'rejects a token whose expiry precedes issue time' },
+    ];
+
+    for (const item of invalidClaimsCases) {
+      let rejected = false;
+      try {
+        await verifyFirebaseIdToken(makeToken(item.overrides));
+      } catch {
+        rejected = true;
+      }
+      assert(rejected, item.label);
+    }
+
+    let unknownKeyRejected = false;
+    try {
+      await verifyFirebaseIdToken(makeToken({}, 'unknown-signing-key'));
+    } catch {
+      unknownKeyRejected = true;
+    }
+    assert(unknownKeyRejected, 'rejects tokens signed with an unknown key ID after refreshing Google keys');
   } finally {
     globalThis.fetch = originalFetch;
     if (originalProjectId === undefined) delete process.env.FIREBASE_PROJECT_ID;
