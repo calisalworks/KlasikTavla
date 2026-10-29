@@ -316,6 +316,13 @@ app.get('/api/match/tiers', (_req, res) => {
 
 // Match Coin Security: Deduct Entry Fee
 app.post('/api/match/deduct-fee', (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(503).json({
+      error: 'Maç giriş ücreti işlemleri geçici olarak kullanılamıyor. Güvenli sunucu tarafı jeton defteri henüz yapılandırılmadı.',
+      code: 'MATCH_SETTLEMENT_NOT_CONFIGURED',
+    });
+  }
+
   const { userId, roomId, entryFee } = req.body;
   if (!userId || !roomId || typeof entryFee !== 'number') {
     return res.status(400).json({ error: 'Geçersiz parametreler.' });
@@ -327,6 +334,13 @@ app.post('/api/match/deduct-fee', (req, res) => {
 
 // Match Coin Security: Award Match Prize (Server Authoritative & Idempotent)
 app.post('/api/match/award-prize', (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(503).json({
+      error: 'Maç ödülü işlemleri geçici olarak kullanılamıyor. Güvenli sunucu tarafı jeton defteri henüz yapılandırılmadı.',
+      code: 'MATCH_SETTLEMENT_NOT_CONFIGURED',
+    });
+  }
+
   const { userId, roomId, prizeAmount } = req.body;
   if (!userId || !roomId || typeof prizeAmount !== 'number') {
     return res.status(400).json({ error: 'Geçersiz parametreler.' });
@@ -346,6 +360,13 @@ app.post('/api/match/award-prize', (req, res) => {
 
 // Match Coin Security: Refund Entry Fee if aborted before start
 app.post('/api/match/refund-fee', (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(503).json({
+      error: 'Maç ücreti iade işlemleri geçici olarak kullanılamıyor. Güvenli sunucu tarafı jeton defteri henüz yapılandırılmadı.',
+      code: 'MATCH_SETTLEMENT_NOT_CONFIGURED',
+    });
+  }
+
   const { userId, roomId, entryFee } = req.body;
   if (!userId || !roomId) {
     return res.status(400).json({ error: 'Geçersiz parametreler.' });
