@@ -110,3 +110,7 @@ The production fail-closed integration test covers the coin-status and daily-rew
 ### Misafir hesabı bakiyesi aktarımı — ledger türü uyumu
 
 `syncUserWithFirestore()` ilk kez oturum açan kullanıcı için `guest_migration` türünde bir `coinTransactions` kaydı oluşturabiliyordu; Firestore kuralındaki izin verilen türler listesinde bu değer yoktu ve kayıt reddediliyordu. Kural listesine `guest_migration` eklendi; bu yalnızca mevcut istemci akışının ledger kaydını yazabilmesini sağlar. **Bu değişiklik bakiyeyi güvenilir hâle getirmez:** istemci hâlâ kendi başlangıç bakiyesini ve ledger kaydını belirleyebiliyor. Güvenli üretim ekonomisi için yukarıdaki sunucu tarafı kimlik doğrulama, kalıcı ledger ve koordineli kural geçişi hâlâ zorunludur.
+
+### Ek fail-closed koruması: test dışı ortamlar
+
+Jeton durumu, ücretsiz ödül, reklam ödülü ve maç ücret/ödül/iade uçlarındaki geçici ekonomi davranışları artık yalnızca `NODE_ENV=test` iken etkinleşir. `NODE_ENV=production` yanında `development`, değişkenin hiç tanımlanmaması veya beklenmeyen başka bir değer de bu uçlarda 503 ile kapalı kalır. Bu, üretim ortam değişkeninin yanlışlıkla eksik/yanlış ayarlanmasının test amaçlı sahte ekonomi uçlarını açmasını önler. Bu uçların test dışındaki ortamlarda çalışması artık beklenmemelidir; gerçek ekonomi için doğrulanmış kimlik ve kalıcı sunucu ledger'ı hâlâ gereklidir.
