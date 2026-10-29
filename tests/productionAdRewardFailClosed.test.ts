@@ -52,6 +52,49 @@ async function run(): Promise<void> {
     assert(response.status === 503, `production ad claim returns 503 (got ${response.status})`);
     assert(body.code === 'ADMOB_SSV_NOT_CONFIGURED', 'response identifies missing AdMob SSV configuration');
     assert(body.success !== true && body.coinsAdded === undefined, 'response grants no client-claimed ad reward');
+
+    const matchSettlementCases = [
+      {
+        path: '/api/match/deduct-fee',
+        payload: { userId: 'security-test-user', roomId: 'security-test-room', entryFee: 100 },
+        label: 'match entry-fee deduction',
+      },
+      {
+        path: '/api/match/award-prize',
+        payload: { userId: 'security-test-user', roomId: 'security-test-room', prizeAmount: 1000 },
+        label: 'match prize award',
+      },
+      {
+        path: '/api/match/refund-fee',
+        payload: { userId: 'security-test-user', roomId: 'security-test-room', entryFee: 100 },
+        label: 'match entry-fee refund',
+      },
+    ];
+
+    for (const item of matchSettlementCases) {
+      const matchResponse = await fetch(`${BASE_URL}${item.path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item.payload),
+      });
+      const matchBody = await matchResponse.json() as {
+        code?: string;
+        success?: boolean;
+        deducted?: number;
+        prizeAwarded?: number;
+        refunded?: number;
+      };
+
+      assert(matchResponse.status === 503, `production ${item.label} returns 503 (got ${matchResponse.status})`);
+      assert(matchBody.code === 'MATCH_SETTLEMENT_NOT_CONFIGURED', `production ${item.label} identifies missing secure settlement`);
+      assert(
+        matchBody.success !== true
+          && matchBody.deducted === undefined
+          && matchBody.prizeAwarded === undefined
+          && matchBody.refunded === undefined,
+        `production ${item.label} does not claim a completed coin transaction`,
+      );
+    }
   } finally {
     if (serverProcess && serverProcess.exitCode === null) {
       serverProcess.kill('SIGTERM');
