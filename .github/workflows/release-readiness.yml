@@ -1,0 +1,147 @@
+name: Release readiness checks
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  web-checks:
+    name: TypeScript, build and integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: TypeScript check
+        run: bun run lint
+      - name: Build web app
+        run: bun run build
+      - name: Start test server
+        env:
+          NODE_ENV: test
+          PORT: 3000
+        run: |
+          bun run dev > /tmp/klasik-tavla-test-server.log 2>&1 &
+          echo $! > /tmp/klasik-tavla-test-server.pid
+          for attempt in $(seq 1 30); do
+            if curl --silent --fail http://localhost:3000/api/health > /dev/null; then
+              echo "Test server is ready."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Test server did not become healthy."
+          cat /tmp/klasik-tavla-test-server.log
+          exit 1
+      - name: Run online game integration tests
+        run: bun run test
+      - name: Show server log on failure
+        if: failure()
+        run: cat /tmp/klasik-tavla-test-server.log || true
+
+  android-build:
+    name: Android debug APK and release AAB compile
+    runs-on: ubuntu-latest
+    # This artifact is explicitly a validation build using Google's sample IDs.
+    # Real Play Store bundles must use production IDs and pass Gradle's release guard.
+    env:
+      ADMOB_AD_MODE: test
+      ADMOB_ANDROID_APP_ID: ca-app-pub-3940256099942544~3347511713
+      VITE_ADMOB_MODE: test
+      VITE_ADMOB_ANDROID_APP_ID: ca-app-pub-3940256099942544~3347511713
+      VITE_ADMOB_REWARDED_AD_UNIT_ID: ca-app-pub-3940256099942544/5224354917
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Install JavaScript dependencies
+        run: bun install --frozen-lockfile
+      - name: Build web app
+        run: bun run build
+      - name: Sync Capacitor Android project
+        run: bunx cap sync android
+      - name: Verify Android application ID and minimum SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          app_id=$(sed -nE 's/^[[:space:]]*applicationId "([^"]+)"/\1/p' android/app/build.gradle | head -n 1)
+          capacitor_app_id=$(sed -nE "s/^[[:space:]]*appId: '([^']+)',/\\1/p" capacitor.config.ts | head -n 1)
+          min_sdk=$(sed -nE 's/^[[:space:]]*minSdkVersion = ([0-9]+)[[:space:]]*$/\1/p' android/variables.gradle | head -n 1)
+          target_sdk=$(sed -nE 's/^[[:space:]]*targetSdkVersion = ([0-9]+)[[:space:]]*$/\1/p' android/variables.gradle | head -n 1)
+          test "$app_id" = "com.klasiktavla.app" || { echo "Unexpected Android application ID: $app_id"; exit 1; }
+          test "$capacitor_app_id" = "$app_id" || { echo "Capacitor appId ($capacitor_app_id) does not match Android applicationId ($app_id)"; exit 1; }
+          [[ "$min_sdk" =~ ^[0-9]+$ ]] || { echo "Could not read minSdkVersion"; exit 1; }
+          [[ "$target_sdk" =~ ^[0-9]+$ ]] || { echo "Could not read targetSdkVersion"; exit 1; }
+          (( min_sdk >= 24 )) || { echo "minSdkVersion must be at least 24; found $min_sdk"; exit 1; }
+          (( target_sdk >= 35 )) || { echo "targetSdkVersion must be at least 35; found $target_sdk"; exit 1; }
+          echo "Android ID: $app_id; minSdkVersion: $min_sdk; targetSdkVersion: $target_sdk"
+      - name: Build debug APK and release AAB
+        working-directory: android
+        run: bash ./gradlew --no-daemon assembleDebug bundleRelease
+      - name: Upload Android build outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-validation-builds
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 7
+
+  ledger-sql-tests:
+    name: PostgreSQL coin ledger integrity tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: klasiktavla_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d klasiktavla_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: klasiktavla_test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Apply coin ledger schema
+        run: psql -v ON_ERROR_STOP=1 -f migrations/001_coin_ledger.sql
+      - name: Apply ledger integrity guards
+        run: psql -v ON_ERROR_STOP=1 -f migrations/002_coin_ledger_integrity.sql
+      - name: Verify constraints and append-only ledger
+        run: psql -v ON_ERROR_STOP=1 -f tests/coinLedgerIntegrity.test.sql

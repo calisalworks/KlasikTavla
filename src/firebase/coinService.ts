@@ -5,6 +5,29 @@ import { COIN_SETTINGS, getTodayDateString, getTimeUntilNextReset } from '../uti
 import { saveUserProfile, getUserProfile } from '../utils/profileStorage';
 import { handleFirestoreError, OperationType } from './firestoreErrors';
 
+/** Attach a fresh Firebase ID token to server API calls when the player is signed in.
+ * Guest requests intentionally have no bearer token and must never be treated as verified users.
+ */
+async function getServerAuthHeaders(profile: UserProfile): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const currentUser = auth.currentUser;
+
+  if (profile.isFirebaseUser) {
+    if (!currentUser) {
+      throw new Error('Oturum doğrulanamadı. Lütfen tekrar giriş yapın.');
+    }
+    if (currentUser.uid !== profile.id) {
+      throw new Error('Oturum ile oyuncu hesabı eşleşmiyor. Lütfen tekrar giriş yapın.');
+    }
+    headers.Authorization = `Bearer ${await currentUser.getIdToken()}`;
+  } else if (currentUser) {
+    // Do not silently send a signed-in Firebase identity for a guest profile.
+    throw new Error('Misafir hesabı ile oturum açılmış hesap eşleşmiyor. Lütfen hesabınızı yenileyin.');
+  }
+
+  return headers;
+}
+
 export interface CoinRewardStatus {
   canClaimDaily: boolean;
   canClaimFree: boolean;
@@ -103,7 +126,7 @@ export async function claimDailyCoins(profile: UserProfile): Promise<{
   try {
     const response = await fetch('/api/coins/claim-daily', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getServerAuthHeaders(profile),
       body: JSON.stringify({
         userId: profile.id,
         isGuest: !profile.isFirebaseUser,
@@ -113,14 +136,11 @@ export async function claimDailyCoins(profile: UserProfile): Promise<{
 
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
-      if (errData.error) {
-        throw new Error(errData.error);
-      }
+      throw new Error(errData.error || 'Ücretsiz jeton ödülü doğrulanamadı.');
     }
-  } catch (err: any) {
-    if (err.message && err.message.includes('dakika sonra')) {
-      throw err;
-    }
+  } catch (err) {
+    // Never grant a local reward when the server cannot confirm the claim.
+    throw err instanceof Error ? err : new Error('Ücretsiz jeton ödülü doğrulanamadı.');
   }
 
   const newCoins = (profile.coins ?? COIN_SETTINGS.INITIAL_STARTING_COINS) + rewardAmount;
@@ -205,7 +225,7 @@ export async function claimAdRewardCoins(
   // Call server verification API
   const response = await fetch('/api/coins/claim-ad', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: await getServerAuthHeaders(profile),
     body: JSON.stringify({
       userId: profile.id,
       adProof: adCompletionProof,
@@ -296,7 +316,7 @@ export async function deductMatchEntryFee(
   try {
     const res = await fetch('/api/match/deduct-fee', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getServerAuthHeaders(profile),
       body: JSON.stringify({
         userId: profile.id,
         roomId,
@@ -305,10 +325,11 @@ export async function deductMatchEntryFee(
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      if (err.error) throw new Error(err.error);
+      throw new Error(err.error || 'Maç giriş ücreti sunucu tarafından doğrulanamadı.');
     }
-  } catch (err: any) {
-    if (err.message && err.message.includes('Yetersiz')) throw err;
+  } catch (err) {
+    // A failed or unavailable server must never be treated as a successful fee deduction.
+    throw err instanceof Error ? err : new Error('Maç giriş ücreti sunucu tarafından doğrulanamadı.');
   }
 
   const finalCoins = Math.max(0, currentCoins - entryFee);
@@ -372,11 +393,10 @@ export async function awardMatchPrize(
   tierName: string
 ): Promise<UserProfile> {
   // 1. Check with server to prevent duplicate prize claims
-  let serverValidated = true;
   try {
     const res = await fetch('/api/match/award-prize', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getServerAuthHeaders(profile),
       body: JSON.stringify({
         userId: profile.id,
         roomId,
@@ -385,14 +405,11 @@ export async function awardMatchPrize(
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      if (err.error) {
-        throw new Error(err.error);
-      }
+      throw new Error(err.error || 'Maç ödülü sunucu tarafından doğrulanamadı.');
     }
-  } catch (err: any) {
-    if (err.message && err.message.includes('zaten')) {
-      throw err;
-    }
+  } catch (err) {
+    // Do not continue to local/Firestore prize updates unless the server accepted the award.
+    throw err instanceof Error ? err : new Error('Maç ödülü sunucu tarafından doğrulanamadı.');
   }
 
   const currentCoins = profile.coins ?? COIN_SETTINGS.INITIAL_STARTING_COINS;
@@ -462,18 +479,18 @@ export async function refundMatchEntryFee(
   roomId: string,
   tierName: string
 ): Promise<UserProfile> {
-  try {
-    await fetch('/api/match/refund-fee', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: profile.id,
-        roomId,
-        entryFee,
-      }),
-    });
-  } catch {
-    // network fallback
+  const refundResponse = await fetch('/api/match/refund-fee', {
+    method: 'POST',
+    headers: await getServerAuthHeaders(profile),
+    body: JSON.stringify({
+      userId: profile.id,
+      roomId,
+      entryFee,
+    }),
+  });
+  if (!refundResponse.ok) {
+    const err = await refundResponse.json().catch(() => ({}));
+    throw new Error(err.error || 'Maç ücreti iadesi sunucu tarafından doğrulanamadı.');
   }
 
   const currentCoins = profile.coins ?? COIN_SETTINGS.INITIAL_STARTING_COINS;

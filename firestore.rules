@@ -33,7 +33,7 @@ service cloud.firestore {
     function isValidCoinTransaction(data, userId, txId) {
       return data.id == txId &&
         data.userId == userId &&
-        data.type in ['initial_bonus', 'daily_reward', 'ad_reward', 'match_fee', 'match_reward', 'match_refund'] &&
+        data.type in ['initial_bonus', 'guest_migration', 'daily_reward', 'ad_reward', 'match_fee', 'match_reward', 'match_refund'] &&
         data.amount is number &&
         data.balanceAfter is number &&
         data.balanceAfter >= 0 &&

@@ -1,5 +1,15 @@
 apply plugin: 'com.android.application'
 
+def testAdMobAppId = "ca-app-pub-3940256099942544~3347511713"
+def testRewardedAdUnitId = "ca-app-pub-3940256099942544/5224354917"
+def admobMode = System.getenv("ADMOB_AD_MODE") ?: "disabled"
+def admobAppId = System.getenv("ADMOB_ANDROID_APP_ID") ?: (admobMode == "test" ? testAdMobAppId : "")
+def releaseStoreFile = System.getenv("ANDROID_KEYSTORE_PATH") ?: ""
+def releaseStorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
+def releaseKeyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: ""
+def releaseKeyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: ""
+def releaseSigningConfigured = [releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword].every { !it.trim().isEmpty() }
+
 android {
     namespace = "com.klasiktavla.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +17,9 @@ android {
         applicationId "com.klasiktavla.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode = (System.getenv("PLAY_VERSION_CODE") ?: "1").toInteger()
+        versionName = System.getenv("PLAY_VERSION_NAME") ?: "1.0"
+        manifestPlaceholders = [admobApplicationId: admobAppId]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,12 +27,50 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (releaseSigningConfigured) {
+            release {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
+            if (releaseSigningConfigured) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+}
+
+// A release bundle must be explicitly built in test mode or with real production IDs.
+tasks.register("verifyAdMobReleaseConfig") {
+    doLast {
+        if (admobMode == "test") {
+            if (admobAppId != testAdMobAppId ||
+                (System.getenv("VITE_ADMOB_REWARDED_AD_UNIT_ID") ?: testRewardedAdUnitId) != testRewardedAdUnitId) {
+                throw new GradleException("Test mode must use Google's official sample AdMob IDs.")
+            }
+            return
+        }
+
+        def rewardedUnitId = System.getenv("VITE_ADMOB_REWARDED_AD_UNIT_ID") ?: ""
+        def appId = System.getenv("ADMOB_ANDROID_APP_ID") ?: ""
+        def validAppId = appId.startsWith("ca-app-pub-") && appId.contains("~") && !appId.contains("/")
+        def validRewardedUnit = rewardedUnitId.startsWith("ca-app-pub-") && rewardedUnitId.contains("/") && !rewardedUnitId.contains("~")
+        if (admobMode != "production" || !validAppId || !validRewardedUnit ||
+            appId == testAdMobAppId || rewardedUnitId == testRewardedAdUnitId) {
+            throw new GradleException("Release AAB requires ADMOB_AD_MODE=production and real ADMOB_ANDROID_APP_ID / VITE_ADMOB_REWARDED_AD_UNIT_ID values. Use ADMOB_AD_MODE=test only for validation builds.")
+        }
+    }
+}
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    dependsOn tasks.named("verifyAdMobReleaseConfig")
 }
 
 repositories {

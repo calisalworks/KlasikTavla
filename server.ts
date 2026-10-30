@@ -14,6 +14,7 @@ import {
   rollDice,
 } from './src/utils/backgammonLogic.ts';
 import { Die, GameRoom, PlayerColor, RoomPlayer, RoomTierId, TargetScore } from './src/types/game.ts';
+import { verifyFirebaseIdToken } from './src/server/firebaseIdToken.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -301,6 +302,25 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// Firebase Authentication session probe. Future economy routes must use the verified UID,
+// never a userId supplied in the request body. This endpoint exposes no profile data.
+app.get('/api/auth/session', async (req, res) => {
+  const authorization = req.header('authorization') || '';
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  if (!match) {
+    return res.status(401).json({ error: 'Firebase ID token is required.', code: 'AUTH_TOKEN_REQUIRED' });
+  }
+  if (!process.env.FIREBASE_PROJECT_ID?.trim()) {
+    return res.status(503).json({ error: 'Firebase server authentication is not configured.', code: 'FIREBASE_AUTH_NOT_CONFIGURED' });
+  }
+  try {
+    const verified = await verifyFirebaseIdToken(match[1].trim());
+    return res.json({ authenticated: true, uid: verified.uid });
+  } catch {
+    return res.status(401).json({ error: 'Firebase ID token is invalid or expired.', code: 'AUTH_TOKEN_INVALID' });
+  }
+});
+
 // REST endpoints for room tiers & matchmaking info
 app.get('/api/match/tiers', (_req, res) => {
   res.json({
@@ -316,6 +336,13 @@ app.get('/api/match/tiers', (_req, res) => {
 
 // Match Coin Security: Deduct Entry Fee
 app.post('/api/match/deduct-fee', (req, res) => {
+  if (process.env.NODE_ENV !== 'test') {
+    return res.status(503).json({
+      error: 'Maç giriş ücreti işlemleri geçici olarak kullanılamıyor. Güvenli sunucu tarafı jeton defteri henüz yapılandırılmadı.',
+      code: 'MATCH_SETTLEMENT_NOT_CONFIGURED',
+    });
+  }
+
   const { userId, roomId, entryFee } = req.body;
   if (!userId || !roomId || typeof entryFee !== 'number') {
     return res.status(400).json({ error: 'Geçersiz parametreler.' });
@@ -327,6 +354,13 @@ app.post('/api/match/deduct-fee', (req, res) => {
 
 // Match Coin Security: Award Match Prize (Server Authoritative & Idempotent)
 app.post('/api/match/award-prize', (req, res) => {
+  if (process.env.NODE_ENV !== 'test') {
+    return res.status(503).json({
+      error: 'Maç ödülü işlemleri geçici olarak kullanılamıyor. Güvenli sunucu tarafı jeton defteri henüz yapılandırılmadı.',
+      code: 'MATCH_SETTLEMENT_NOT_CONFIGURED',
+    });
+  }
+
   const { userId, roomId, prizeAmount } = req.body;
   if (!userId || !roomId || typeof prizeAmount !== 'number') {
     return res.status(400).json({ error: 'Geçersiz parametreler.' });
@@ -346,6 +380,13 @@ app.post('/api/match/award-prize', (req, res) => {
 
 // Match Coin Security: Refund Entry Fee if aborted before start
 app.post('/api/match/refund-fee', (req, res) => {
+  if (process.env.NODE_ENV !== 'test') {
+    return res.status(503).json({
+      error: 'Maç ücreti iade işlemleri geçici olarak kullanılamıyor. Güvenli sunucu tarafı jeton defteri henüz yapılandırılmadı.',
+      code: 'MATCH_SETTLEMENT_NOT_CONFIGURED',
+    });
+  }
+
   const { userId, roomId, entryFee } = req.body;
   if (!userId || !roomId) {
     return res.status(400).json({ error: 'Geçersiz parametreler.' });
@@ -433,6 +474,13 @@ app.get('/api/coins/config', (_req, res) => {
 
 // 2. Query Reward Status
 app.post('/api/coins/status', (req, res) => {
+  if (process.env.NODE_ENV !== 'test') {
+    return res.status(503).json({
+      error: 'Jeton durumu geçici olarak kullanılamıyor. Kalıcı ve kimliği doğrulanmış jeton defteri henüz yapılandırılmadı.',
+      code: 'COIN_STATUS_NOT_CONFIGURED',
+    });
+  }
+
   const { userId } = req.body;
   if (!userId) {
     return res.status(400).json({ error: 'userId is required' });
@@ -454,6 +502,13 @@ app.post('/api/coins/status', (req, res) => {
 
 // 3. Claim Free Coins (Enforces 6-hour cooldown server-side)
 app.post('/api/coins/claim-daily', (req, res) => {
+  if (process.env.NODE_ENV !== 'test') {
+    return res.status(503).json({
+      error: 'Ücretsiz jeton ödülü geçici olarak kullanılamıyor. Kalıcı ve kimliği doğrulanmış jeton defteri henüz yapılandırılmadı.',
+      code: 'COIN_REWARD_NOT_CONFIGURED',
+    });
+  }
+
   const { userId } = req.body;
   if (!userId) {
     return res.status(400).json({ error: 'userId is required' });
@@ -480,11 +535,21 @@ app.post('/api/coins/claim-daily', (req, res) => {
   });
 });
 
-// 4. Claim Rewarded Ad Coins (Unlimited, validates completion token & adds 100 coins)
+// 4. Claim Rewarded Ad Coins.
+// IMPORTANT: A client-generated token is not proof that Google served a completed ad.
+// Until AdMob Server-Side Verification (SSV) callbacks are implemented and verified,
+// fail closed in production rather than granting coins to forged client requests.
 app.post('/api/coins/claim-ad', (req, res) => {
   const { userId, adProof } = req.body;
   if (!userId) {
     return res.status(400).json({ error: 'userId is required' });
+  }
+
+  if (process.env.NODE_ENV !== 'test') {
+    return res.status(503).json({
+      error: 'Reklam ödülleri geçici olarak kullanılamıyor. Güvenli reklam doğrulaması henüz yapılandırılmadı.',
+      code: 'ADMOB_SSV_NOT_CONFIGURED',
+    });
   }
 
   if (!adProof || typeof adProof !== 'string' || adProof.length < 8) {
@@ -504,13 +569,9 @@ app.post('/api/coins/claim-ad', (req, res) => {
     return res.status(400).json({ error: 'Bu reklam tamamlama kanıtı zaten kullanılmış.' });
   }
 
-  // 2. Prevent rapid-fire automated spamming (minimum 15s between consecutive ads in production)
+  // This mock path is reachable only in NODE_ENV=test. Production and all other
+  // environments fail closed before this test-only in-memory logic is reached.
   const now = Date.now();
-  const isProd = process.env.NODE_ENV === 'production';
-  const isTestBypass = req.headers['x-test-suite'] === 'true';
-  if (isProd && !isTestBypass && userAdRecord.lastClaimTime && now - userAdRecord.lastClaimTime < 15000) {
-    return res.status(429).json({ error: 'Reklam ödülleri arasında lütfen en az 15 saniye bekleyiniz.' });
-  }
 
   userAdRecord.usedTokens.add(adProof);
   userAdRecord.count += 1;
