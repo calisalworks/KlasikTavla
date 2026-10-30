@@ -17,8 +17,8 @@ android {
         applicationId "com.klasiktavla.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode (System.getenv("PLAY_VERSION_CODE") ?: "1").toInteger()
-        versionName System.getenv("PLAY_VERSION_NAME") ?: "1.0"
+        versionCode = (System.getenv("PLAY_VERSION_CODE") ?: "1").toInteger()
+        versionName = System.getenv("PLAY_VERSION_NAME") ?: "1.0"
         manifestPlaceholders = [admobApplicationId: admobAppId]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
