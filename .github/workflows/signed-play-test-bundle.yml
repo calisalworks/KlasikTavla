@@ -1,0 +1,123 @@
+name: Signed Google Play closed-test bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: "Play Console'daki mevcut en yüksek versionCode değerinden büyük pozitif tam sayı"
+        required: true
+        type: string
+      version_name:
+        description: "Test sürüm adı (ör. 1.0.1)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  signed-test-bundle:
+    name: Build and verify signed closed-test AAB
+    runs-on: ubuntu-latest
+    env:
+      # This workflow is only for closed testing; Google sample ad IDs are intentional.
+      ADMOB_AD_MODE: test
+      ADMOB_ANDROID_APP_ID: ca-app-pub-3940256099942544~3347511713
+      VITE_ADMOB_MODE: test
+      VITE_ADMOB_ANDROID_APP_ID: ca-app-pub-3940256099942544~3347511713
+      VITE_ADMOB_REWARDED_AD_UNIT_ID: ca-app-pub-3940256099942544/5224354917
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      PLAY_VERSION_CODE: ${{ inputs.version_code }}
+      PLAY_VERSION_NAME: ${{ inputs.version_name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate signing secrets and version
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing required GitHub Actions secret: $name"
+              exit 1
+            fi
+          done
+          [[ "$PLAY_VERSION_CODE" =~ ^[1-9][0-9]*$ ]] || { echo "::error::version_code must be a positive integer"; exit 1; }
+          (( PLAY_VERSION_CODE <= 2100000000 )) || { echo "::error::version_code is too large"; exit 1; }
+          [[ "$PLAY_VERSION_NAME" =~ ^[0-9A-Za-z][0-9A-Za-z._+-]{0,49}$ ]] || { echo "::error::version_name contains unsupported characters"; exit 1; }
+
+      - name: Decode upload keystore securely
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/klasik-tavla-upload.jks"
+          test -s "$RUNNER_TEMP/klasik-tavla-upload.jks"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/klasik-tavla-upload.jks" >> "$GITHUB_ENV"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build web app
+        run: bun run build
+
+      - name: Sync Capacitor Android project
+        run: bunx cap sync android
+
+      - name: Verify application identity and Android requirements
+        shell: bash
+        run: |
+          set -euo pipefail
+          app_id=$(sed -nE 's/^[[:space:]]*applicationId "([^"]+)"/\1/p' android/app/build.gradle | head -n 1)
+          capacitor_app_id=$(sed -nE "s/^[[:space:]]*appId: '([^']+)',/\1/p" capacitor.config.ts | head -n 1)
+          min_sdk=$(sed -nE 's/^[[:space:]]*minSdkVersion = ([0-9]+)[[:space:]]*$/\1/p' android/variables.gradle | head -n 1)
+          target_sdk=$(sed -nE 's/^[[:space:]]*targetSdkVersion = ([0-9]+)[[:space:]]*$/\1/p' android/variables.gradle | head -n 1)
+          test "$app_id" = "com.klasiktavla.app" || { echo "::error::Unexpected application ID: $app_id"; exit 1; }
+          test "$capacitor_app_id" = "$app_id" || { echo "::error::Capacitor ID mismatch"; exit 1; }
+          [[ "$min_sdk" =~ ^[0-9]+$ ]] && (( min_sdk >= 24 )) || { echo "::error::Invalid minimum SDK"; exit 1; }
+          [[ "$target_sdk" =~ ^[0-9]+$ ]] && (( target_sdk >= 35 )) || { echo "::error::Target SDK must be at least 35"; exit 1; }
+          echo "Package ID: $app_id; versionCode: $PLAY_VERSION_CODE; versionName: $PLAY_VERSION_NAME"
+
+      - name: Build signed release AAB
+        working-directory: android
+        run: bash ./gradlew --no-daemon bundleRelease
+
+      - name: Verify AAB signature
+        shell: bash
+        run: |
+          set -euo pipefail
+          bundle="android/app/build/outputs/bundle/release/app-release.aab"
+          test -s "$bundle"
+          jarsigner -verify -verbose -certs "$bundle" > "$RUNNER_TEMP/aab-signature-check.txt"
+          grep -q 'jar verified' "$RUNNER_TEMP/aab-signature-check.txt" || { cat "$RUNNER_TEMP/aab-signature-check.txt"; echo "::error::AAB signature verification did not report success"; exit 1; }
+          keytool -printcert -jarfile "$bundle"
+
+      - name: Upload signed test bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: klasik-tavla-signed-play-test-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Remove temporary keystore
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/klasik-tavla-upload.jks"
