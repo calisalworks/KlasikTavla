@@ -115,7 +115,9 @@ jobs:
           set -euo pipefail
           apk="android/app/build/outputs/apk/release/app-release.apk"
           test -s "$apk"
-          apksigner verify --verbose --print-certs "$apk"
+          apksigner="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          test -x "$apksigner"
+          "$apksigner" verify --verbose --print-certs "$apk"
 
       - name: Upload signed test APK and bundle
         uses: actions/upload-artifact@v4
