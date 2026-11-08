@@ -242,8 +242,9 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           }
 
           // Table border bounds (keep dice inside central playing area)
-          const maxX = 120;
-          const maxY = 55;
+          // Keep the dice within the visible right-side tray while allowing natural scatter.
+          const maxX = 52;
+          const maxY = 34;
           if (x < -maxX) {
             x = -maxX;
             vx = -vx * 0.5;
@@ -445,9 +446,9 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
               return (
                 <div
                   key={i}
-                  className="absolute"
+                  className="absolute left-1/2 top-1/2"
                   style={{
-                    transform: `translate3d(${st.x}px, ${st.y}px, 0)`,
+                    transform: `translate3d(${st.x}px, ${st.y}px, 0) translate(-50%, -50%)`,
                   }}
                 >
                   {render3DCube(
