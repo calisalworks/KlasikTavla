@@ -178,7 +178,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     if (resultDice.length === 0 || current.length === 0) return;
 
     const startedAt = performance.now();
-    const duration = 420;
+    const duration = 900;
     const starts = current.map((st, i) => {
       const value = resultDice[i]?.value || 1;
       const target = FACE_ROTATIONS[value] || { rx: 0, ry: 0 };
@@ -196,8 +196,8 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     let frame = 0;
     const finishRoll = (time: number) => {
       const progress = Math.min(1, (time - startedAt) / duration);
-      // A single quick deceleration; no secondary CSS transition or wobble.
-      const eased = 1 - Math.pow(1 - progress, 4);
+      // Smooth, longer deceleration into the final face without a secondary wobble.
+      const eased = 1 - Math.pow(1 - progress, 3);
       setPhysicsStates(starts.map(({ state, value, endX, endY, endZ }) => ({
         ...state,
         x: state.x,
@@ -540,10 +540,10 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
                   {render3DCube(
                     isRolling ? st.displayValue : targetValue,
                     isRolling ? false : (die?.used ?? false),
-                    isRolling ? st.rotX : targetRot.rx,
-                    isRolling ? st.rotY : targetRot.ry,
-                    isRolling ? st.rotZ : 0,
-                    isRolling ? st.z : 0
+                    st.rotX,
+                    st.rotY,
+                    st.rotZ,
+                    st.z
                   )}
                 </div>
               );
