@@ -89,7 +89,8 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
   // Trigger physics impulse when isRolling starts
   useEffect(() => {
     if (isRolling) {
-      const count = Math.max(dice.length, 2);
+      // Backgammon uses two physical dice; doubles grant four moves, not four visible dice.
+      const count = 2;
       const newStates: PhysicsDieState[] = [];
 
       for (let i = 0; i < count; i++) {
@@ -139,7 +140,8 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             y: st.y,
             rotX: targetRot.rx,
             rotY: targetRot.ry,
-            rotZ: (i * 12 - 6) % 15,
+            // Preserve the final physical spin angle as well as the landing position.
+            rotZ: st.rotZ,
             vRotX: 0,
             vRotY: 0,
             vRotZ: 0,
@@ -433,10 +435,14 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
               : ''
           }`}
         >
-          {isRolling ? (
-            /* Rolling Physics Stage */
-            <div className="relative w-40 h-28 flex items-center justify-center">
-              {physicsStates.map((st, i) => (
+          {/* Keep one identical stage and the same two physical dice before, during and after the roll. */}
+          <div className="relative w-40 h-28">
+            {physicsStates.map((st, i) => {
+              const die = dice[i];
+              const targetValue = die?.value ?? st.displayValue;
+              const targetRot = FACE_ROTATIONS[targetValue] || { rx: 0, ry: 0 };
+
+              return (
                 <div
                   key={i}
                   className="absolute"
@@ -445,55 +451,26 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
                   }}
                 >
                   {render3DCube(
-                    st.displayValue,
-                    false,
-                    st.rotX,
-                    st.rotY,
+                    isRolling ? st.displayValue : targetValue,
+                    isRolling ? false : (die?.used ?? false),
+                    isRolling ? st.rotX : targetRot.rx,
+                    isRolling ? st.rotY : targetRot.ry,
                     st.rotZ,
-                    st.z,
-                    false
+                    isRolling ? st.z : 0,
+                    !isRolling
                   )}
                 </div>
-              ))}
-            </div>
-          ) : (
-            /* Keep rendering the same physical dice at their landing positions. */
-            <div className="relative w-40 h-28">
-              {dice.map((die, index) => {
-                const state = physicsStates[index];
-                const targetRot = FACE_ROTATIONS[die.value] || { rx: 0, ry: 0 };
-                const fallbackX = (index - (dice.length - 1) / 2) * 40;
-
-                return (
-                  <div
-                    key={die.id || index}
-                    className="absolute"
-                    style={{
-                      transform: `translate3d(${state?.x ?? fallbackX}px, ${state?.y ?? 0}px, 0)`,
-                    }}
-                  >
-                    {render3DCube(
-                      die.value,
-                      die.used,
-                      state?.rotX ?? targetRot.rx,
-                      state?.rotY ?? targetRot.ry,
-                      state?.rotZ ?? 0,
-                      0,
-                      true
-                    )}
-                  </div>
-                );
-              })}
-              {canRoll && (
-                <button
-                  onClick={onRollClick}
-                  className="pointer-events-auto absolute -right-14 top-1/2 -translate-y-1/2 ml-1 px-3 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-600 text-amber-100 text-xs font-bold border border-amber-500/50 shadow cursor-pointer transition-colors"
-                >
-                  Yeniden
-                </button>
-              )}
-            </div>
-          )}
+              );
+            })}
+            {!isRolling && canRoll && (
+              <button
+                onClick={onRollClick}
+                className="pointer-events-auto absolute -right-14 top-1/2 -translate-y-1/2 ml-1 px-3 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-600 text-amber-100 text-xs font-bold border border-amber-500/50 shadow cursor-pointer transition-colors"
+              >
+                Yeniden
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
