@@ -1576,7 +1576,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
 
             {/* Floating Live 3D Physics Dice - Positioned in the Right Tray to prevent covering middle bar checkers */}
             <div className="absolute inset-y-0 right-0 w-1/2 pointer-events-none flex flex-col items-center justify-center z-30">
-              <div className="pointer-events-auto pr-8 flex flex-col items-center">
+              <div className="pointer-events-auto translate-x-4 flex flex-col items-center">
                 {/* 15-Second Turn Countdown Badge on top of the thrown dice */}
                 {turnSecondsLeft !== null && isMyTurn && room.dice.length > 0 && room.dice.some((d) => !d.used) && !room.winnerInfo && (
                   <div
