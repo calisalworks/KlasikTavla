@@ -390,8 +390,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     rotX: number,
     rotY: number,
     rotZ: number,
-    zHeight: number,
-    isSettled: boolean
+    zHeight: number
   ) => {
     const size = 28; // 28px compact dice size
     const half = size / 2;
