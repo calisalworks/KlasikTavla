@@ -31,10 +31,10 @@ interface PhysicsDieState {
 // Front: 1, Back: 6, Right: 3, Left: 4, Top: 2, Bottom: 5
 const FACE_ROTATIONS: Record<number, { rx: number; ry: number }> = {
   1: { rx: 0, ry: 0 },
-  2: { rx: 90, ry: 0 },
+  2: { rx: -90, ry: 0 },
   3: { rx: 0, ry: -90 },
   4: { rx: 0, ry: 90 },
-  5: { rx: -90, ry: 0 },
+  5: { rx: 90, ry: 0 },
   6: { rx: 180, ry: 0 },
 };
 
