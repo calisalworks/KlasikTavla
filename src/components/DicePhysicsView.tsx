@@ -38,6 +38,48 @@ const FACE_ROTATIONS: Record<number, { rx: number; ry: number }> = {
   6: { rx: 180, ry: 0 },
 };
 
+// Keep the two physical dice from intersecting. The collision is resolved in
+// the table plane, so dice bounce apart instead of visually stacking.
+const resolveDiceCollision = (states: PhysicsDieState[], bounce: boolean): PhysicsDieState[] => {
+  if (states.length < 2) return states;
+  const next = states.map((state) => ({ ...state }));
+  const a = next[0];
+  const b = next[1];
+  const minDistance = 36; // 28px dice plus a small visible gap
+  let dx = b.x - a.x;
+  let dy = b.y - a.y;
+  let distance = Math.hypot(dx, dy);
+  if (distance >= minDistance) return states;
+  if (distance < 0.001) {
+    dx = 1;
+    dy = 0;
+    distance = 1;
+  }
+  const nx = dx / distance;
+  const ny = dy / distance;
+  const overlap = minDistance - distance;
+  // Split the correction evenly so neither die is privileged.
+  a.x -= nx * overlap * 0.5;
+  a.y -= ny * overlap * 0.5;
+  b.x += nx * overlap * 0.5;
+  b.y += ny * overlap * 0.5;
+
+  if (bounce) {
+    const relativeNormalSpeed = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+    if (relativeNormalSpeed < 0) {
+      const impulse = -(1 + 0.58) * relativeNormalSpeed * 0.5;
+      a.vx -= impulse * nx;
+      a.vy -= impulse * ny;
+      b.vx += impulse * nx;
+      b.vy += impulse * ny;
+      // A small spin response makes the contact feel like a real dice collision.
+      a.vRotZ -= 90;
+      b.vRotZ += 90;
+    }
+  }
+  return next;
+};
+
 export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
   dice,
   isRolling,
@@ -126,7 +168,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
   useEffect(() => {
     if (!isRolling && dice.length > 0) {
       setPhysicsStates((prev) =>
-        prev.map((st, i) => {
+        resolveDiceCollision(prev.map((st, i) => {
           const targetVal = dice[i]?.value || 1;
           const targetRot = FACE_ROTATIONS[targetVal] || { rx: 0, ry: 0 };
           return {
@@ -148,7 +190,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             displayValue: targetVal,
             settled: true,
           };
-        })
+        }), false)
       );
     }
   }, [isRolling, dice]);
@@ -278,7 +320,9 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           };
         });
 
-        return next;
+        // Resolve contact after integrating both dice for this frame.
+        // This creates a real bounce and prevents either die passing through the other.
+        return resolveDiceCollision(next, true);
       });
 
       animFrameRef.current = requestAnimationFrame(step);
