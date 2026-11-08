@@ -88,6 +88,8 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const animFrameRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
+  // Blocks any queued physics tick from running after the final settle phase begins.
+  const settlingRef = useRef(false);
 
   // Dynamic physics states for up to 4 dice
   const [physicsStates, setPhysicsStates] = useState<PhysicsDieState[]>([]);
@@ -133,6 +135,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
   // Trigger physics impulse when isRolling starts
   useEffect(() => {
     if (isRolling) {
+      settlingRef.current = false;
       // Backgammon uses two physical dice; doubles grant four moves, not four visible dice.
       const count = 2;
       const newStates: PhysicsDieState[] = [];
@@ -171,6 +174,9 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
   useEffect(() => {
     if (isRolling) return;
 
+    // Freeze the physics simulation before reading the final angles. This also
+    // makes any already-queued physics updater a no-op during the settle animation.
+    settlingRef.current = true;
     const current = physicsStatesRef.current;
     const resultDice = diceRef.current;
     if (resultDice.length === 0 || current.length === 0) return;
@@ -254,6 +260,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       lastTimeRef.current = time;
 
       setPhysicsStates((prev) => {
+        if (settlingRef.current) return prev;
         let changed = false;
         const next = prev.map((die, idx) => {
           if (die.settled) return die;
