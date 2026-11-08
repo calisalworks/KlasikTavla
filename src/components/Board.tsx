@@ -495,7 +495,7 @@ export const Board: React.FC<BoardProps> = ({
             : `Zarlar: ${newDice[0].value} - ${newDice[1].value}. Taşı sürükleyin veya dokunun.`
         );
       }
-    }, 700);
+    }, 1150);
   };
 
   const clearAutoPassTimers = () => {
@@ -666,7 +666,7 @@ export const Board: React.FC<BoardProps> = ({
 
           aiTimeoutsRef.current.push(startTimer);
         });
-      }, 700);
+      }, 1150);
       aiTimeoutsRef.current.push(dropTimer);
     }, 800);
 
@@ -1639,7 +1639,7 @@ export const Board: React.FC<BoardProps> = ({
 
             {/* Floating Live 3D Physics Dice - Positioned in the Right Tray to prevent covering middle bar checkers */}
             <div className="absolute inset-y-0 right-0 w-1/2 pointer-events-none flex items-center justify-center z-30">
-              <div className="pointer-events-auto pr-8">
+              <div className="pointer-events-auto translate-x-4">
                 <DicePhysicsView
                   dice={dice}
                   isRolling={isRolling}
