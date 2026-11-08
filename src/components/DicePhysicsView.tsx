@@ -94,7 +94,9 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
   // Dynamic physics states for up to 4 dice
   const [physicsStates, setPhysicsStates] = useState<PhysicsDieState[]>([]);
   const physicsStatesRef = useRef<PhysicsDieState[]>([]);
+  const diceRef = useRef(dice);
   physicsStatesRef.current = physicsStates;
+  diceRef.current = dice;
 
   // Sound throttles for impact sounds during roll
   const lastImpactSoundRef = useRef<number>(0);
@@ -166,61 +168,78 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     }
   }, [isRolling]);
 
-  // Animate the actual 3D orientation into its final face. Never snap the
-  // rendered cube to the result: start from the last physical frame and ease
-  // into the target orientation with a continuous, decelerating motion.
+  // One short final roll animation, then a hard, stable stop on the result.
+  // Depend only on the rolling state so parent renders cannot restart the animation.
   useEffect(() => {
-    if (isRolling || dice.length === 0) return;
+    if (isRolling) return;
 
-    const initialStates = physicsStatesRef.current;
-    if (initialStates.length === 0) return;
+    const current = physicsStatesRef.current;
+    const resultDice = diceRef.current;
+    if (resultDice.length === 0 || current.length === 0) return;
 
     const startedAt = performance.now();
-    const duration = 950;
-    const starts = initialStates.map((st, i) => {
-      const targetVal = dice[i]?.value || 1;
-      const target = FACE_ROTATIONS[targetVal] || { rx: 0, ry: 0 };
-      const nearestAngle = (from: number, to: number) =>
+    const duration = 420;
+    const starts = current.map((st, i) => {
+      const value = resultDice[i]?.value || 1;
+      const target = FACE_ROTATIONS[value] || { rx: 0, ry: 0 };
+      const nearest = (from: number, to: number) =>
         from + ((((to - from) % 360) + 540) % 360 - 180);
       return {
-        ...st,
-        targetVal,
-        endX: nearestAngle(st.rotX, target.rx),
-        endY: nearestAngle(st.rotY, target.ry),
-        endZ: nearestAngle(st.rotZ, 0),
+        state: st,
+        value,
+        endX: nearest(st.rotX, target.rx),
+        endY: nearest(st.rotY, target.ry),
+        endZ: nearest(st.rotZ, 0),
       };
     });
 
     let frame = 0;
-    const animateSettle = (time: number) => {
+    const finishRoll = (time: number) => {
       const progress = Math.min(1, (time - startedAt) / duration);
-      // Cubic ease-out: fast at first, then continuously slower until still.
-      const eased = 1 - Math.pow(1 - progress, 3);
-
-      setPhysicsStates(starts.map((start) => ({
-        ...start,
-        x: start.x,
-        y: start.y,
-        z: start.z * (1 - eased),
-        rotX: start.rotX + (start.endX - start.rotX) * eased,
-        rotY: start.rotY + (start.endY - start.rotY) * eased,
-        rotZ: start.rotZ + (start.endZ - start.rotZ) * eased,
+      // A single quick deceleration; no secondary CSS transition or wobble.
+      const eased = 1 - Math.pow(1 - progress, 4);
+      setPhysicsStates(starts.map(({ state, value, endX, endY, endZ }) => ({
+        ...state,
+        x: state.x,
+        y: state.y,
+        z: 0,
+        rotX: state.rotX + (endX - state.rotX) * eased,
+        rotY: state.rotY + (endY - state.rotY) * eased,
+        rotZ: state.rotZ + (endZ - state.rotZ) * eased,
         vx: 0,
         vy: 0,
         vz: 0,
         vRotX: 0,
         vRotY: 0,
         vRotZ: 0,
-        displayValue: start.targetVal,
+        displayValue: value,
         settled: progress >= 1,
       })));
 
-      if (progress < 1) frame = requestAnimationFrame(animateSettle);
+      if (progress < 1) {
+        frame = requestAnimationFrame(finishRoll);
+      } else {
+        // Lock the exact final face and stop all movement.
+        setPhysicsStates(starts.map(({ state, value }) => {
+          const target = FACE_ROTATIONS[value] || { rx: 0, ry: 0 };
+          return {
+            ...state,
+            z: 0,
+            rotX: target.rx,
+            rotY: target.ry,
+            rotZ: 0,
+            vx: 0, vy: 0, vz: 0,
+            vRotX: 0, vRotY: 0, vRotZ: 0,
+            displayValue: value,
+            settled: true,
+          };
+        }));
+      }
     };
 
-    frame = requestAnimationFrame(animateSettle);
+    frame = requestAnimationFrame(finishRoll);
     return () => cancelAnimationFrame(frame);
-  }, [isRolling, dice]);
+  }, [isRolling]);
 
   // RequestAnimationFrame physics simulation loop
   useEffect(() => {
@@ -401,9 +420,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
         {/* 3D Cube Container */}
         <div
-          className={`relative w-full h-full ${
-            isSettled ? 'transition-transform duration-[1000ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]' : ''
-          }`}
+          className="relative w-full h-full"
           style={{
             transformStyle: 'preserve-3d',
             transform: `translateZ(${zHeight}px) rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`,
