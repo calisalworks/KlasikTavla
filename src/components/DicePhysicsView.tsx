@@ -31,10 +31,10 @@ interface PhysicsDieState {
 // Front: 1, Back: 6, Right: 3, Left: 4, Top: 2, Bottom: 5
 const FACE_ROTATIONS: Record<number, { rx: number; ry: number }> = {
   1: { rx: 0, ry: 0 },
-  2: { rx: -90, ry: 0 },
+  2: { rx: 90, ry: 0 },
   3: { rx: 0, ry: -90 },
   4: { rx: 0, ry: 90 },
-  5: { rx: 90, ry: 0 },
+  5: { rx: -90, ry: 0 },
   6: { rx: 180, ry: 0 },
 };
 
@@ -140,8 +140,8 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             y: st.y,
             rotX: targetRot.rx,
             rotY: targetRot.ry,
-            // Preserve the final physical spin angle as well as the landing position.
-            rotZ: st.rotZ,
+            // Remove the in-plane spin so the die settles flat on one unambiguous top face.
+            rotZ: 0,
             vRotX: 0,
             vRotY: 0,
             vRotZ: 0,
@@ -456,7 +456,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
                     isRolling ? false : (die?.used ?? false),
                     isRolling ? st.rotX : targetRot.rx,
                     isRolling ? st.rotY : targetRot.ry,
-                    st.rotZ,
+                    isRolling ? st.rotZ : 0,
                     isRolling ? st.z : 0,
                     !isRolling
                   )}
