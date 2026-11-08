@@ -72,9 +72,7 @@ const resolveDiceCollision = (states: PhysicsDieState[], bounce: boolean): Physi
       a.vy -= impulse * ny;
       b.vx += impulse * nx;
       b.vy += impulse * ny;
-      // A small spin response makes the contact feel like a real dice collision.
-      a.vRotZ -= 90;
-      b.vRotZ += 90;
+      // Keep the collision physical, but do not inject a fresh spin near the stop.
     }
   }
   return next;
@@ -313,8 +311,6 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
               vz = -vz * 0.45; // 45% bounce energy retention
               vx += (Math.random() - 0.5) * 80;
               vy += (Math.random() - 0.5) * 80;
-              vRotX += (Math.random() - 0.5) * 600;
-              vRotY += (Math.random() - 0.5) * 600;
 
               // Play impact sound proportional to velocity (throttle to avoid audio spam)
               const now = performance.now();
