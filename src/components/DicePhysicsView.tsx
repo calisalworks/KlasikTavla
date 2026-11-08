@@ -134,8 +134,9 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             vy: 0,
             vz: 0,
             z: 0,
-            x: (i - (dice.length - 1) / 2) * 40, // compact 40px resting spacing for 28px dice
-            y: 0,
+            // Keep the exact landing position; do not respawn/reposition dice after the roll.
+            x: st.x,
+            y: st.y,
             rotX: targetRot.rx,
             rotY: targetRot.ry,
             rotZ: (i * 12 - 6) % 15,
@@ -456,35 +457,37 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
               ))}
             </div>
           ) : (
-            /* Settled State with Realistic Physics Resting Angles */
-            <div className="flex items-center gap-3 p-2 rounded-2xl bg-black/25 backdrop-blur-[2px] border border-amber-900/30 shadow-lg">
+            /* Keep rendering the same physical dice at their landing positions. */
+            <div className="relative w-40 h-28">
               {dice.map((die, index) => {
+                const state = physicsStates[index];
                 const targetRot = FACE_ROTATIONS[die.value] || { rx: 0, ry: 0 };
-                // Organic resting rotation angle
-                const restingAngle = ((index * 37) % 20) - 10;
+                const fallbackX = (index - (dice.length - 1) / 2) * 40;
 
                 return (
                   <div
                     key={die.id || index}
-                    className="relative cursor-pointer transition-transform hover:scale-105"
+                    className="absolute"
+                    style={{
+                      transform: `translate3d(${state?.x ?? fallbackX}px, ${state?.y ?? 0}px, 0)`,
+                    }}
                   >
                     {render3DCube(
                       die.value,
                       die.used,
-                      targetRot.rx,
-                      targetRot.ry,
-                      restingAngle,
+                      state?.rotX ?? targetRot.rx,
+                      state?.rotY ?? targetRot.ry,
+                      state?.rotZ ?? 0,
                       0,
                       true
                     )}
                   </div>
                 );
               })}
-
               {canRoll && (
                 <button
                   onClick={onRollClick}
-                  className="pointer-events-auto ml-1 px-3 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-600 text-amber-100 text-xs font-bold border border-amber-500/50 shadow cursor-pointer transition-colors"
+                  className="pointer-events-auto absolute -right-14 top-1/2 -translate-y-1/2 ml-1 px-3 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-600 text-amber-100 text-xs font-bold border border-amber-500/50 shadow cursor-pointer transition-colors"
                 >
                   Yeniden
                 </button>
