@@ -528,6 +528,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             {physicsStates.map((st, i) => {
               const die = dice[i];
               const targetValue = die?.value ?? st.displayValue;
+              const targetRot = FACE_ROTATIONS[targetValue] || { rx: 0, ry: 0 };
               return (
                 <div
                   key={i}
@@ -542,8 +543,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
                     isRolling ? st.rotX : targetRot.rx,
                     isRolling ? st.rotY : targetRot.ry,
                     isRolling ? st.rotZ : 0,
-                    isRolling ? st.z : 0,
-                    !isRolling
+                    isRolling ? st.z : 0
                   )}
                 </div>
               );
