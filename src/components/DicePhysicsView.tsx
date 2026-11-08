@@ -375,7 +375,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         {/* 3D Cube Container */}
         <div
           className={`relative w-full h-full ${
-            isSettled ? 'transition-all duration-300 ease-out' : ''
+            isSettled ? 'transition-transform duration-[1000ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]' : ''
           }`}
           style={{
             transformStyle: 'preserve-3d',
