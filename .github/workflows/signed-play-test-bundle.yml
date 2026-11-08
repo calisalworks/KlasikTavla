@@ -97,7 +97,7 @@ jobs:
 
       - name: Build signed release AAB
         working-directory: android
-        run: bash ./gradlew --no-daemon bundleRelease
+        run: bash ./gradlew --no-daemon bundleRelease assembleRelease
 
       - name: Verify AAB signature
         shell: bash
@@ -109,11 +109,21 @@ jobs:
           grep -q 'jar verified' "$RUNNER_TEMP/aab-signature-check.txt" || { cat "$RUNNER_TEMP/aab-signature-check.txt"; echo "::error::AAB signature verification did not report success"; exit 1; }
           keytool -printcert -jarfile "$bundle"
 
-      - name: Upload signed test bundle
+      - name: Verify APK signature
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="android/app/build/outputs/apk/release/app-release.apk"
+          test -s "$apk"
+          apksigner verify --verbose --print-certs "$apk"
+
+      - name: Upload signed test APK and bundle
         uses: actions/upload-artifact@v4
         with:
-          name: klasik-tavla-signed-play-test-aab
-          path: android/app/build/outputs/bundle/release/app-release.aab
+          name: klasik-tavla-signed-play-test-builds
+          path: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
 
