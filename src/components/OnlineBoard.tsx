@@ -1576,7 +1576,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
                 <DicePhysicsView
                   dice={room.dice}
                   isRolling={isRolling}
-                  canRoll={isMyTurn && !isOpeningRollOpen && (!room.openingRoll || room.openingRollCompleted) && room.dice.length === 0 && !room.winnerInfo}
+                  canRoll={isMyTurn && !isOpeningRollOpen && (!room.openingRoll || room.openingRollCompleted === true) && room.dice.length === 0 && !room.winnerInfo}
                   onRollClick={handleRollDice}
                 />
               </div>
