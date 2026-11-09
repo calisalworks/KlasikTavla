@@ -2,7 +2,7 @@ name: Release readiness checks
 
 on:
   push:
-    branches: [fix/accepted-game-with-intro]
+    branches: [fix/accepted-game-with-intro, fix/launch-screen-and-typescript]
   pull_request:
     branches: [main]
 
