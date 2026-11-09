@@ -69,6 +69,8 @@ function rollOpeningDice(): {
   blackDie: number;
   winner: PlayerColor;
   ties: { white: number; black: number }[];
+  whiteRolled: boolean;
+  blackRolled: boolean;
 } {
   const ties: { white: number; black: number }[] = [];
   while (true) {
