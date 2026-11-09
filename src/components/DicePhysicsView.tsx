@@ -169,47 +169,25 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     }
   }, [isRolling]);
 
-  // One short final roll animation, then a hard, stable stop on the result.
-  // Depend only on the rolling state so parent renders cannot restart the animation.
+  // Stop immediately on the result face. Do not run a second rotation after the dice land.
   useEffect(() => {
     if (isRolling) return;
 
-    // Freeze the physics simulation before reading the final angles. This also
-    // makes any already-queued physics updater a no-op during the settle animation.
+    // Freeze the physics simulation before locking the final result.
     settlingRef.current = true;
     const current = physicsStatesRef.current;
     const resultDice = diceRef.current;
     if (resultDice.length === 0 || current.length === 0) return;
 
-    const startedAt = performance.now();
-    const duration = 550;
-    const starts = current.map((st, i) => {
+    setPhysicsStates(current.map((state, i) => {
       const value = resultDice[i]?.value || 1;
       const target = FACE_ROTATIONS[value] || { rx: 0, ry: 0 };
-      const nearest = (from: number, to: number) =>
-        from + ((((to - from) % 360) + 540) % 360 - 180);
       return {
-        state: st,
-        value,
-        endX: nearest(st.rotX, target.rx),
-        endY: nearest(st.rotY, target.ry),
-        endZ: nearest(st.rotZ, 0),
-      };
-    });
-
-    let frame = 0;
-    const finishRoll = (time: number) => {
-      const progress = Math.min(1, (time - startedAt) / duration);
-      // Smooth, longer deceleration into the final face without a secondary wobble.
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setPhysicsStates(starts.map(({ state, value, endX, endY, endZ }) => ({
         ...state,
-        x: state.x,
-        y: state.y,
         z: 0,
-        rotX: state.rotX + (endX - state.rotX) * eased,
-        rotY: state.rotY + (endY - state.rotY) * eased,
-        rotZ: state.rotZ + (endZ - state.rotZ) * eased,
+        rotX: target.rx,
+        rotY: target.ry,
+        rotZ: 0,
         vx: 0,
         vy: 0,
         vz: 0,
@@ -217,32 +195,9 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         vRotY: 0,
         vRotZ: 0,
         displayValue: value,
-        settled: progress >= 1,
-      })));
-
-      if (progress < 1) {
-        frame = requestAnimationFrame(finishRoll);
-      } else {
-        // Lock the exact final face and stop all movement.
-        setPhysicsStates(starts.map(({ state, value }) => {
-          const target = FACE_ROTATIONS[value] || { rx: 0, ry: 0 };
-          return {
-            ...state,
-            z: 0,
-            rotX: target.rx,
-            rotY: target.ry,
-            rotZ: 0,
-            vx: 0, vy: 0, vz: 0,
-            vRotX: 0, vRotY: 0, vRotZ: 0,
-            displayValue: value,
-            settled: true,
-          };
-        }));
-      }
-    };
-
-    frame = requestAnimationFrame(finishRoll);
-    return () => cancelAnimationFrame(frame);
+        settled: true,
+      };
+    }));
   }, [isRolling]);
 
   // RequestAnimationFrame physics simulation loop
