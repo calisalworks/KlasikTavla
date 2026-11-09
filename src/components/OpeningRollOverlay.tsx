@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { PlayerColor, Die } from '../types/game';
+import { Die } from '../types/game';
 import { DicePhysicsView } from './DicePhysicsView';
 import { tavlaAudio } from '../utils/audio';
 
