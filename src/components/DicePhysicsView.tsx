@@ -177,7 +177,32 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     settlingRef.current = true;
     const current = physicsStatesRef.current;
     const resultDice = diceRef.current;
-    if (resultDice.length === 0 || current.length === 0) return;
+    if (resultDice.length === 0) return;
+
+    // When dice are handed in from the opening roll, this view mounts already
+    // holding their results. Seed a settled 3D pose so they appear immediately.
+    if (current.length === 0) {
+      setPhysicsStates(resultDice.map((die, i) => {
+        const target = FACE_ROTATIONS[die.value] || { rx: 0, ry: 0 };
+        return {
+          x: (i - (resultDice.length - 1) / 2) * 34,
+          y: 0,
+          vx: 0,
+          vy: 0,
+          z: 0,
+          vz: 0,
+          rotX: target.rx,
+          rotY: target.ry,
+          rotZ: 0,
+          vRotX: 0,
+          vRotY: 0,
+          vRotZ: 0,
+          displayValue: die.value,
+          settled: true,
+        };
+      }));
+      return;
+    }
 
     setPhysicsStates(current.map((state, i) => {
       const value = resultDice[i]?.value || 1;
