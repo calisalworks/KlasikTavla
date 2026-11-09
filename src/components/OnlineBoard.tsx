@@ -1601,7 +1601,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             {/* Normal two-dice UI stays hidden until the opening roll is acknowledged. */}
             {(!room.openingRoll || room.openingRollCompleted) && (
             <div className="absolute inset-y-0 right-0 w-1/2 pointer-events-none flex flex-col items-center justify-center z-30">
-              <div className="pointer-events-auto translate-x-4 flex flex-col items-center">
+              <div className="pointer-events-auto flex flex-col items-center">
                 {/* 15-Second Turn Countdown Badge on top of the thrown dice */}
                 {turnSecondsLeft !== null && isMyTurn && room.dice.length > 0 && room.dice.some((d) => !d.used) && !room.winnerInfo && (
                   <div
@@ -1625,6 +1625,21 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
                 />
               </div>
             </div>
+            )}
+
+            {room && room.openingRoll && (
+              <OpeningRollOverlay
+                isOpen={isOpeningRollOpen}
+                whitePlayerName={room.whitePlayer?.name || 'Beyaz Oyuncu'}
+                blackPlayerName={room.blackPlayer?.name || 'Siyah Oyuncu'}
+                whiteDie={room.openingRoll.whiteDie}
+                blackDie={room.openingRoll.blackDie}
+                whiteRolled={room.openingRoll.whiteRolled ?? false}
+                blackRolled={room.openingRoll.blackRolled ?? false}
+                myColor={myColor ?? undefined}
+                onRoll={handleOpeningDieRoll}
+                onComplete={handleOpeningRollComplete}
+              />
             )}
 
             {/* Animated Opponent Sliding Checker: Visualizes opponent dragging/moving pieces across board */}
@@ -2034,21 +2049,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
         </div>
       )}
 
-      {/* Classic Backgammon Opening Roll Overlay */}
-      {room && room.openingRoll && (
-        <OpeningRollOverlay
-          isOpen={isOpeningRollOpen}
-          whitePlayerName={room.whitePlayer?.name || 'Beyaz Oyuncu'}
-          blackPlayerName={room.blackPlayer?.name || 'Siyah Oyuncu'}
-          whiteDie={room.openingRoll.whiteDie}
-          blackDie={room.openingRoll.blackDie}
-          whiteRolled={room.openingRoll.whiteRolled ?? false}
-          blackRolled={room.openingRoll.blackRolled ?? false}
-          myColor={myColor ?? undefined}
-          onRoll={handleOpeningDieRoll}
-          onComplete={handleOpeningRollComplete}
-        />
-      )}
+
     </div>
   );
 };
