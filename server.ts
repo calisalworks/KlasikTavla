@@ -57,6 +57,7 @@ const rooms = new Map<string, GameRoom>();
 const passTimeouts = new Map<string, NodeJS.Timeout>();
 const disconnectTimeouts = new Map<string, NodeJS.Timeout>();
 const turnTimeouts = new Map<string, NodeJS.Timeout>();
+const openingRollFallbacks = new Map<string, NodeJS.Timeout>();
 
 /**
  * Rolls opening dice for backgammon (1 die for White, 1 die for Black)
@@ -78,10 +79,65 @@ function rollOpeningDice(): {
         blackDie,
         winner: whiteDie > blackDie ? 'white' : 'black',
         ties,
+        whiteRolled: false,
+        blackRolled: false,
       };
     }
     ties.push({ white: whiteDie, black: blackDie });
   }
+}
+
+
+function finalizeOpeningRoll(room: GameRoom) {
+  const opening = room.openingRoll;
+  if (!opening || room.openingRollCompleted || !opening.whiteRolled || !opening.blackRolled) return;
+  const fallback = openingRollFallbacks.get(room.id);
+  if (fallback) clearTimeout(fallback);
+  openingRollFallbacks.delete(room.id);
+
+  const firstValue = opening.winner === 'white' ? opening.whiteDie : opening.blackDie;
+  const secondValue = opening.winner === 'white' ? opening.blackDie : opening.whiteDie;
+  const rollId = Date.now();
+  room.turn = opening.winner;
+  room.dice = [
+    { value: firstValue, used: false, id: `opening-first-${rollId}` },
+    { value: secondValue, used: false, id: `opening-second-${rollId}` },
+  ];
+  room.turnSnapshot = {
+    board: cloneBoard(room.board),
+    dice: room.dice.map((die) => ({ ...die })),
+    movesMade: [],
+  };
+  room.openingRollCompleted = true;
+  room.lastActivity = Date.now();
+  const hasMoves = hasAnyLegalMoves(room.board, room.turn, room.dice);
+  broadcastToRoom(room.id, { type: 'room:updated', room });
+
+  if (!hasMoves) {
+    const passTimer = setTimeout(() => {
+      if (rooms.get(room.id) === room && room.dice.some((die) => !die.used)) {
+        room.dice = [];
+        room.turnSnapshot = null;
+        room.turn = room.turn === 'white' ? 'black' : 'white';
+        broadcastToRoom(room.id, { type: 'game:turn_passed', room, reason: 'Hamle yok' });
+      }
+      passTimeouts.delete(room.id);
+    }, 1200);
+    passTimeouts.set(room.id, passTimer);
+  }
+}
+
+function scheduleOpeningRollFallback(room: GameRoom) {
+  if (!room.openingRoll || room.openingRollCompleted) return;
+  const existing = openingRollFallbacks.get(room.id);
+  if (existing) clearTimeout(existing);
+  const timer = setTimeout(() => {
+    if (rooms.get(room.id) !== room || room.openingRollCompleted || !room.openingRoll) return;
+    room.openingRoll.whiteRolled = true;
+    room.openingRoll.blackRolled = true;
+    finalizeOpeningRoll(room);
+  }, 5000);
+  openingRollFallbacks.set(room.id, timer);
 }
 
 // Matchmaking Queue Structure
@@ -199,6 +255,7 @@ function tryMatchmakeTier(tierId: RoomTierId) {
   };
 
   rooms.set(roomId, matchRoom);
+  scheduleOpeningRollFallback(matchRoom);
 
   // Note: We do NOT bind lobby WebSockets to roomId (currentRoomId remains null)
   // because clients close these lobby sockets after match celebration to mount OnlineBoard.
@@ -918,6 +975,7 @@ wss.on('connection', (ws) => {
           room.blackPlayer = blackPlayer;
           room.status = 'playing';
           session.currentRoomId = room.id;
+          scheduleOpeningRollFallback(room);
 
           // Her iki oyuncuya da bildir
           broadcastToRoom(room.id, {
@@ -1095,6 +1153,7 @@ wss.on('connection', (ws) => {
             room.dice = [];
             room.turnSnapshot = null;
             room.status = 'playing';
+            scheduleOpeningRollFallback(room);
           }
 
           broadcastToRoom(room.id, {
@@ -1164,60 +1223,33 @@ wss.on('connection', (ws) => {
           break;
         }
 
-        case 'game:opening_roll_complete': {
+        case 'game:opening_roll_player': {
           if (!session.currentRoomId) return;
           const room = rooms.get(session.currentRoomId);
-          if (!room || room.status !== 'playing' || !room.openingRoll) return;
-
-          const isParticipant =
-            room.whitePlayer?.id === session.playerId ||
-            room.blackPlayer?.id === session.playerId;
-          if (!isParticipant) return;
-
-          if (room.openingRollCompleted) return;
-
-          // In backgammon, the two opening dice are used for the first move.
-          // Keep the starting player's die first in the authoritative dice list.
-          const opening = room.openingRoll;
-          const firstValue = opening.winner === 'white' ? opening.whiteDie : opening.blackDie;
-          const secondValue = opening.winner === 'white' ? opening.blackDie : opening.whiteDie;
-          const rollId = Date.now();
-          room.turn = opening.winner;
-          room.dice = [
-            { value: firstValue, used: false, id: `opening-first-${rollId}` },
-            { value: secondValue, used: false, id: `opening-second-${rollId}` },
-          ];
-          room.turnSnapshot = {
-            board: cloneBoard(room.board),
-            dice: room.dice.map((die) => ({ ...die })),
-            movesMade: [],
-          };
-          room.openingRollCompleted = true;
+          if (!room || room.status !== 'playing' || !room.openingRoll || room.openingRollCompleted) return;
+          const color: PlayerColor | null =
+            room.whitePlayer?.id === session.playerId ? 'white' :
+            room.blackPlayer?.id === session.playerId ? 'black' : null;
+          if (!color) return;
+          const rolledKey = color === 'white' ? 'whiteRolled' : 'blackRolled';
+          if (room.openingRoll[rolledKey]) return;
+          room.openingRoll[rolledKey] = true;
           room.lastActivity = Date.now();
+          broadcastToRoom(room.id, { type: 'room:updated', room });
+          finalizeOpeningRoll(room);
+          break;
+        }
 
-          const hasMoves = hasAnyLegalMoves(room.board, room.turn, room.dice);
-          broadcastToRoom(room.id, {
-            type: 'room:updated',
-            room,
-          });
-
-          // Match the regular roll behavior when the opening player has no legal move.
-          if (!hasMoves) {
-            const passTimer = setTimeout(() => {
-              if (rooms.get(room.id) === room && room.dice.some((die) => !die.used)) {
-                room.dice = [];
-                room.turnSnapshot = null;
-                room.turn = room.turn === 'white' ? 'black' : 'white';
-                broadcastToRoom(room.id, {
-                  type: 'game:turn_passed',
-                  room,
-                  reason: 'Hamle yok',
-                });
-              }
-              passTimeouts.delete(room.id);
-            }, 1200);
-            passTimeouts.set(room.id, passTimer);
-          }
+        case 'game:opening_roll_complete': {
+          // Backward compatibility with clients from the previous build.
+          if (!session.currentRoomId) return;
+          const room = rooms.get(session.currentRoomId);
+          if (!room || room.status !== 'playing' || !room.openingRoll || room.openingRollCompleted) return;
+          const isParticipant = room.whitePlayer?.id === session.playerId || room.blackPlayer?.id === session.playerId;
+          if (!isParticipant) return;
+          room.openingRoll.whiteRolled = true;
+          room.openingRoll.blackRolled = true;
+          finalizeOpeningRoll(room);
           break;
         }
 
@@ -1603,6 +1635,7 @@ wss.on('connection', (ws) => {
             room.openingRollCompleted = false;
             }
 
+            scheduleOpeningRollFallback(room);
             broadcastToRoom(room.id, {
               type: 'game:reset',
               room,
@@ -1653,8 +1686,8 @@ wss.on('connection', (ws) => {
             room.openingRollCompleted = false;
           }
 
+          scheduleOpeningRollFallback(room);
           broadcastToRoom(room.id, {
-            type: 'game:reset',
             room,
           });
           break;
