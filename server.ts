@@ -1174,12 +1174,50 @@ wss.on('connection', (ws) => {
             room.blackPlayer?.id === session.playerId;
           if (!isParticipant) return;
 
+          if (room.openingRollCompleted) return;
+
+          // In backgammon, the two opening dice are used for the first move.
+          // Keep the starting player's die first in the authoritative dice list.
+          const opening = room.openingRoll;
+          const firstValue = opening.winner === 'white' ? opening.whiteDie : opening.blackDie;
+          const secondValue = opening.winner === 'white' ? opening.blackDie : opening.whiteDie;
+          const rollId = Date.now();
+          room.turn = opening.winner;
+          room.dice = [
+            { value: firstValue, used: false, id: `opening-first-${rollId}` },
+            { value: secondValue, used: false, id: `opening-second-${rollId}` },
+          ];
+          room.turnSnapshot = {
+            board: cloneBoard(room.board),
+            dice: room.dice.map((die) => ({ ...die })),
+            movesMade: [],
+          };
           room.openingRollCompleted = true;
           room.lastActivity = Date.now();
+
+          const hasMoves = hasAnyLegalMoves(room.board, room.turn, room.dice);
           broadcastToRoom(room.id, {
             type: 'room:updated',
             room,
           });
+
+          // Match the regular roll behavior when the opening player has no legal move.
+          if (!hasMoves) {
+            const passTimer = setTimeout(() => {
+              if (rooms.get(room.id) === room && room.dice.some((die) => !die.used)) {
+                room.dice = [];
+                room.turnSnapshot = null;
+                room.turn = room.turn === 'white' ? 'black' : 'white';
+                broadcastToRoom(room.id, {
+                  type: 'game:turn_passed',
+                  room,
+                  reason: 'Hamle yok',
+                });
+              }
+              passTimeouts.delete(room.id);
+            }, 1200);
+            passTimeouts.set(room.id, passTimer);
+          }
           break;
         }
 
