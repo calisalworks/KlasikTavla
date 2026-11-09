@@ -147,7 +147,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         const tossHeight = 70 + Math.random() * 50; // arc height
 
         newStates.push({
-          x: (i === 0 ? -32 : 32) + (Math.random() * 16 - 8),
+          x: (count === 1 ? 0 : (i === 0 ? -32 : 32)) + (Math.random() * 16 - 8),
           y: -110 - Math.random() * 30, // start high up as if tossed from cup/hand
           vx: Math.cos(angle) * speed * (i === 0 ? -0.8 : 0.8),
           vy: 180 + Math.random() * 120,
