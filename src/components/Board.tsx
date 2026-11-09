@@ -1386,10 +1386,10 @@ export const Board: React.FC<BoardProps> = ({
       ref={boardRef}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      className="relative w-full h-full flex flex-row items-stretch select-none overflow-hidden bg-[#181310] touch-none"
+      className="relative w-full h-full flex flex-row items-stretch select-none overflow-hidden bg-[radial-gradient(ellipse_at_center,#392316_0%,#1b100a_58%,#090604_100%)] touch-none"
     >
       {/* 1. LEFT SIDE PANEL */}
-      <div className="w-36 md:w-44 flex flex-col justify-between py-2.5 px-2 bg-[#221711] border-r border-[#3f291b] shadow-2xl z-20 shrink-0">
+      <div className="w-36 md:w-44 flex flex-col justify-between py-2.5 px-2 bg-[linear-gradient(180deg,#382316_0%,#24150d_55%,#160b06_100%)] border-r border-amber-900/50 shadow-[8px_0_24px_rgba(0,0,0,0.55),inset_-1px_0_0_rgba(255,210,140,0.08)] z-20 shrink-0">
         {/* Top: Opponent Card */}
         <div
           className={`relative p-2 rounded-2xl border transition-all ${
@@ -1541,7 +1541,7 @@ export const Board: React.FC<BoardProps> = ({
       </div>
 
       {/* 2. BOARD */}
-      <div className="flex-1 flex flex-col p-1.5 md:p-2 bg-[#1b130e] overflow-hidden">
+      <div className="flex-1 flex flex-col p-1.5 md:p-2 bg-[linear-gradient(145deg,#28170e_0%,#120a06_100%)] overflow-hidden">
         {/* Subtle Status Bar */}
         <div className="h-6 flex items-center justify-between px-3 text-xs text-amber-200/80 mb-1 select-none">
           <div className="flex items-center gap-2 truncate">
@@ -1569,8 +1569,8 @@ export const Board: React.FC<BoardProps> = ({
         </div>
 
         {/* Master Board */}
-        <div className="flex-1 relative rounded-2xl p-2 bg-gradient-to-b from-[#874b21] via-[#6a3815] to-[#4e270b] border-4 border-[#3b1c06] shadow-[0_15px_35px_rgba(0,0,0,0.8),inset_0_2px_4px_rgba(255,255,255,0.2)] flex flex-row overflow-hidden">
-          <div className="flex-1 relative rounded-xl bg-gradient-to-b from-[#dcb274] via-[#cca062] to-[#b88c4e] border-2 border-[#542d11] shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)] flex flex-row overflow-hidden">
+        <div className="flex-1 relative rounded-2xl p-2 bg-[linear-gradient(145deg,#a66b37_0%,#75431e_24%,#4b260f_100%)] border-[5px] border-[#241006] shadow-[0_18px_42px_rgba(0,0,0,0.82),inset_0_2px_5px_rgba(255,235,190,0.34),inset_0_-5px_12px_rgba(0,0,0,0.45)] ring-1 ring-amber-700/40 flex flex-row overflow-hidden">
+          <div className="flex-1 relative rounded-xl bg-[linear-gradient(145deg,#f0d39a_0%,#d5ad70_42%,#a97942_100%)] border-[3px] border-[#49240d] shadow-[inset_0_5px_14px_rgba(55,25,5,0.48),0_2px_5px_rgba(0,0,0,0.45)] flex flex-row overflow-hidden">
             {/* Left Tray */}
             <div className="flex-1 flex flex-col border-r border-[#693917]">
               <div className="flex-1 flex flex-row border-b border-[#5e3213]/40">
