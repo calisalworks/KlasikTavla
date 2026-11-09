@@ -336,7 +336,7 @@ export const Board: React.FC<BoardProps> = ({
   // Opening roll to determine who goes first (classic backgammon rule)
   // Initialize the opening roll synchronously so auto-roll/AI effects cannot
   // run once with a null opening state on the first render.
-  const [openingRoll, setOpeningRoll] = useState<{
+  type OpeningRollState = {
     whiteDie: number;
     blackDie: number;
     winner: PlayerColor;
@@ -344,7 +344,9 @@ export const Board: React.FC<BoardProps> = ({
     whiteRolled: boolean;
     blackRolled: boolean;
     isComplete: boolean;
-  } | null>(() => {
+  };
+
+  const [openingRoll, setOpeningRoll] = useState<OpeningRollState | null>(() => {
     const ties: { white: number; black: number }[] = [];
     let w = 0;
     let b = 0;
