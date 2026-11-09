@@ -124,6 +124,7 @@ export interface GameRoom {
   turn: PlayerColor;
   dice: Die[];
   turnSnapshot?: TurnSnapshot | null;
+  undoHistory?: TurnSnapshot[];
   openingRoll?: OpeningRollInfo | null;
   openingRollCompleted?: boolean;
   winnerInfo: { winner: PlayerColor; winType: 'normal' | 'mars' | 'katmerli'; points: number } | null;
