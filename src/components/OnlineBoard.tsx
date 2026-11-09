@@ -1304,7 +1304,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
           <div className="w-full flex flex-col gap-1.5 px-1">
             {isMyTurn && (
               <>
-                {!isOpeningRollOpen && (!room.openingRoll || room.openingRollCompleted) && room.dice.length === 0 && !isRolling && !room.winnerInfo && (
+                {!isOpeningRollOpen && (!room.openingRoll || room.openingRollCompleted === true) && room.dice.length === 0 && !isRolling && !room.winnerInfo && (
                   <button
                     onClick={handleRollDice}
                     className="w-full py-2 px-2 rounded-xl bg-gradient-to-b from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700 text-amber-50 text-xs font-bold shadow-lg border border-amber-400/50 active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"
