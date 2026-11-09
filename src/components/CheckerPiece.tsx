@@ -5,7 +5,7 @@ interface CheckerPieceProps {
   color: PlayerColor;
   isSelected?: boolean;
   isInteractive?: boolean;
-  size?: number; // diameter in px or %
+  size?: number;
   badgeCount?: number;
   onClick?: () => void;
   className?: string;
@@ -26,69 +26,72 @@ export const CheckerPiece: React.FC<CheckerPieceProps> = ({
     <div
       onClick={isInteractive ? onClick : undefined}
       style={{ width: size, height: size }}
-      className={`relative rounded-full select-none transition-transform duration-150 flex items-center justify-center ${
-        isInteractive ? 'cursor-pointer active:scale-95 hover:brightness-105' : ''
-      } ${isSelected ? 'scale-110 z-30' : 'z-10'} ${className}`}
+      className={
+        'relative isolate flex select-none items-center justify-center rounded-full transition-transform duration-150 ' +
+        (isInteractive ? 'cursor-pointer active:scale-95 hover:brightness-110 ' : '') +
+        (isSelected ? 'z-30 scale-110 ' : 'z-10 ') +
+        className
+      }
     >
-      {/* Outer shadow for 3D wood bevel */}
       <div
-        className={`absolute inset-0 rounded-full ${
-          isSelected
-            ? 'ring-3 ring-amber-300 ring-offset-2 ring-offset-amber-950 shadow-[0_6px_14px_rgba(0,0,0,0.65)]'
-            : 'shadow-[0_4px_8px_rgba(0,0,0,0.5),0_1px_2px_rgba(0,0,0,0.4)]'
-        }`}
+        className={
+          'absolute -inset-[2px] rounded-full transition-all ' +
+          (isSelected
+            ? 'ring-[3px] ring-amber-300 ring-offset-2 ring-offset-amber-950 shadow-[0_8px_18px_rgba(0,0,0,0.72)]'
+            : 'shadow-[0_6px_12px_rgba(0,0,0,0.58),0_2px_3px_rgba(0,0,0,0.42)]')
+        }
       />
 
-      {/* Main Checker Disc with Tactile Carved Wood/Resin Look */}
       <div
-        className={`w-full h-full rounded-full relative overflow-hidden flex items-center justify-center ${
-          isWhite
-            ? 'bg-gradient-to-b from-[#fbf8f2] via-[#ede4d3] to-[#d6c7b0] border border-[#fbf9f4]'
-            : 'bg-gradient-to-b from-[#3a3532] via-[#24201e] to-[#141211] border border-[#4a423e]'
-        }`}
+        className={
+          'relative h-full w-full overflow-hidden rounded-full border p-[3px] ' +
+          (isWhite
+            ? 'border-[#fffdf7] bg-gradient-to-br from-white via-[#d9d2c5] to-[#81745f]'
+            : 'border-[#71675f] bg-gradient-to-br from-[#81776f] via-[#292522] to-[#080707]')
+        }
       >
-        {/* Subtle radial inner highlight */}
         <div
-          className={`absolute inset-0 rounded-full opacity-60 ${
-            isWhite
-              ? 'bg-[radial-gradient(circle_at_35%_28%,rgba(255,255,255,0.9),transparent_65%)]'
-              : 'bg-[radial-gradient(circle_at_35%_28%,rgba(255,255,255,0.22),transparent_60%)]'
-          }`}
-        />
-
-        {/* Traditional carved concentric circular groove (klasik tavla pulu halkası) */}
-        <div
-          className={`w-[66%] h-[66%] rounded-full border flex items-center justify-center transition-all ${
-            isWhite
-              ? 'border-[#caa885]/70 bg-gradient-to-b from-[#f2ebdf] to-[#dfd3bf] shadow-[inset_0_2px_3px_rgba(0,0,0,0.18)]'
-              : 'border-[#4e4540]/80 bg-gradient-to-b from-[#2a2624] to-[#181615] shadow-[inset_0_2px_4px_rgba(0,0,0,0.55)]'
-          }`}
+          className={
+            'relative h-full w-full overflow-hidden rounded-full border ' +
+            (isWhite
+              ? 'border-[#fffdf4] bg-[radial-gradient(circle_at_32%_24%,#ffffff_0%,#f5f0e6_34%,#d8c9b0_78%,#9d8a70_100%)] shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-4px_7px_rgba(70,48,24,0.28)]'
+              : 'border-[#514841] bg-[radial-gradient(circle_at_32%_24%,#69615b_0%,#302b27_38%,#171412_78%,#080707_100%)] shadow-[inset_0_2px_4px_rgba(255,255,255,0.22),inset_0_-5px_8px_rgba(0,0,0,0.9)]')
+          }
         >
-          {/* Inner center button/core */}
           <div
-            className={`w-[45%] h-[45%] rounded-full ${
-              isWhite
-                ? 'bg-gradient-to-b from-[#fcf9f2] to-[#ded2bd] border border-[#d2bfa6]/50 shadow-[0_1px_2px_rgba(0,0,0,0.12)]'
-                : 'bg-gradient-to-b from-[#38332f] to-[#1c1a18] border border-[#524943]/60 shadow-[0_1px_2px_rgba(0,0,0,0.4)]'
-            }`}
-          />
-        </div>
-
-        {/* Top subtle rim sheen */}
-        <div className="absolute top-0.5 inset-x-2 h-1/3 rounded-t-full bg-gradient-to-b from-white/30 to-transparent pointer-events-none" />
-
-        {/* Optional Count Badge when stack has many checkers */}
-        {badgeCount && badgeCount > 1 ? (
-          <div
-            className={`absolute z-20 font-bold text-xs px-1.5 py-0.5 rounded-full shadow-md ${
-              isWhite
-                ? 'bg-amber-900/90 text-amber-100 border border-amber-700/60'
-                : 'bg-amber-100 text-amber-950 border border-amber-300 font-extrabold'
-            }`}
+            className={
+              'absolute inset-[12%] rounded-full border ' +
+              (isWhite
+                ? 'border-white/90 bg-gradient-to-br from-white/80 via-[#f1e7d7] to-[#c9b698] shadow-[inset_0_2px_3px_rgba(255,255,255,0.9),inset_0_-2px_4px_rgba(91,64,34,0.25),0_1px_2px_rgba(255,255,255,0.75)]'
+                : 'border-[#8a7e72]/60 bg-gradient-to-br from-[#51483f] via-[#2b2622] to-[#100e0d] shadow-[inset_0_2px_3px_rgba(255,255,255,0.18),inset_0_-3px_5px_rgba(0,0,0,0.9)]')
+            }
           >
-            {badgeCount}
+            <div
+              className={
+                'absolute inset-[22%] rounded-full border ' +
+                (isWhite
+                  ? 'border-white/80 bg-gradient-to-br from-white to-[#d7c7ae] shadow-[0_1px_3px_rgba(70,48,24,0.2),inset_0_1px_2px_white]'
+                  : 'border-[#71665c]/70 bg-gradient-to-br from-[#62584e] to-[#1b1714] shadow-[0_2px_4px_rgba(0,0,0,0.7),inset_0_1px_2px_rgba(255,255,255,0.18)]')
+              }
+            />
           </div>
-        ) : null}
+
+          <div className="pointer-events-none absolute inset-x-[12%] top-[5%] h-[28%] rounded-[100%] bg-gradient-to-b from-white/60 via-white/15 to-transparent blur-[1px]" />
+          <div className="pointer-events-none absolute bottom-[8%] left-[22%] h-[12%] w-[56%] rounded-full bg-black/10 blur-[3px]" />
+
+          {badgeCount && badgeCount > 1 ? (
+            <div
+              className={
+                'absolute z-20 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full px-1.5 text-[10px] font-black shadow-[0_2px_5px_rgba(0,0,0,0.5)] ' +
+                (isWhite
+                  ? 'border border-amber-700/70 bg-gradient-to-b from-amber-700 to-amber-950 text-amber-50'
+                  : 'border border-amber-100 bg-gradient-to-b from-amber-50 to-amber-300 text-amber-950')
+              }
+            >
+              {badgeCount}
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
