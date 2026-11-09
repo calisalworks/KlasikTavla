@@ -181,7 +181,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
     // When dice are handed in from the opening roll, this view mounts already
     // holding their results. Seed a settled 3D pose so they appear immediately.
-    if (current.length === 0) {
+    if (current.length !== resultDice.length) {
       setPhysicsStates(resultDice.map((die, i) => {
         const target = FACE_ROTATIONS[die.value] || { rx: 0, ry: 0 };
         return {
@@ -223,7 +223,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         settled: true,
       };
     }));
-  }, [isRolling]);
+  }, [isRolling, dice.length]);
 
   // RequestAnimationFrame physics simulation loop
   useEffect(() => {
@@ -314,8 +314,8 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           // Table border bounds (keep dice inside central playing area)
           // Keep the dice within the visible right-side tray while allowing natural scatter.
-          const maxX = 52;
-          const maxY = 34;
+          const maxX = 48;
+          const maxY = 30;
           if (x < -maxX) {
             x = -maxX;
             vx = -vx * 0.5;
@@ -482,7 +482,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`relative flex items-center justify-center select-none pointer-events-none ${className}`}
+      className={`relative flex items-center justify-center select-none pointer-events-none overflow-hidden rounded-xl ${className}`}
       style={{ perspective: '800px' }}
     >
       {/* 1. If no dice rolled yet and player can roll: prominent CTA */}
@@ -507,7 +507,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           }`}
         >
           {/* Keep one identical stage and the same two physical dice before, during and after the roll. */}
-          <div className="relative w-40 h-28">
+          <div className="relative w-36 h-24 overflow-hidden">
             {physicsStates.map((st, i) => {
               const die = dice[i];
               const targetValue = die?.value ?? st.displayValue;
