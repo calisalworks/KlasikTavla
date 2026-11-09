@@ -203,6 +203,13 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
     // close the other client's animation too and reveal the shared first-move dice.
     if (room.openingRollCompleted) {
       setIsOpeningRollOpen(false);
+      if (room.dice.length > 0 && myColor) {
+        setStatusMessage(
+          room.turn === myColor
+            ? 'Başlangıç atışını kazandınız. Bu iki zar ilk hamlenizde kullanılacak.'
+            : 'Rakibiniz başlangıç atışını kazandı. Bu iki zar ilk hamlesinde kullanılacak.'
+        );
+      }
       return;
     }
     const rollKey = `${room.id}_${room.openingRoll.whiteDie}_${room.openingRoll.blackDie}_${room.whiteScore}_${room.blackScore}`;
