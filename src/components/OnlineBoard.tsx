@@ -194,6 +194,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
     }, 850);
   };
 
+  const startedOpeningTurnRef = useRef<string | null>(null);
   const [shownOpeningRollKey, setShownOpeningRollKey] = useState<string | null>(null);
   const [isOpeningRollOpen, setIsOpeningRollOpen] = useState(false);
 
@@ -210,6 +211,12 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             : 'Rakibiniz başlangıç atışını kazandı. Bu iki zar ilk hamlesinde kullanılacak.'
         );
       }
+      const openingKey = `${room.id}_${room.whiteScore}_${room.blackScore}_${room.openingRoll.whiteDie}_${room.openingRoll.blackDie}`;
+      if (startedOpeningTurnRef.current !== openingKey) {
+        startedOpeningTurnRef.current = openingKey;
+        startTurnTimer(room.turn);
+        if (myColor && room.turn === myColor) tavlaAudio.playTurnNotification();
+      }
       return;
     }
     const rollKey = `${room.id}_${room.openingRoll.whiteDie}_${room.openingRoll.blackDie}_${room.whiteScore}_${room.blackScore}`;
@@ -219,25 +226,18 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
     }
   }, [room?.openingRoll, room?.openingRollCompleted, room?.status, room?.whiteScore, room?.blackScore, room?.id, shownOpeningRollKey]);
 
+  const handleOpeningDieRoll = (color: PlayerColor) => {
+    if (!room || !myColor || color !== myColor || room.openingRollCompleted) return;
+    const alreadyRolled = color === 'white'
+      ? room.openingRoll?.whiteRolled
+      : room.openingRoll?.blackRolled;
+    if (alreadyRolled) return;
+    wsRef.current?.send(JSON.stringify({ type: 'game:opening_roll_player', roomId: room.id }));
+  };
+
   const handleOpeningRollComplete = () => {
-    setIsOpeningRollOpen(false);
-    if (room?.openingRoll && myColor) {
-      const wonOpeningRoll = room.openingRoll.winner === myColor;
-      setStatusMessage(
-        wonOpeningRoll
-          ? 'Başlangıç atışını kazandınız. Bu iki zar ilk hamlenizde kullanılacak.'
-          : 'Rakibiniz başlangıç atışını kazandı. Bu iki zar ilk hamlesinde kullanılacak.'
-      );
-    }
-    if (room?.openingRoll && !room.openingRollCompleted) {
-      wsRef.current?.send(JSON.stringify({ type: 'game:opening_roll_complete', roomId: room.id }));
-    }
-    if (room && room.status === 'playing' && !room.winnerInfo) {
-      startTurnTimer(room.turn);
-      if (myColor && room.turn === myColor) {
-        tavlaAudio.playTurnNotification();
-      }
-    }
+    // The server completes the opening roll after both players have rolled.
+    // The room update closes this overlay and starts the first-turn timer.
   };
 
   const startTurnTimer = (activeTurn?: PlayerColor) => {
@@ -2040,13 +2040,12 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
           isOpen={isOpeningRollOpen}
           whitePlayerName={room.whitePlayer?.name || 'Beyaz Oyuncu'}
           blackPlayerName={room.blackPlayer?.name || 'Siyah Oyuncu'}
-          whiteAvatar={room.whitePlayer?.avatar}
-          blackAvatar={room.blackPlayer?.avatar}
           whiteDie={room.openingRoll.whiteDie}
           blackDie={room.openingRoll.blackDie}
-          winner={room.openingRoll.winner}
-          ties={room.openingRoll.ties ?? []}
+          whiteRolled={room.openingRoll.whiteRolled ?? false}
+          blackRolled={room.openingRoll.blackRolled ?? false}
           myColor={myColor ?? undefined}
+          onRoll={handleOpeningDieRoll}
           onComplete={handleOpeningRollComplete}
         />
       )}
