@@ -160,7 +160,7 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
             isRolling={rolling}
             canRoll={false}
             onRollClick={() => undefined}
-            className="scale-110"
+            className="scale-90"
           />
         ) : (
           <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-amber-500/40 bg-black/35 text-3xl font-black text-amber-100 shadow-inner">
