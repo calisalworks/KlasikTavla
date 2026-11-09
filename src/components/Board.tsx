@@ -637,6 +637,7 @@ export const Board: React.FC<BoardProps> = ({
             isAITurnRef.current = false;
             setDice([]);
             diceRef.current = [];
+            setUndoHistory([]);
             startTurnTimer('white');
             setStatusMessage('Sıra Sizde. Zarları atın.');
             tavlaAudio.playTurnNotification();
@@ -716,6 +717,7 @@ export const Board: React.FC<BoardProps> = ({
                 isAITurnRef.current = false;
                 setDice([]);
                 diceRef.current = [];
+                setUndoHistory([]);
                 startTurnTimer('white');
                 setStatusMessage('Sıra Sizde. Zarları atın.');
                 tavlaAudio.playTurnNotification();
@@ -1118,6 +1120,7 @@ export const Board: React.FC<BoardProps> = ({
     setBoard(getInitialBoard());
     setDice([]);
     diceRef.current = [];
+    setUndoHistory([]);
     setSelectedPoint(null);
     setValidDestinations([]);
     setDragState(null);
