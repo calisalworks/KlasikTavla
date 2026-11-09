@@ -88,7 +88,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1c0f08] via-[#2a170d] to-[#120803] p-3 select-none overflow-hidden">
+    <div className="relative w-full h-full flex items-center justify-center bg-[radial-gradient(ellipse_at_center,rgba(129,75,34,0.42)_0%,rgba(42,23,13,0.96)_48%,#090503_100%)] p-3 select-none overflow-hidden">
       {/* Top-Left Corner: Profile Avatar, Details & Google Login/Logout */}
       <div className="absolute top-3 left-3 z-30 flex items-center gap-2">
         <div
@@ -190,7 +190,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
       </div>
 
       {/* Main Wood Craft Menu Board */}
-      <div className="relative z-10 w-full max-w-md sm:max-w-lg rounded-3xl bg-gradient-to-b from-[#6b3816] via-[#4e270d] to-[#341807] border-4 border-[#241004] p-4 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.95),inset_0_2px_4px_rgba(255,255,255,0.2)] flex flex-col items-center">
+      <div className="relative z-10 w-full max-w-md sm:max-w-lg rounded-[28px] bg-[linear-gradient(145deg,#8b542b_0%,#633717_18%,#48240f_58%,#2b1308_100%)] border-[5px] border-[#1d0c04] p-4 sm:p-6 shadow-[0_28px_70px_rgba(0,0,0,0.95),inset_0_2px_5px_rgba(255,235,190,0.38),inset_0_-5px_12px_rgba(0,0,0,0.5)] ring-1 ring-amber-700/40 flex flex-col items-center">
         {/* Header / Title (Küçültülmüş ve yukarı taşınmış Klasik Tavla) */}
         <div className="text-center mb-4 mt-0.5">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-200 to-amber-400 tracking-wider font-['Cinzel',serif] drop-shadow-md">
