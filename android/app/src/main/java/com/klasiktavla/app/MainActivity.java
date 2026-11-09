@@ -15,28 +15,37 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Apply immersive flags before Capacitor creates the WebView to avoid a
+        // one-frame system-bar flash during cold start.
+        applyEarlyFullscreenFlags();
         super.onCreate(savedInstanceState);
 
-        // Donanım hızlandırma ve maksimum akıcılık (Hardware Acceleration)
         getWindow().setFlags(
             WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
             WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
         );
 
-        // Tam ekran oyun: Çentik ve delikli kameraları (cutout) da kapsayacak şekilde kenardan kenara yerleşim
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             getWindow().getAttributes().layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
         }
 
-        // Oyun sırasında ekranın kararmasını/kapanmasını engelle
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        // Üst bildirim ve alt navigasyon çubuklarını gizle (Immersive Sticky Fullscreen)
         hideSystemUI();
-
-        // Android WebView optimizasyonları (Sıfır kasma, gecikme ve bekleme)
         optimizeWebView();
+    }
+
+    private void applyEarlyFullscreenFlags() {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            | View.SYSTEM_UI_FLAG_FULLSCREEN
+        );
     }
 
     private void optimizeWebView() {
@@ -52,7 +61,7 @@ public class MainActivity extends BridgeActivity {
                 settings.setEnableSmoothTransition(true);
             }
         } catch (Exception e) {
-            // ignore
+            // WebView may not be attached during the earliest lifecycle callbacks.
         }
     }
 
@@ -73,18 +82,16 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void hideSystemUI() {
-        // AndroidX WindowInsetsControllerCompat (Android 11+ ve geriye dönük tam uyum)
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        WindowInsetsControllerCompat insetsController =
+        WindowInsetsControllerCompat controller =
             WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-        if (insetsController != null) {
-            insetsController.hide(WindowInsetsCompat.Type.systemBars());
-            insetsController.setSystemBarsBehavior(
+        if (controller != null) {
+            controller.hide(WindowInsetsCompat.Type.systemBars());
+            controller.setSystemBarsBehavior(
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             );
         }
 
-        // Geriye dönük bayraklar (Eski sürümler ve her durum için)
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(
             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
