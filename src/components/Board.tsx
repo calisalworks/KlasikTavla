@@ -1664,7 +1664,7 @@ export const Board: React.FC<BoardProps> = ({
             )}
 
             {/* Hide normal game dice completely until the one-die opening roll is completed. */}
-            {openingRoll.isComplete && (
+            {openingRoll?.isComplete && (
               <div className="absolute inset-y-0 right-0 w-1/2 pointer-events-none flex items-center justify-center z-30">
                 <div className="pointer-events-auto">
                   <DicePhysicsView
