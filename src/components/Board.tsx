@@ -890,6 +890,7 @@ export const Board: React.FC<BoardProps> = ({
       return;
     }
     const moves = getLegalMovesForPosition(board, from, turn, dice);
+    validDestinationsRef.current = moves;
     if (moves.length === 0) {
       setStatusMessage('Bu taş ile oynanabilecek geçerli bir hamle yok.');
       return;
