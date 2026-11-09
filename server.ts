@@ -1295,6 +1295,7 @@ wss.on('connection', (ws) => {
             dice: newDice.map((d) => ({ ...d })),
             movesMade: [],
           };
+          room.undoHistory = [];
 
           const hasMoves = hasAnyLegalMoves(room.board, room.turn, newDice);
 
@@ -1420,6 +1421,14 @@ wss.on('connection', (ws) => {
             (idx) => idx >= 0 && idx < room.dice.length && !room.dice[idx].used
           );
           if (!allDiceAvailable) return;
+
+          // Save the state before each individual move for one-step undo.
+          room.undoHistory = room.undoHistory || [];
+          room.undoHistory.push({
+            board: cloneBoard(room.board),
+            dice: room.dice.map((die) => ({ ...die })),
+            movesMade: [],
+          });
 
           // Apply move authoritatively
           let newBoard = room.board;
@@ -1576,7 +1585,7 @@ wss.on('connection', (ws) => {
           const myColor = isWhite ? 'white' : isBlack ? 'black' : null;
 
           if (myColor !== room.turn) return;
-          if (!room.turnSnapshot) return;
+          if (!room.undoHistory?.length) return;
 
           // Cancel any pending turn pass timeout if player chose to Undo!
           const pendingPass = passTimeouts.get(room.id);
@@ -1585,9 +1594,10 @@ wss.on('connection', (ws) => {
             passTimeouts.delete(room.id);
           }
 
-          // Restore authoritative board & dice from snapshot
-          room.board = cloneBoard(room.turnSnapshot.board);
-          room.dice = room.turnSnapshot.dice.map((d) => ({ ...d }));
+          // Restore only the immediately preceding move.
+          const previous = room.undoHistory.pop()!;
+          room.board = cloneBoard(previous.board);
+          room.dice = previous.dice.map((d) => ({ ...d }));
           room.lastActivity = Date.now();
 
           broadcastToRoom(room.id, {
