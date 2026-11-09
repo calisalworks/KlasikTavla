@@ -330,13 +330,31 @@ export const Board: React.FC<BoardProps> = ({
   };
 
   // Opening roll to determine who goes first (classic backgammon rule)
+  // Initialize the opening roll synchronously so auto-roll/AI effects cannot
+  // run once with a null opening state on the first render.
   const [openingRoll, setOpeningRoll] = useState<{
     whiteDie: number;
     blackDie: number;
     winner: PlayerColor;
     ties: { white: number; black: number }[];
     isComplete: boolean;
-  } | null>(null);
+  }>(() => {
+    const ties: { white: number; black: number }[] = [];
+    let w = 0;
+    let b = 0;
+    while (w === b) {
+      w = Math.floor(Math.random() * 6) + 1;
+      b = Math.floor(Math.random() * 6) + 1;
+      if (w === b) ties.push({ white: w, black: b });
+    }
+    return {
+      whiteDie: w,
+      blackDie: b,
+      winner: w > b ? 'white' : 'black',
+      ties,
+      isComplete: false,
+    };
+  });
 
   const startOpeningRoll = () => {
     isAITurnRef.current = false;
@@ -1637,17 +1655,19 @@ export const Board: React.FC<BoardProps> = ({
               </div>
             )}
 
-            {/* Floating Live 3D Physics Dice - Positioned in the Right Tray to prevent covering middle bar checkers */}
-            <div className="absolute inset-y-0 right-0 w-1/2 pointer-events-none flex items-center justify-center z-30">
-              <div className="pointer-events-auto translate-x-4">
-                <DicePhysicsView
-                  dice={dice}
-                  isRolling={isRolling}
-                  canRoll={!(openingRoll && !openingRoll.isComplete) && turn === 'white' && dice.length === 0 && !winnerInfo && !matchWinner}
-                  onRollClick={handleRollDice}
-                />
+            {/* Hide normal game dice completely until the one-die opening roll is completed. */}
+            {openingRoll.isComplete && (
+              <div className="absolute inset-y-0 right-0 w-1/2 pointer-events-none flex items-center justify-center z-30">
+                <div className="pointer-events-auto translate-x-4">
+                  <DicePhysicsView
+                    dice={dice}
+                    isRolling={isRolling}
+                    canRoll={turn === 'white' && dice.length === 0 && !winnerInfo && !matchWinner}
+                    onRollClick={handleRollDice}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* GERİ AL BUTONU: Sağ tarafta kalsın */}
             {turn === 'white' && !winnerInfo && !matchWinner && turnSnapshot && dice.some((d) => d.used) && (
