@@ -32,6 +32,7 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
   onComplete,
 }) => {
   const [phase, setPhase] = useState<'waiting_for_roll' | 'rolling' | 'revealed'>('waiting_for_roll');
+  const phaseRef = useRef<'waiting_for_roll' | 'rolling' | 'revealed'>('waiting_for_roll');
   const [countdown, setCountdown] = useState<number>(5);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const rollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -47,7 +48,8 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
   };
 
   const startRoll = useCallback(() => {
-    if (phase !== 'waiting_for_roll') return;
+    if (phaseRef.current !== 'waiting_for_roll') return;
+    phaseRef.current = 'rolling';
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
       countdownIntervalRef.current = null;
@@ -56,20 +58,23 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
     tavlaAudio.playDiceRoll();
 
     rollTimeoutRef.current = setTimeout(() => {
+      phaseRef.current = 'revealed';
       setPhase('revealed');
       tavlaAudio.playDiceDrop();
       autoCloseTimeoutRef.current = setTimeout(onComplete, 2600);
     }, 700);
-  }, [onComplete, phase]);
+  }, [onComplete]);
 
   useEffect(() => {
     if (!isOpen) {
       clearTimers();
+      phaseRef.current = 'waiting_for_roll';
       setPhase('waiting_for_roll');
       setCountdown(5);
       return;
     }
 
+    phaseRef.current = 'waiting_for_roll';
     setPhase('waiting_for_roll');
     setCountdown(5);
     countdownIntervalRef.current = setInterval(() => {
