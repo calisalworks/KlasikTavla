@@ -341,8 +341,10 @@ export const Board: React.FC<BoardProps> = ({
     blackDie: number;
     winner: PlayerColor;
     ties: { white: number; black: number }[];
+    whiteRolled: boolean;
+    blackRolled: boolean;
     isComplete: boolean;
-  }>(() => {
+  } | null>(() => {
     const ties: { white: number; black: number }[] = [];
     let w = 0;
     let b = 0;
