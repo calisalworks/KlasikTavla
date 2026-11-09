@@ -1282,7 +1282,9 @@ wss.on('connection', (ws) => {
           const myColor = isWhite ? 'white' : isBlack ? 'black' : null;
 
           if (myColor !== room.turn) return;
-          if (room.dice.length > 0 && room.dice.some((d) => !d.used)) return;
+          // Do not allow another roll until the previous turn is explicitly passed and its dice are cleared.
+          // Even when every die is used, the server may still be waiting to broadcast game:turn_passed.
+          if (room.dice.length > 0) return;
 
           if (myColor === 'white') room.whiteTimeouts = 0;
           if (myColor === 'black') room.blackTimeouts = 0;
