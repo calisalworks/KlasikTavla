@@ -120,6 +120,7 @@ function finalizeOpeningRoll(room: GameRoom) {
       dice: room.dice.map((die) => ({ ...die })),
       movesMade: [],
     };
+    room.undoHistory = [];
     room.openingRollCompleted = true;
     room.lastActivity = Date.now();
     const hasMoves = hasAnyLegalMoves(room.board, room.turn, room.dice);
@@ -130,6 +131,7 @@ function finalizeOpeningRoll(room: GameRoom) {
         if (rooms.get(room.id) === room && room.dice.some((die) => !die.used)) {
           room.dice = [];
           room.turnSnapshot = null;
+          room.undoHistory = [];
           room.turn = room.turn === 'white' ? 'black' : 'white';
           broadcastToRoom(room.id, { type: 'game:turn_passed', room, reason: 'Hamle yok' });
         }
@@ -1166,6 +1168,7 @@ wss.on('connection', (ws) => {
             room.openingRollCompleted = false;
             room.dice = [];
             room.turnSnapshot = null;
+            room.undoHistory = [];
             room.status = 'playing';
             scheduleOpeningRollFallback(room);
           }
@@ -1351,6 +1354,7 @@ wss.on('connection', (ws) => {
 
                   activeRoom.dice = [];
                   activeRoom.turnSnapshot = null;
+                  activeRoom.undoHistory = [];
                   activeRoom.turn = activeRoom.turn === 'white' ? 'black' : 'white';
                   broadcastToRoom(activeRoom.id, {
                     type: 'game:turn_passed',
@@ -1376,6 +1380,7 @@ wss.on('connection', (ws) => {
               if (rooms.get(room.id) === room) {
                 room.dice = [];
                 room.turnSnapshot = null;
+                room.undoHistory = [];
                 room.turn = room.turn === 'white' ? 'black' : 'white';
                 broadcastToRoom(room.id, {
                   type: 'game:turn_passed',
@@ -1488,6 +1493,7 @@ wss.on('connection', (ws) => {
               if (rooms.get(room.id) === room && !room.winnerInfo) {
                 room.dice = [];
                 room.turnSnapshot = null;
+                room.undoHistory = [];
                 room.turn = room.turn === 'white' ? 'black' : 'white';
                 broadcastToRoom(room.id, {
                   type: 'game:turn_passed',
@@ -1567,6 +1573,7 @@ wss.on('connection', (ws) => {
 
           room.dice = [];
           room.turnSnapshot = null;
+          room.undoHistory = [];
           room.turn = room.turn === 'white' ? 'black' : 'white';
           broadcastToRoom(room.id, {
             type: 'game:turn_passed',
@@ -1634,6 +1641,7 @@ wss.on('connection', (ws) => {
             room.board = getInitialBoard();
             room.dice = [];
             room.turnSnapshot = null;
+            room.undoHistory = [];
             room.winnerInfo = null;
             room.prizeClaimed = false;
             room.status = 'playing';
@@ -1686,6 +1694,7 @@ wss.on('connection', (ws) => {
           room.board = getInitialBoard();
           room.dice = [];
           room.turnSnapshot = null;
+          room.undoHistory = [];
           room.winnerInfo = null;
           room.prizeClaimed = false;
           room.status = 'playing';
