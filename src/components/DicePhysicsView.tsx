@@ -137,7 +137,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     if (isRolling) {
       settlingRef.current = false;
       // Backgammon uses two physical dice; doubles grant four moves, not four visible dice.
-      const count = 2;
+      const count = Math.min(Math.max(diceRef.current.length, 1), 2);
       const newStates: PhysicsDieState[] = [];
 
       for (let i = 0; i < count; i++) {
