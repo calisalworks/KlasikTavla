@@ -137,7 +137,9 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     if (isRolling) {
       settlingRef.current = false;
       // Backgammon uses two physical dice; doubles grant four moves, not four visible dice.
-      const count = Math.min(Math.max(diceRef.current.length, 1), 2);
+      // Opening roll passes one die; every regular turn must animate both dice,
+      // even though the result values arrive only after the roll animation.
+      const count = diceRef.current.length === 1 ? 1 : 2;
       const newStates: PhysicsDieState[] = [];
 
       for (let i = 0; i < count; i++) {
@@ -156,9 +158,9 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           rotX: Math.random() * 720 - 360,
           rotY: Math.random() * 720 - 360,
           rotZ: Math.random() * 360,
-          vRotX: (Math.random() > 0.5 ? 1 : -1) * (600 + Math.random() * 700),
+          vRotX: (Math.random() > 0.5 ? 1 : -1) * (1800 + Math.random() * 1600),
           vRotY: (Math.random() > 0.5 ? 1 : -1) * (600 + Math.random() * 700),
-          vRotZ: (Math.random() > 0.5 ? 1 : -1) * (250 + Math.random() * 350),
+          vRotZ: (Math.random() > 0.5 ? 1 : -1) * (700 + Math.random() * 500),
           displayValue: Math.floor(Math.random() * 6) + 1,
           settled: false,
         });
