@@ -352,6 +352,8 @@ export const Board: React.FC<BoardProps> = ({
       blackDie: b,
       winner: w > b ? 'white' : 'black',
       ties,
+      whiteRolled: false,
+      blackRolled: false,
       isComplete: false,
     };
   });
@@ -379,6 +381,8 @@ export const Board: React.FC<BoardProps> = ({
       blackDie: b,
       winner: win,
       ties,
+      whiteRolled: false,
+      blackRolled: false,
       isComplete: false,
     });
   };
@@ -391,6 +395,13 @@ export const Board: React.FC<BoardProps> = ({
       aiTimeoutsRef.current.forEach(clearTimeout);
     };
   }, []);
+
+  const handleOpeningDieRoll = (color: PlayerColor) => {
+    setOpeningRoll((prev) => {
+      if (!prev || prev.isComplete || prev[ color === 'white' ? 'whiteRolled' : 'blackRolled' ]) return prev;
+      return { ...prev, [color === 'white' ? 'whiteRolled' : 'blackRolled']: true };
+    });
+  };
 
   const handleOpeningRollComplete = () => {
     if (!openingRoll) return;
@@ -1979,12 +1990,13 @@ export const Board: React.FC<BoardProps> = ({
         isOpen={!!openingRoll && !openingRoll.isComplete}
         whitePlayerName={profile?.name || 'SİZ'}
         blackPlayerName="Yapay Zeka"
-        whiteAvatar={profile?.avatar}
         whiteDie={openingRoll?.whiteDie ?? 1}
         blackDie={openingRoll?.blackDie ?? 1}
-        winner={openingRoll?.winner ?? 'white'}
-        ties={openingRoll?.ties ?? []}
+        whiteRolled={openingRoll?.whiteRolled ?? false}
+        blackRolled={openingRoll?.blackRolled ?? false}
         myColor="white"
+        isLocalGame
+        onRoll={handleOpeningDieRoll}
         onComplete={handleOpeningRollComplete}
       />
     </div>
