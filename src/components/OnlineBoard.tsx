@@ -81,6 +81,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   const [selectedPoint, setSelectedPoint] = useState<number | 'bar' | null>(null);
   const [validDestinations, setValidDestinations] = useState<LegalMoveInfo[]>([]);
   const [dragState, setDragState] = useState<DragState | null>(null);
+  // Keep the active pointer session synchronous; React state alone can lag behind fast swipes.
+  const dragStateRef = useRef<DragState | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>('Odaya bağlanılıyor...');
   const [showAbandonConfirm, setShowAbandonConfirm] = useState(false);
   const [abandonedNotice, setAbandonedNotice] = useState<string | null>(null);
@@ -805,42 +807,25 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   };
 
   // HIGH-SENSITIVITY & ULTRA-HIGH FPS DRAG & DROP HANDLERS
+  // Pointer-driven drag: keep coordinates in refs so a quick flick cannot outrun React rendering.
   const handlePointerDownOnChecker = (e: React.PointerEvent, from: number | 'bar') => {
     if (!room || !myColor || isRolling || room.status !== 'playing' || room.winnerInfo) return;
     if (room.turn !== myColor) return;
     if (room.dice.length === 0 || room.dice.every((d) => d.used)) return;
-
     if (room.board.bar[myColor] > 0 && from !== 'bar') {
       setStatusMessage('Kırık taşınız var! Önce kırık taşı oyuna sokmalısınız.');
       return;
     }
 
-    // If another piece was selected: check if 'from' is a valid target to move to, OR switch selection!
-    if (selectedPoint !== null && selectedPoint !== from) {
-      if (from !== 'bar' && validDestinations.some((d) => d.to === from)) {
-        executeMoveTo(from);
-        return;
-      }
-      // Switch selection smoothly to this friendly checker on single click!
-      const moves = getLegalMovesForPosition(room.board, from, myColor, room.dice);
-      if (moves.length === 0) {
-        setStatusMessage('Bu taş ile oynanabilecek geçerli bir hamle yok.');
-        return;
-      }
-      setSelectedPoint(from);
-      setValidDestinations(moves);
-      justSelectedRef.current = from;
-      selectedAtRef.current = { point: from, timestamp: Date.now() };
-      tavlaAudio.playButtonClick();
+    if (selectedPoint !== null && selectedPoint !== from && from !== 'bar' && validDestinations.some((d) => d.to === from)) {
+      executeMoveTo(from);
       return;
     }
-
-    const moves = getLegalMovesForPosition(room.board, from, myColor, room.dice);
+    const moves = getLegalMovesForPosition(room.board, from, myColor!, room.dice);
     if (moves.length === 0) {
       setStatusMessage('Bu taş ile oynanabilecek geçerli bir hamle yok.');
       return;
     }
-
     if (selectedPoint !== from) {
       setSelectedPoint(from);
       setValidDestinations(moves);
@@ -848,74 +833,55 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
       selectedAtRef.current = { point: from, timestamp: Date.now() };
       tavlaAudio.playButtonClick();
     }
-
     try {
       (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
     } catch {
-      // Ignore if pointer capture unsupported
+      // Pointer capture is best-effort on older WebViews.
     }
-
+    const initial: DragState = {
+      from, startX: e.clientX, startY: e.clientY,
+      currentX: e.clientX, currentY: e.clientY,
+      isDragging: false, hoveredTarget: null,
+    };
     pointerCoordsRef.current = { x: e.clientX, y: e.clientY };
-
-    setDragState({
-      from,
-      startX: e.clientX,
-      startY: e.clientY,
-      currentX: e.clientX,
-      currentY: e.clientY,
-      isDragging: false,
-      hoveredTarget: null,
-    });
+    dragStateRef.current = initial;
+    setDragState(initial);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!dragState) return;
-
-    pointerCoordsRef.current = { x: e.clientX, y: e.clientY };
-
-    // Direct DOM translation update for 120Hz/60Hz buttery smoothness
-    if (ghostRef.current) {
-      ghostRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%)`;
+    const active = dragStateRef.current;
+    if (!active) return;
+    const x = e.clientX, y = e.clientY;
+    pointerCoordsRef.current = { x, y };
+    const dx = x - active.startX, dy = y - active.startY;
+    const isDragging = active.isDragging || Math.hypot(dx, dy) >= 2;
+    if (ghostRef.current && isDragging) {
+      ghostRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
     }
+    const hoveredTarget = isDragging ? findDropTarget(x, y, validDestinations) : null;
+    const next: DragState = { ...active, currentX: x, currentY: y, isDragging, hoveredTarget };
+    dragStateRef.current = next;
+    if (isDragging !== active.isDragging || hoveredTarget !== active.hoveredTarget) {
+      setDragState(next);
+    }
+  };
 
-    const dx = e.clientX - dragState.startX;
-    const dy = e.clientY - dragState.startY;
-    const distance = Math.hypot(dx, dy);
-
-    const hoveredTarget = findDropTarget(e.clientX, e.clientY, validDestinations);
-
-    // Only update React state when dragging status or hovered drop target changes
-    if ((!dragState.isDragging && distance > 3) || dragState.hoveredTarget !== hoveredTarget) {
-      setDragState((prev) =>
-        prev
-          ? {
-              ...prev,
-              currentX: e.clientX,
-              currentY: e.clientY,
-              isDragging: true,
-              hoveredTarget,
-            }
-          : null
-      );
+  const finishPointerDrag = (clientX: number, clientY: number) => {
+    const active = dragStateRef.current;
+    if (!active) return;
+    const dx = clientX - active.startX, dy = clientY - active.startY;
+    const dragged = active.isDragging || Math.hypot(dx, dy) >= 2;
+    // Always hit-test the actual release point. Never trust a stale hover value from a prior frame.
+    const dropTarget = dragged ? findDropTarget(clientX, clientY, validDestinations) : null;
+    dragStateRef.current = null;
+    setDragState(null);
+    if (dropTarget !== null && validDestinations.some((d) => d.to === dropTarget)) {
+      executeMoveTo(dropTarget);
     }
   };
 
   const handlePointerUp = (e?: React.PointerEvent) => {
-    if (!dragState) return;
-
-    const finalX = e ? e.clientX : pointerCoordsRef.current.x;
-    const finalY = e ? e.clientY : pointerCoordsRef.current.y;
-
-    if (dragState.isDragging) {
-      const dropTarget = dragState.hoveredTarget ?? findDropTarget(finalX, finalY, validDestinations);
-      if (dropTarget !== null && validDestinations.some((d) => d.to === dropTarget)) {
-        executeMoveTo(dropTarget);
-        setDragState(null);
-        return;
-      }
-    }
-
-    setDragState(null);
+    finishPointerDrag(e?.clientX ?? pointerCoordsRef.current.x, e?.clientY ?? pointerCoordsRef.current.y);
   };
 
   const handlePointClick = (pointIndex: number | 'bar') => {
@@ -1252,6 +1218,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
       ref={boardRef}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onPointerCancel={() => { dragStateRef.current = null; setDragState(null); }}
       className="relative w-full h-full flex flex-row items-stretch select-none overflow-hidden bg-[#181310] touch-none"
     >
       {/* 1. LEFT PANEL */}
