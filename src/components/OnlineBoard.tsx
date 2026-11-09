@@ -80,6 +80,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   const [isRolling, setIsRolling] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState<number | 'bar' | null>(null);
   const [validDestinations, setValidDestinations] = useState<LegalMoveInfo[]>([]);
+  const validDestinationsRef = useRef<LegalMoveInfo[]>([]);
   const [dragState, setDragState] = useState<DragState | null>(null);
   // Keep the active pointer session synchronous; React state alone can lag behind fast swipes.
   const dragStateRef = useRef<DragState | null>(null);
@@ -829,6 +830,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
     if (selectedPoint !== from) {
       setSelectedPoint(from);
       setValidDestinations(moves);
+      validDestinationsRef.current = moves;
       justSelectedRef.current = from;
       selectedAtRef.current = { point: from, timestamp: Date.now() };
       tavlaAudio.playButtonClick();
@@ -858,7 +860,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
     if (ghostRef.current && isDragging) {
       ghostRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
     }
-    const hoveredTarget = isDragging ? findDropTarget(x, y, validDestinations) : null;
+    const hoveredTarget = isDragging ? findDropTarget(x, y, validDestinationsRef.current) : null;
     const next: DragState = { ...active, currentX: x, currentY: y, isDragging, hoveredTarget };
     dragStateRef.current = next;
     if (isDragging !== active.isDragging || hoveredTarget !== active.hoveredTarget) {
@@ -872,10 +874,10 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
     const dx = clientX - active.startX, dy = clientY - active.startY;
     const dragged = active.isDragging || Math.hypot(dx, dy) >= 2;
     // Always hit-test the actual release point. Never trust a stale hover value from a prior frame.
-    const dropTarget = dragged ? findDropTarget(clientX, clientY, validDestinations) : null;
+    const dropTarget = dragged ? findDropTarget(clientX, clientY, validDestinationsRef.current) : null;
     dragStateRef.current = null;
     setDragState(null);
-    if (dropTarget !== null && validDestinations.some((d) => d.to === dropTarget)) {
+    if (dropTarget !== null && validDestinationsRef.current.some((d) => d.to === dropTarget)) {
       executeMoveTo(dropTarget);
     }
   };
