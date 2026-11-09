@@ -273,6 +273,7 @@ export const Board: React.FC<BoardProps> = ({
 
   // Turn history for "GERİ AL" (Undo)
   const [turnSnapshot, setTurnSnapshot] = useState<TurnSnapshot | null>(null);
+  const [undoHistory, setUndoHistory] = useState<TurnSnapshot[]>([]);
 
   // Scores
   const [whiteScore, setWhiteScore] = useState(0);
@@ -365,6 +366,7 @@ export const Board: React.FC<BoardProps> = ({
     clearAutoPassTimers();
     clearTurnTimer();
     setDice([]);
+    setUndoHistory([]);
 
     const ties: { white: number; black: number }[] = [];
     let w = 0, b = 0;
@@ -572,6 +574,7 @@ export const Board: React.FC<BoardProps> = ({
     setTurnSnapshot(null);
     setDice([]);
     diceRef.current = [];
+    setUndoHistory([]);
 
     const nextPlayer: PlayerColor = turn === 'white' ? 'black' : 'white';
     setTurn(nextPlayer);
@@ -782,6 +785,13 @@ export const Board: React.FC<BoardProps> = ({
 
     const matchedMove = validDestinations.find((m) => m.to === target);
     if (!matchedMove) return;
+
+    // Save the exact state immediately before this individual move.
+    setUndoHistory((history) => [...history, {
+      board: cloneBoard(board),
+      dice: dice.map((die) => ({ ...die })),
+      movesMade: [],
+    }]);
 
     let newBoard: BoardState;
     let hit = false;
@@ -1082,19 +1092,18 @@ export const Board: React.FC<BoardProps> = ({
   };
 
   const handleUndo = () => {
-    if (!turnSnapshot || isRolling || winnerInfo || matchWinner) return;
-
+    if (undoHistory.length === 0 || isRolling || winnerInfo || matchWinner) return;
     clearAutoPassTimers();
-    // Do NOT restart turn timer: remaining 20s countdown continues continuously!
-
-    setBoard(cloneBoard(turnSnapshot.board));
-    setDice(turnSnapshot.dice.map((d) => ({ ...d })));
-    diceRef.current = turnSnapshot.dice.map((d) => ({ ...d }));
+    const previous = undoHistory[undoHistory.length - 1];
+    setUndoHistory((history) => history.slice(0, -1));
+    setBoard(cloneBoard(previous.board));
+    setDice(previous.dice.map((d) => ({ ...d })));
+    diceRef.current = previous.dice.map((d) => ({ ...d }));
     setSelectedPoint(null);
     setValidDestinations([]);
     setDragState(null);
     tavlaAudio.playButtonClick();
-    setStatusMessage('Hamleler geri alındı. Kalan süreniz içinde zarlarınızı yeniden oynayabilirsiniz.');
+    setStatusMessage('Son hamle geri alındı. İsterseniz bir önceki hamleyi de geri alabilirsiniz.');
   };
 
   const handleNextRound = () => {
@@ -1708,7 +1717,7 @@ export const Board: React.FC<BoardProps> = ({
             />
 
             {/* GERİ AL BUTONU: Sağ tarafta kalsın */}
-            {turn === 'white' && !winnerInfo && !matchWinner && turnSnapshot && dice.some((d) => d.used) && (
+            {turn === 'white' && !winnerInfo && !matchWinner && undoHistory.length > 0 && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-2 pointer-events-auto animate-in fade-in duration-150">
                 <button
                   onClick={handleUndo}
@@ -1803,7 +1812,7 @@ export const Board: React.FC<BoardProps> = ({
         <div className="h-7 flex items-center justify-between px-3 mt-1 text-[11px] text-amber-300/80 select-none bg-[#241710]/60 rounded-lg border border-amber-900/30">
           <div className="flex items-center gap-3">
             <span>Taşı sürükleyin veya hedef haneye dokunun</span>
-            {turn === 'white' && turnSnapshot && dice.some((d) => d.used) && !winnerInfo && (
+            {turn === 'white' && undoHistory.length > 0 && !winnerInfo && (
               <button
                 onClick={handleUndo}
                 className="px-2.5 py-0.5 rounded-md bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-600 hover:to-amber-800 text-amber-100 text-[11px] font-bold border border-amber-500/60 shadow flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
