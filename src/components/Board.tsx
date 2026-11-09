@@ -588,17 +588,29 @@ export const Board: React.FC<BoardProps> = ({
     aiTimeoutsRef.current = [];
 
     const rollTimer = setTimeout(() => {
-      setIsRolling(true);
-      tavlaAudio.playDiceRoll();
+      // If the AI won the opening roll, those two dice are already its first move.
+      const openingDiceAlreadySet = diceRef.current.length > 0 && diceRef.current.some((die) => !die.used);
+      if (!openingDiceAlreadySet) {
+        setIsRolling(true);
+        tavlaAudio.playDiceRoll();
+      }
 
       const dropTimer = setTimeout(() => {
-        const aiDice = rollDice();
+        const aiDice = openingDiceAlreadySet
+          ? diceRef.current.map((die) => ({ ...die }))
+          : rollDice();
         setDice(aiDice);
         diceRef.current = aiDice;
-        setIsRolling(false);
-        tavlaAudio.playDiceDrop();
+        if (!openingDiceAlreadySet) {
+          setIsRolling(false);
+          tavlaAudio.playDiceDrop();
+        }
 
-        setStatusMessage(`Rakip zar attı: ${aiDice[0].value} - ${aiDice[1].value}`);
+        setStatusMessage(
+          openingDiceAlreadySet
+            ? `Rakip başlangıç zarlarıyla oynuyor: ${aiDice[0].value} - ${aiDice[1].value}`
+            : `Rakip zar attı: ${aiDice[0].value} - ${aiDice[1].value}`
+        );
 
         const currentBoardSnapshot = cloneBoard(boardRefState.current);
         const bestSteps = findBestMovesForAI(currentBoardSnapshot, aiDice, settings.aiDifficulty);
@@ -700,7 +712,7 @@ export const Board: React.FC<BoardProps> = ({
 
           aiTimeoutsRef.current.push(startTimer);
         });
-      }, 1150);
+      }, openingDiceAlreadySet ? 0 : 1150);
       aiTimeoutsRef.current.push(dropTimer);
     }, 800);
 
