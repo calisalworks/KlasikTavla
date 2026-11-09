@@ -28,6 +28,13 @@ import { StatusBar } from '@capacitor/status-bar';
 
 export default function App() {
   const [activeView, setActiveView] = useState<'MENU' | 'SINGLE_PLAYER' | 'ONLINE_BOARD'>('MENU');
+
+  // CALISAL WORKS marka açılışı — Harf Yolu ile aynı görsel, 3,5 saniye.
+  const [showBrandSplash, setShowBrandSplash] = useState(true);
+  useEffect(() => {
+    const splashTimer = window.setTimeout(() => setShowBrandSplash(false), 3500);
+    return () => window.clearTimeout(splashTimer);
+  }, []);
   const [singlePlayerTargetScore, setSinglePlayerTargetScore] = useState<TargetScore>(3);
   const [onlineRoomId, setOnlineRoomId] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile>(getUserProfile);
@@ -280,6 +287,11 @@ export default function App() {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#120d09] font-['Plus_Jakarta_Sans',sans-serif] flex flex-col select-none touch-none">
+      {showBrandSplash && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black">
+          <img src="/calisal-works-intro.jpg" alt="CALISAL WORKS" className="h-full w-full object-contain" />
+        </div>
+      )}
       {/* Strict Landscape Lock Screen for Mobile/Tablets */}
       <LandscapeNotice
         onToggleFullscreen={toggleFullscreen}
