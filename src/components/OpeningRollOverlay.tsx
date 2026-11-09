@@ -183,7 +183,7 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
             {settled ? 'ZAR ATILDI' : 'ZAR ATIŞI...'}
           </div>
         )}
-        {!rolled && (isMySide || (isLocalGame && color === 'black' && whiteRolled)) && (
+        {!rolled && (!isLocalGame || isMySide || (isLocalGame && color === 'black' && whiteRolled)) && (
           <div className="text-[10px] font-black text-amber-200 drop-shadow">
             {seconds} sn
           </div>
