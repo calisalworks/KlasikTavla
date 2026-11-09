@@ -45,7 +45,7 @@ const OpeningDie3D: React.FC<{ value: number; phase: 'waiting_for_roll' | 'rolli
   const transform = phase === 'rolling'
     ? 'rotateX(720deg) rotateY(540deg) rotateZ(360deg)'
     : phase === 'revealed'
-      ? 'rotateX(' + target.x + 'deg) rotateY(' + target.y + 'deg)'
+      ? 'rotateX(' + (720 + target.x) + 'deg) rotateY(' + (540 + target.y) + 'deg) rotateZ(360deg)'
       : 'rotateX(-12deg) rotateY(18deg) rotateZ(-4deg)';
 
   const face = (faceValue: number, transformStyle: string) => (
@@ -116,7 +116,14 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
   const rollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const autoCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const onCompleteRef = useRef(onComplete);
+  const completionSentRef = useRef(false);
   onCompleteRef.current = onComplete;
+
+  const completeOnce = useCallback(() => {
+    if (completionSentRef.current) return;
+    completionSentRef.current = true;
+    onCompleteRef.current();
+  }, []);
 
   const clearTimers = () => {
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
@@ -140,20 +147,22 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
       phaseRef.current = 'revealed';
       setPhase('revealed');
       tavlaAudio.playDiceDrop();
-      autoCloseTimeoutRef.current = setTimeout(() => onCompleteRef.current(), 2200);
+      autoCloseTimeoutRef.current = setTimeout(completeOnce, 2200);
     }, 820);
-  }, []);
+  }, [completeOnce]);
 
   useEffect(() => {
     if (!isOpen) {
       clearTimers();
       phaseRef.current = 'waiting_for_roll';
+      completionSentRef.current = false;
       setPhase('waiting_for_roll');
       setCountdown(3);
       return;
     }
 
     phaseRef.current = 'waiting_for_roll';
+    completionSentRef.current = false;
     setPhase('waiting_for_roll');
     setCountdown(3);
     countdownIntervalRef.current = setInterval(() => {
@@ -169,7 +178,7 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
     }, 1000);
 
     return clearTimers;
-  }, [isOpen, startRoll]);
+  }, [isOpen, startRoll, completeOnce]);
 
   if (!isOpen) return null;
 
@@ -274,7 +283,7 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
                   : (whiteWins ? whitePlayerName : blackPlayerName) + ' oyuna başlıyor.'}
               </div>
               <button
-                onClick={onComplete}
+                onClick={completeOnce}
                 className="flex items-center gap-2 rounded-xl border border-amber-200/50 bg-gradient-to-b from-amber-300 via-amber-500 to-amber-700 px-6 py-2.5 text-[10px] font-black tracking-wider text-amber-950 shadow-[0_7px_20px_rgba(245,158,11,0.25),inset_0_1px_0_rgba(255,255,255,0.65)] transition hover:brightness-110 active:scale-95"
               >
                 OYUNA GEÇ <ArrowRight className="h-4 w-4" />
