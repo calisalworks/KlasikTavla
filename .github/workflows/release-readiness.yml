@@ -1,6 +1,8 @@
 name: Release readiness checks
 
 on:
+  push:
+    branches: [fix/accepted-game-with-intro]
   pull_request:
     branches: [main]
 
