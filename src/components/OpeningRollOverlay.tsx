@@ -47,56 +47,44 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
   };
 
   useEffect(() => {
-    if (!isOpen) {
-      requestedRef.current = { white: false, black: false };
-      completedRef.current = false;
-      setWhiteRolling(false);
-      setBlackRolling(false);
-      setWhiteSettled(false);
-      setBlackSettled(false);
-      setWhiteSeconds(5);
-      setBlackSeconds(5);
-      return;
-    }
-
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const intervals: ReturnType<typeof setInterval>[] = [];
-
-    const startCountdown = (color: PlayerColor, alreadyRolled: boolean) => {
-      if (alreadyRolled) {
-        requestedRef.current[color] = true;
-        return;
-      }
-
-      const canAutoRoll = isLocalGame || myColor === color;
-      let seconds = 5;
-      const setSeconds = color === 'white' ? setWhiteSeconds : setBlackSeconds;
-      setSeconds(5);
-
-      const interval = setInterval(() => {
-        seconds -= 1;
-        setSeconds(Math.max(0, seconds));
-      }, 1000);
-      intervals.push(interval);
-
-      if (canAutoRoll) {
-        const timeout = setTimeout(() => {
-          clearInterval(interval);
-          setSeconds(0);
-          requestRoll(color);
-        }, 5000);
-        timers.push(timeout);
-      }
-    };
-
-    startCountdown('white', whiteRolled);
-    startCountdown('black', blackRolled);
-
+    if (!isOpen || whiteRolled) return;
+    const canAutoRoll = isLocalGame || myColor === 'white';
+    let seconds = 5;
+    setWhiteSeconds(5);
+    const interval = setInterval(() => {
+      seconds -= 1;
+      setWhiteSeconds(Math.max(0, seconds));
+    }, 1000);
+    const timeout = canAutoRoll ? setTimeout(() => {
+      clearInterval(interval);
+      setWhiteSeconds(0);
+      requestRoll('white');
+    }, 5000) : null;
     return () => {
-      timers.forEach(clearTimeout);
-      intervals.forEach(clearInterval);
+      clearInterval(interval);
+      if (timeout) clearTimeout(timeout);
     };
-  }, [isOpen, isLocalGame, myColor, whiteRolled, blackRolled]);
+  }, [isOpen, isLocalGame, myColor, whiteRolled]);
+
+  useEffect(() => {
+    if (!isOpen || blackRolled) return;
+    const canAutoRoll = isLocalGame || myColor === 'black';
+    let seconds = 5;
+    setBlackSeconds(5);
+    const interval = setInterval(() => {
+      seconds -= 1;
+      setBlackSeconds(Math.max(0, seconds));
+    }, 1000);
+    const timeout = canAutoRoll ? setTimeout(() => {
+      clearInterval(interval);
+      setBlackSeconds(0);
+      requestRoll('black');
+    }, 5000) : null;
+    return () => {
+      clearInterval(interval);
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [isOpen, isLocalGame, myColor, blackRolled]);
 
   useEffect(() => {
     if (!isOpen || !whiteRolled) return;
@@ -187,8 +175,14 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[60] flex items-center">
-      {renderSide('black', blackPlayerName, blackDie, blackRolled, blackRolling, blackSeconds, blackSettled)}
-      {renderSide('white', whitePlayerName, whiteDie, whiteRolled, whiteRolling, whiteSeconds, whiteSettled)}
+      {(() => {
+        const leftColor: PlayerColor = isLocalGame || myColor === 'white' ? 'black' : 'white';
+        const rightColor: PlayerColor = isLocalGame ? 'white' : (myColor ?? 'white');
+        const side = (color: PlayerColor) => color === 'white'
+          ? renderSide('white', whitePlayerName, whiteDie, whiteRolled, whiteRolling, whiteSeconds, whiteSettled)
+          : renderSide('black', blackPlayerName, blackDie, blackRolled, blackRolling, blackSeconds, blackSettled);
+        return <>{side(leftColor)}{side(rightColor)}</>;
+      })()}
     </div>
   );
 };
