@@ -1577,7 +1577,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
               </div>
             </div>
 
-            {/* Floating Live 3D Physics Dice - Positioned in the Right Tray to prevent covering middle bar checkers */}
+            {/* Normal two-dice UI stays hidden until the opening roll is acknowledged. */}
+            {(!room.openingRoll || room.openingRollCompleted) && (
             <div className="absolute inset-y-0 right-0 w-1/2 pointer-events-none flex flex-col items-center justify-center z-30">
               <div className="pointer-events-auto translate-x-4 flex flex-col items-center">
                 {/* 15-Second Turn Countdown Badge on top of the thrown dice */}
@@ -1603,6 +1604,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
                 />
               </div>
             </div>
+            )}
 
             {/* Animated Opponent Sliding Checker: Visualizes opponent dragging/moving pieces across board */}
             {opponentSliding && (
