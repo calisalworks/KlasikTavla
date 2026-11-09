@@ -58,6 +58,7 @@ const passTimeouts = new Map<string, NodeJS.Timeout>();
 const disconnectTimeouts = new Map<string, NodeJS.Timeout>();
 const turnTimeouts = new Map<string, NodeJS.Timeout>();
 const openingRollFallbacks = new Map<string, NodeJS.Timeout>();
+const openingRollFinalizeTimers = new Map<string, NodeJS.Timeout>();
 
 /**
  * Rolls opening dice for backgammon (1 die for White, 1 die for Black)
@@ -91,42 +92,52 @@ function rollOpeningDice(): {
 function finalizeOpeningRoll(room: GameRoom) {
   const opening = room.openingRoll;
   if (!opening || room.openingRollCompleted || !opening.whiteRolled || !opening.blackRolled) return;
-  const fallback = openingRollFallbacks.get(room.id);
-  if (fallback) clearTimeout(fallback);
-  openingRollFallbacks.delete(room.id);
+  if (openingRollFinalizeTimers.has(room.id)) return;
 
-  const firstValue = opening.winner === 'white' ? opening.whiteDie : opening.blackDie;
-  const secondValue = opening.winner === 'white' ? opening.blackDie : opening.whiteDie;
-  const rollId = Date.now();
-  room.turn = opening.winner;
-  room.dice = [
-    { value: firstValue, used: false, id: `opening-first-${rollId}` },
-    { value: secondValue, used: false, id: `opening-second-${rollId}` },
-  ];
-  room.turnSnapshot = {
-    board: cloneBoard(room.board),
-    dice: room.dice.map((die) => ({ ...die })),
-    movesMade: [],
-  };
-  room.openingRollCompleted = true;
-  room.lastActivity = Date.now();
-  const hasMoves = hasAnyLegalMoves(room.board, room.turn, room.dice);
-  broadcastToRoom(room.id, { type: 'room:updated', room });
+  // Let both independent dice animations finish before revealing the first-move dice.
+  const finalizeTimer = setTimeout(() => {
+    openingRollFinalizeTimers.delete(room.id);
+    const current = room.openingRoll;
+    if (rooms.get(room.id) !== room || !current || room.openingRollCompleted ||
+        !current.whiteRolled || !current.blackRolled) return;
 
-  if (!hasMoves) {
-    const passTimer = setTimeout(() => {
-      if (rooms.get(room.id) === room && room.dice.some((die) => !die.used)) {
-        room.dice = [];
-        room.turnSnapshot = null;
-        room.turn = room.turn === 'white' ? 'black' : 'white';
-        broadcastToRoom(room.id, { type: 'game:turn_passed', room, reason: 'Hamle yok' });
-      }
-      passTimeouts.delete(room.id);
-    }, 1200);
-    passTimeouts.set(room.id, passTimer);
-  }
+    const fallback = openingRollFallbacks.get(room.id);
+    if (fallback) clearTimeout(fallback);
+    openingRollFallbacks.delete(room.id);
+
+    const firstValue = current.winner === 'white' ? current.whiteDie : current.blackDie;
+    const secondValue = current.winner === 'white' ? current.blackDie : current.whiteDie;
+    const rollId = Date.now();
+    room.turn = current.winner;
+    room.dice = [
+      { value: firstValue, used: false, id: `opening-first-${rollId}` },
+      { value: secondValue, used: false, id: `opening-second-${rollId}` },
+    ];
+    room.turnSnapshot = {
+      board: cloneBoard(room.board),
+      dice: room.dice.map((die) => ({ ...die })),
+      movesMade: [],
+    };
+    room.openingRollCompleted = true;
+    room.lastActivity = Date.now();
+    const hasMoves = hasAnyLegalMoves(room.board, room.turn, room.dice);
+    broadcastToRoom(room.id, { type: 'room:updated', room });
+
+    if (!hasMoves) {
+      const passTimer = setTimeout(() => {
+        if (rooms.get(room.id) === room && room.dice.some((die) => !die.used)) {
+          room.dice = [];
+          room.turnSnapshot = null;
+          room.turn = room.turn === 'white' ? 'black' : 'white';
+          broadcastToRoom(room.id, { type: 'game:turn_passed', room, reason: 'Hamle yok' });
+        }
+        passTimeouts.delete(room.id);
+      }, 1200);
+      passTimeouts.set(room.id, passTimer);
+    }
+  }, 1650);
+  openingRollFinalizeTimers.set(room.id, finalizeTimer);
 }
-
 function scheduleOpeningRollFallback(room: GameRoom) {
   if (!room.openingRoll || room.openingRollCompleted) return;
   const existing = openingRollFallbacks.get(room.id);
@@ -135,6 +146,7 @@ function scheduleOpeningRollFallback(room: GameRoom) {
     if (rooms.get(room.id) !== room || room.openingRollCompleted || !room.openingRoll) return;
     room.openingRoll.whiteRolled = true;
     room.openingRoll.blackRolled = true;
+    broadcastToRoom(room.id, { type: 'room:updated', room });
     finalizeOpeningRoll(room);
   }, 5000);
   openingRollFallbacks.set(room.id, timer);
