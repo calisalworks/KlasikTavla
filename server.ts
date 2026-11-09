@@ -1601,7 +1601,7 @@ wss.on('connection', (ws) => {
             passTimeouts.delete(room.id);
           }
 
-          // Restore only the immediately preceding move.
+          // Restore only the immediately preceding move, preserving earlier undo steps.
           const previous = room.undoHistory.pop()!;
           room.board = cloneBoard(previous.board);
           room.dice = previous.dice.map((d) => ({ ...d }));
