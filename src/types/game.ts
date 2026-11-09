@@ -100,6 +100,8 @@ export interface OpeningRollInfo {
   blackDie: number;
   winner: PlayerColor;
   ties?: { white: number; black: number }[];
+  whiteRolled?: boolean;
+  blackRolled?: boolean;
 }
 
 export interface GameRoom {
