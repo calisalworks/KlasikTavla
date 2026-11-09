@@ -119,7 +119,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           <div key={i} className="flex items-center justify-center">
             {activePips.includes(i) && (
               <div
-                className={`w-1.5 h-1.5 rounded-full ${
+                className={`w-2 h-2 rounded-full ${
                   val === 1
                     ? 'bg-rose-700 shadow-[inset_0_1px_1.5px_rgba(0,0,0,0.8),0_0.5px_1px_rgba(255,255,255,0.4)]'
                     : 'bg-[#18181b] shadow-[inset_0_1px_1.5px_rgba(0,0,0,0.8),0_0.5px_1px_rgba(255,255,255,0.4)]'
