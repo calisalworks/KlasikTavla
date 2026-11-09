@@ -198,7 +198,13 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   const [isOpeningRollOpen, setIsOpeningRollOpen] = useState(false);
 
   useEffect(() => {
-    if (!room || !room.openingRoll || room.openingRollCompleted || room.status !== 'playing') return;
+    if (!room || !room.openingRoll || room.status !== 'playing') return;
+    // The server is authoritative: once the first client completes the roll,
+    // close the other client's animation too and reveal the shared first-move dice.
+    if (room.openingRollCompleted) {
+      setIsOpeningRollOpen(false);
+      return;
+    }
     const rollKey = `${room.id}_${room.openingRoll.whiteDie}_${room.openingRoll.blackDie}_${room.whiteScore}_${room.blackScore}`;
     if (shownOpeningRollKey !== rollKey) {
       setShownOpeningRollKey(rollKey);
