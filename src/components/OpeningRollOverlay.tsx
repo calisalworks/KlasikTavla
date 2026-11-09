@@ -39,6 +39,18 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
   const requestedRef = useRef<Record<PlayerColor, boolean>>({ white: false, black: false });
   const completedRef = useRef(false);
 
+  useEffect(() => {
+    if (isOpen) return;
+    requestedRef.current = { white: false, black: false };
+    completedRef.current = false;
+    setWhiteRolling(false);
+    setBlackRolling(false);
+    setWhiteSettled(false);
+    setBlackSettled(false);
+    setWhiteSeconds(5);
+    setBlackSeconds(5);
+  }, [isOpen]);
+
   const requestRoll = (color: PlayerColor) => {
     if (requestedRef.current[color]) return;
     requestedRef.current[color] = true;
