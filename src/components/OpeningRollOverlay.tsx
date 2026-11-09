@@ -84,15 +84,13 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
           <span className="max-w-[68px] truncate">{whitePlayerName}</span>
           <span className="max-w-[68px] truncate text-right">{blackPlayerName}</span>
         </div>
-        <div className="rounded-2xl border border-amber-200/10 bg-black/10 px-2 py-1 shadow-[0_8px_22px_rgba(0,0,0,0.18)]">
-          <DicePhysicsView
-            dice={openingDice}
-            isRolling={phase === 'rolling'}
-            canRoll={false}
-            onRollClick={() => undefined}
-            className="scale-110"
-          />
-        </div>
+        <DicePhysicsView
+          dice={openingDice}
+          isRolling={phase === 'rolling'}
+          canRoll={false}
+          onRollClick={() => undefined}
+          className="scale-110"
+        />
         <div className="mt-1 min-h-4 text-[9px] font-black uppercase tracking-[0.18em] text-amber-100/85 drop-shadow-[0_2px_3px_rgba(0,0,0,0.95)]">
           {phase === 'rolling' ? 'BAŞLANGIÇ ATIŞI' : 'İLK HAMLE ZARLARI'}
         </div>
