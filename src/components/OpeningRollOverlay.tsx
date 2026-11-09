@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { PlayerColor } from '../types/game';
 import { AvatarDisplay } from './AvatarDisplay';
 import { tavlaAudio } from '../utils/audio';
-import { Sparkles, Trophy, ArrowRight, Clock, Dices } from 'lucide-react';
+import { Sparkles, Trophy, ArrowRight, Dices } from 'lucide-react';
 
 interface OpeningRollOverlayProps {
   isOpen: boolean;
@@ -178,7 +178,6 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
   const meWins = winner === (myColor ?? 'white');
 
   const renderPlayer = (
-    side: 'left' | 'right',
     name: string,
     avatar: string | undefined,
     playerLabel: string,
@@ -235,11 +234,15 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
         </div>
 
         <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
-          {renderPlayer(whiteIsRight ? 'right' : 'left', whitePlayerName, whiteAvatar, 'BEYAZ', whiteDie, whiteWins)}
+          {whiteIsRight
+            ? renderPlayer(blackPlayerName, blackAvatar, 'SİYAH', blackDie, !whiteWins)
+            : renderPlayer(whitePlayerName, whiteAvatar, 'BEYAZ', whiteDie, whiteWins)}
           <div className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-200/20 bg-slate-800 text-[10px] font-black tracking-wider text-cyan-100 shadow-[0_4px_14px_rgba(0,0,0,0.4)]">
             VS
           </div>
-          {renderPlayer(whiteIsRight ? 'left' : 'right', blackPlayerName, blackAvatar, 'SİYAH', blackDie, !whiteWins)}
+          {whiteIsRight
+            ? renderPlayer(whitePlayerName, whiteAvatar, 'BEYAZ', whiteDie, whiteWins)
+            : renderPlayer(blackPlayerName, blackAvatar, 'SİYAH', blackDie, !whiteWins)}
         </div>
 
         <div className="relative mt-5 flex min-h-[58px] flex-col items-center justify-center gap-2">
