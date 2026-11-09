@@ -397,17 +397,33 @@ export const Board: React.FC<BoardProps> = ({
     const { whiteDie, blackDie, winner: win } = openingRoll;
     setOpeningRoll((prev) => (prev ? { ...prev, isComplete: true } : prev));
 
-    // Tekli zarlar sadece oyuna kimin başlayacağını belirler.
-    // Oyuna başlayan taraf sıfırdan YENİ ZARLAR atarak başlar.
-    setDice([]);
-    setTurnSnapshot(null);
+    // The two opening dice are also the first move's dice in backgammon.
+    // Put the winner's die first so the starting player can use both immediately.
+    const firstMoveDice: Die[] = [
+      {
+        value: win === 'white' ? whiteDie : blackDie,
+        used: false,
+        id: `opening-first-${Date.now()}`,
+      },
+      {
+        value: win === 'white' ? blackDie : whiteDie,
+        used: false,
+        id: `opening-second-${Date.now()}`,
+      },
+    ];
+    setDice(firstMoveDice);
+    diceRef.current = firstMoveDice;
+    setTurnSnapshot({
+      board: cloneBoard(board),
+      dice: firstMoveDice.map((die) => ({ ...die })),
+      movesMade: [],
+    });
     setTurn(win);
 
     if (win === 'white') {
       setIsAITurn(false);
       isAITurnRef.current = false;
-      setStatusMessage(`Oyuna siz başlıyorsunuz (${whiteDie} > ${blackDie})! Zarlarınızı atın.`);
-      tavlaAudio.playDiceDrop();
+      setStatusMessage(`Oyuna siz başlıyorsunuz (${whiteDie} > ${blackDie})! İlk hamlenizi yapın.`);
       startTurnTimer('white');
       tavlaAudio.playTurnNotification();
     } else {
