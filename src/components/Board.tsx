@@ -395,7 +395,7 @@ export const Board: React.FC<BoardProps> = ({
   const handleOpeningRollComplete = () => {
     if (!openingRoll) return;
     const { whiteDie, blackDie, winner: win } = openingRoll;
-    setOpeningRoll((prev) => (prev ? { ...prev, isComplete: true } : null));
+    setOpeningRoll((prev) => (prev ? { ...prev, isComplete: true } : prev));
 
     // Tekli zarlar sadece oyuna kimin başlayacağını belirler.
     // Oyuna başlayan taraf sıfırdan YENİ ZARLAR atarak başlar.
