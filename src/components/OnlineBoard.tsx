@@ -823,6 +823,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
       return;
     }
     const moves = getLegalMovesForPosition(room.board, from, myColor!, room.dice);
+    validDestinationsRef.current = moves;
     if (moves.length === 0) {
       setStatusMessage('Bu taş ile oynanabilecek geçerli bir hamle yok.');
       return;
