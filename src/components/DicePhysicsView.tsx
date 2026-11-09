@@ -182,7 +182,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     if (resultDice.length === 0 || current.length === 0) return;
 
     const startedAt = performance.now();
-    const duration = 900;
+    const duration = 550;
     const starts = current.map((st, i) => {
       const value = resultDice[i]?.value || 1;
       const target = FACE_ROTATIONS[value] || { rx: 0, ry: 0 };
