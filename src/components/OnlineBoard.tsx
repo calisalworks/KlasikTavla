@@ -772,22 +772,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
       }
     }
 
-    // 2. High-sensitivity bounding box proximity fallback
-    for (const move of validList) {
-      const selector = `[data-drop-point="${move.to}"]`;
-      const targetEl = document.querySelector(selector);
-      if (targetEl) {
-        const rect = targetEl.getBoundingClientRect();
-        if (
-          clientX >= rect.left - 18 &&
-          clientX <= rect.right + 18 &&
-          clientY >= rect.top - 32 &&
-          clientY <= rect.bottom + 32
-        ) {
-          return move.to;
-        }
-      }
-    }
+    // Avoid repeated querySelector/getBoundingClientRect work on every
+    // pointer event. The board's drop targets are hit-tested directly above.
 
     return null;
   };
