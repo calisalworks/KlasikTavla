@@ -68,9 +68,12 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
 
   useEffect(() => {
     if (!isOpen || blackRolled) return;
+    // In the local game, the AI rolls separately after the human's roll.
+    if (isLocalGame && !whiteRolled) return;
     const canAutoRoll = isLocalGame || myColor === 'black';
-    let seconds = 5;
-    setBlackSeconds(5);
+    const delayMs = isLocalGame ? 700 : 5000;
+    let seconds = Math.ceil(delayMs / 1000);
+    setBlackSeconds(seconds);
     const interval = setInterval(() => {
       seconds -= 1;
       setBlackSeconds(Math.max(0, seconds));
@@ -79,12 +82,12 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
       clearInterval(interval);
       setBlackSeconds(0);
       requestRoll('black');
-    }, 5000) : null;
+    }, delayMs) : null;
     return () => {
       clearInterval(interval);
       if (timeout) clearTimeout(timeout);
     };
-  }, [isOpen, isLocalGame, myColor, blackRolled]);
+  }, [isOpen, isLocalGame, myColor, blackRolled, whiteRolled]);
 
   useEffect(() => {
     if (!isOpen || !whiteRolled) return;
@@ -164,7 +167,7 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
             {settled ? 'ZAR ATILDI' : 'ZAR ATIŞI...'}
           </div>
         )}
-        {!rolled && (
+        {!rolled && (isMySide || (isLocalGame && color === 'black' && whiteRolled)) && (
           <div className="text-[10px] font-black text-amber-200 drop-shadow">
             {seconds} sn
           </div>
