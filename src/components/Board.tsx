@@ -1697,7 +1697,7 @@ export const Board: React.FC<BoardProps> = ({
             {/* Hide normal game dice completely until the one-die opening roll is completed. */}
             {openingRoll.isComplete && (
               <div className="absolute inset-y-0 right-0 w-1/2 pointer-events-none flex items-center justify-center z-30">
-                <div className="pointer-events-auto translate-x-4">
+                <div className="pointer-events-auto">
                   <DicePhysicsView
                     dice={dice}
                     isRolling={isRolling}
@@ -1707,6 +1707,20 @@ export const Board: React.FC<BoardProps> = ({
                 </div>
               </div>
             )}
+
+            <OpeningRollOverlay
+              isOpen={!!openingRoll && !openingRoll.isComplete}
+              whitePlayerName={profile?.name || 'SİZ'}
+              blackPlayerName="Yapay Zeka"
+              whiteDie={openingRoll?.whiteDie ?? 1}
+              blackDie={openingRoll?.blackDie ?? 1}
+              whiteRolled={openingRoll?.whiteRolled ?? false}
+              blackRolled={openingRoll?.blackRolled ?? false}
+              myColor="white"
+              isLocalGame
+              onRoll={handleOpeningDieRoll}
+              onComplete={handleOpeningRollComplete}
+            />
 
             {/* GERİ AL BUTONU: Sağ tarafta kalsın */}
             {turn === 'white' && !winnerInfo && !matchWinner && turnSnapshot && dice.some((d) => d.used) && (
@@ -1985,20 +1999,7 @@ export const Board: React.FC<BoardProps> = ({
         </div>
       )}
 
-      {/* Classic Opening Roll Overlay */}
-      <OpeningRollOverlay
-        isOpen={!!openingRoll && !openingRoll.isComplete}
-        whitePlayerName={profile?.name || 'SİZ'}
-        blackPlayerName="Yapay Zeka"
-        whiteDie={openingRoll?.whiteDie ?? 1}
-        blackDie={openingRoll?.blackDie ?? 1}
-        whiteRolled={openingRoll?.whiteRolled ?? false}
-        blackRolled={openingRoll?.blackRolled ?? false}
-        myColor="white"
-        isLocalGame
-        onRoll={handleOpeningDieRoll}
-        onComplete={handleOpeningRollComplete}
-      />
+
     </div>
   );
 };
