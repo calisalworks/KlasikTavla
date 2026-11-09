@@ -198,13 +198,13 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   const [isOpeningRollOpen, setIsOpeningRollOpen] = useState(false);
 
   useEffect(() => {
-    if (!room || !room.openingRoll || room.status !== 'playing') return;
+    if (!room || !room.openingRoll || room.openingRollCompleted || room.status !== 'playing') return;
     const rollKey = `${room.id}_${room.openingRoll.whiteDie}_${room.openingRoll.blackDie}_${room.whiteScore}_${room.blackScore}`;
     if (shownOpeningRollKey !== rollKey) {
       setShownOpeningRollKey(rollKey);
       setIsOpeningRollOpen(true);
     }
-  }, [room?.openingRoll, room?.status, room?.whiteScore, room?.blackScore, room?.id, shownOpeningRollKey]);
+  }, [room?.openingRoll, room?.openingRollCompleted, room?.status, room?.whiteScore, room?.blackScore, room?.id, shownOpeningRollKey]);
 
   const handleOpeningRollComplete = () => {
     setIsOpeningRollOpen(false);

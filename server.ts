@@ -1092,7 +1092,6 @@ wss.on('connection', (ws) => {
             room.turn = opening.winner;
             room.openingRoll = opening;
             room.openingRollCompleted = false;
-          room.openingRollCompleted = false;
             room.dice = [];
             room.turnSnapshot = null;
             room.status = 'playing';
@@ -1553,22 +1552,17 @@ wss.on('connection', (ws) => {
               room.turn = opening.winner;
               room.openingRoll = opening;
             room.openingRollCompleted = false;
-              room.openingRollCompleted = false;
-          room.openingRollCompleted = false;
             } else if (room.targetScore > 1 && previousWinner) {
               // 1'den fazla puanlı oyunlarda (3 veya 5), her el sonunda başlangıç zarı atılmaz!
               // Önceki elde galip gelen oyuncu oyuna başlar.
               room.turn = previousWinner;
               room.openingRoll = null as any;
             room.openingRollCompleted = true;
-              room.openingRollCompleted = true;
             } else {
               const opening = rollOpeningDice();
               room.turn = opening.winner;
               room.openingRoll = opening;
             room.openingRollCompleted = false;
-              room.openingRollCompleted = false;
-          room.openingRollCompleted = false;
             }
 
             broadcastToRoom(room.id, {
@@ -1608,7 +1602,6 @@ wss.on('connection', (ws) => {
             room.turn = opening.winner;
             room.openingRoll = opening;
             room.openingRollCompleted = false;
-          room.openingRollCompleted = false;
           } else if (room.targetScore > 1 && previousWinner) {
             // 1'den fazla puanlı oyunlarda (3 veya 5), her el sonunda başlangıç zarı atılmaz!
             // Önceki elde galip gelen oyuncu oyuna başlar.
@@ -1620,7 +1613,6 @@ wss.on('connection', (ws) => {
             room.turn = opening.winner;
             room.openingRoll = opening;
             room.openingRollCompleted = false;
-          room.openingRollCompleted = false;
           }
 
           broadcastToRoom(room.id, {
