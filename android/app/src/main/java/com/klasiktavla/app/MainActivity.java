@@ -3,6 +3,7 @@ package com.klasiktavla.app;
 import android.os.Build;
 import android.os.Bundle;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.WebSettings;
@@ -16,39 +17,25 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Paint the native window black before the WebView is created to avoid
-        // the default theme color/status-bar flash during cold start.
-        getWindow().setStatusBarColor(Color.BLACK);
-        getWindow().setNavigationBarColor(Color.BLACK);
-        getWindow().getDecorView().setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-            | View.SYSTEM_UI_FLAG_FULLSCREEN
-        );
+        // Keep the native window black while Android creates the Capacitor WebView.
+        // Apply immersive flags only after BridgeActivity has initialized the window.
+        getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
         super.onCreate(savedInstanceState);
 
-        // Donanım hızlandırma ve maksimum akıcılık (Hardware Acceleration)
+        getWindow().setStatusBarColor(Color.BLACK);
+        getWindow().setNavigationBarColor(Color.BLACK);
         getWindow().setFlags(
             WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
             WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
         );
 
-        // Tam ekran oyun: Çentik ve delikli kameraları (cutout) da kapsayacak şekilde kenardan kenara yerleşim
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             getWindow().getAttributes().layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
         }
 
-        // Oyun sırasında ekranın kararmasını/kapanmasını engelle
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        // Üst bildirim ve alt navigasyon çubuklarını gizle (Immersive Sticky Fullscreen)
         hideSystemUI();
-
-        // Android WebView optimizasyonları (Sıfır kasma, gecikme ve bekleme)
         optimizeWebView();
     }
 
@@ -66,7 +53,7 @@ public class MainActivity extends BridgeActivity {
                 settings.setEnableSmoothTransition(true);
             }
         } catch (Exception e) {
-            // ignore
+            // Keep startup resilient if the WebView is not ready yet.
         }
     }
 
@@ -87,18 +74,16 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void hideSystemUI() {
-        // AndroidX WindowInsetsControllerCompat (Android 11+ ve geriye dönük tam uyum)
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        WindowInsetsControllerCompat insetsController =
+        WindowInsetsControllerCompat controller =
             WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-        if (insetsController != null) {
-            insetsController.hide(WindowInsetsCompat.Type.systemBars());
-            insetsController.setSystemBarsBehavior(
+        if (controller != null) {
+            controller.hide(WindowInsetsCompat.Type.systemBars());
+            controller.setSystemBarsBehavior(
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             );
         }
 
-        // Geriye dönük bayraklar (Eski sürümler ve her durum için)
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(
             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
