@@ -208,6 +208,9 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
 
   const handleOpeningRollComplete = () => {
     setIsOpeningRollOpen(false);
+    if (room?.openingRoll && !room.openingRollCompleted) {
+      wsRef.current?.send(JSON.stringify({ type: 'game:opening_roll_complete', roomId: room.id }));
+    }
     if (room && room.status === 'playing' && !room.winnerInfo) {
       startTurnTimer(room.turn);
       if (myColor && room.turn === myColor) {
@@ -682,7 +685,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
 
   // Dice roll
   const handleRollDice = () => {
-    if (!room || !myColor || isRolling || room.status !== 'playing' || room.winnerInfo) return;
+    if (!room || !myColor || isOpeningRollOpen || (room.openingRoll && !room.openingRollCompleted) || isRolling || room.status !== 'playing' || room.winnerInfo) return;
     if (room.turn !== myColor) return;
     if (room.dice.length > 0 && room.dice.some((d) => !d.used)) return;
 
@@ -1324,7 +1327,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
           <div className="w-full flex flex-col gap-1.5 px-1">
             {isMyTurn && (
               <>
-                {room.dice.length === 0 && !isRolling && !room.winnerInfo && (
+                {!isOpeningRollOpen && (!room.openingRoll || room.openingRollCompleted) && room.dice.length === 0 && !isRolling && !room.winnerInfo && (
                   <button
                     onClick={handleRollDice}
                     className="w-full py-2 px-2 rounded-xl bg-gradient-to-b from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700 text-amber-50 text-xs font-bold shadow-lg border border-amber-400/50 active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"
@@ -1595,7 +1598,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
                 <DicePhysicsView
                   dice={room.dice}
                   isRolling={isRolling}
-                  canRoll={isMyTurn && room.dice.length === 0 && !room.winnerInfo}
+                  canRoll={isMyTurn && !isOpeningRollOpen && (!room.openingRoll || room.openingRollCompleted) && room.dice.length === 0 && !room.winnerInfo}
                   onRollClick={handleRollDice}
                 />
               </div>

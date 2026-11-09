@@ -451,7 +451,7 @@ export const Board: React.FC<BoardProps> = ({
 
   // Handle dice rolling
   const handleRollDice = () => {
-    if (isRolling || winnerInfo || matchWinner) return;
+    if ((openingRoll && !openingRoll.isComplete) || isRolling || winnerInfo || matchWinner) return;
     if (dice.length > 0 && dice.some((d) => !d.used)) return;
 
     // Reset AFK strikes on manual active play
@@ -545,7 +545,7 @@ export const Board: React.FC<BoardProps> = ({
 
   // AI Turn Loop (strictly single execution guarded against multiple consecutive runs)
   useEffect(() => {
-    if (turn !== 'black' || isAITurnRef.current || winnerInfo || matchWinner) {
+    if ((openingRoll && !openingRoll.isComplete) || turn !== 'black' || isAITurnRef.current || winnerInfo || matchWinner) {
       return;
     }
 
@@ -676,17 +676,17 @@ export const Board: React.FC<BoardProps> = ({
       aiTimeoutsRef.current.forEach(clearTimeout);
       aiTimeoutsRef.current = [];
     };
-  }, [turn, winnerInfo, matchWinner, settings.aiDifficulty]);
+  }, [turn, winnerInfo, matchWinner, settings.aiDifficulty, openingRoll]);
 
   // Auto roll for player
   useEffect(() => {
-    if (autoRoll && turn === 'white' && dice.length === 0 && !isRolling && !winnerInfo && !matchWinner) {
+    if (!(openingRoll && !openingRoll.isComplete) && autoRoll && turn === 'white' && dice.length === 0 && !isRolling && !winnerInfo && !matchWinner) {
       const timer = setTimeout(() => {
         handleRollDice();
       }, 400);
       return () => clearTimeout(timer);
     }
-  }, [autoRoll, turn, dice, isRolling, winnerInfo, matchWinner]);
+  }, [autoRoll, turn, dice, isRolling, winnerInfo, matchWinner, openingRoll]);
 
   // Helper to find target at coordinates with high sensitivity and proximity snapping
   const findDropTarget = (
@@ -1397,7 +1397,7 @@ export const Board: React.FC<BoardProps> = ({
           </div>
 
           <div className="w-full flex flex-col gap-1.5 px-1">
-            {turn === 'white' && dice.length === 0 && !isRolling && !winnerInfo && (
+            {!(openingRoll && !openingRoll.isComplete) && turn === 'white' && dice.length === 0 && !isRolling && !winnerInfo && (
               <button
                 onClick={handleRollDice}
                 className="w-full py-2 px-2 rounded-xl bg-gradient-to-b from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700 text-amber-50 text-xs font-bold shadow-lg border border-amber-400/50 active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"
@@ -1643,7 +1643,7 @@ export const Board: React.FC<BoardProps> = ({
                 <DicePhysicsView
                   dice={dice}
                   isRolling={isRolling}
-                  canRoll={turn === 'white' && dice.length === 0 && !winnerInfo && !matchWinner}
+                  canRoll={!(openingRoll && !openingRoll.isComplete) && turn === 'white' && dice.length === 0 && !winnerInfo && !matchWinner}
                   onRollClick={handleRollDice}
                 />
               </div>

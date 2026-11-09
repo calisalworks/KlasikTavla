@@ -123,6 +123,7 @@ export interface GameRoom {
   dice: Die[];
   turnSnapshot?: TurnSnapshot | null;
   openingRoll?: OpeningRollInfo | null;
+  openingRollCompleted?: boolean;
   winnerInfo: { winner: PlayerColor; winType: 'normal' | 'mars' | 'katmerli'; points: number } | null;
   status: 'waiting' | 'playing' | 'finished';
   lastActivity: number;

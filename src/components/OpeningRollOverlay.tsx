@@ -37,6 +37,8 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const rollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const autoCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   const clearTimers = () => {
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
@@ -61,9 +63,9 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
       phaseRef.current = 'revealed';
       setPhase('revealed');
       tavlaAudio.playDiceDrop();
-      autoCloseTimeoutRef.current = setTimeout(onComplete, 2600);
+      autoCloseTimeoutRef.current = setTimeout(() => onCompleteRef.current(), 2600);
     }, 700);
-  }, [onComplete]);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) {
@@ -163,7 +165,8 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 z-50 pointer-events-none select-none animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 pointer-events-auto select-none animate-in fade-in duration-200">
+      <div className="absolute inset-0 bg-black/35 pointer-events-auto" />
       <div className="absolute top-[13%] left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 px-4 py-2 rounded-xl bg-[#160d08]/90 border border-amber-600/70 shadow-xl backdrop-blur-sm">
         <div className="flex items-center gap-1.5 text-amber-100 text-[11px] sm:text-sm font-black uppercase tracking-wider">
           <Dices className="w-4 h-4 text-amber-400" />

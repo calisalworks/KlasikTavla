@@ -190,6 +190,7 @@ function tryMatchmakeTier(tierId: RoomTierId) {
     board: getInitialBoard(),
     turn: opening.winner,
     openingRoll: opening,
+    openingRollCompleted: false,
     dice: [],
     turnSnapshot: null,
     winnerInfo: null,
@@ -913,6 +914,7 @@ wss.on('connection', (ws) => {
           const opening = rollOpeningDice();
           room.turn = opening.winner;
           room.openingRoll = opening;
+          room.openingRollCompleted = false;
           room.blackPlayer = blackPlayer;
           room.status = 'playing';
           session.currentRoomId = room.id;
@@ -1089,6 +1091,8 @@ wss.on('connection', (ws) => {
             const opening = rollOpeningDice();
             room.turn = opening.winner;
             room.openingRoll = opening;
+            room.openingRollCompleted = false;
+          room.openingRollCompleted = false;
             room.dice = [];
             room.turnSnapshot = null;
             room.status = 'playing';
@@ -1161,10 +1165,30 @@ wss.on('connection', (ws) => {
           break;
         }
 
+        case 'game:opening_roll_complete': {
+          if (!session.currentRoomId) return;
+          const room = rooms.get(session.currentRoomId);
+          if (!room || room.status !== 'playing' || !room.openingRoll) return;
+
+          const isParticipant =
+            room.whitePlayer?.id === session.playerId ||
+            room.blackPlayer?.id === session.playerId;
+          if (!isParticipant) return;
+
+          room.openingRollCompleted = true;
+          room.lastActivity = Date.now();
+          broadcastToRoom(room.id, {
+            type: 'room:updated',
+            room,
+          });
+          break;
+        }
+
         case 'game:roll': {
           if (!session.currentRoomId) return;
           const room = rooms.get(session.currentRoomId);
           if (!room || room.status !== 'playing' || room.winnerInfo) return;
+          if (room.openingRoll && !room.openingRollCompleted) return;
 
           // Check if it's the sender's turn
           const isWhite = room.whitePlayer?.id === session.playerId;
@@ -1528,15 +1552,23 @@ wss.on('connection', (ws) => {
               const opening = rollOpeningDice();
               room.turn = opening.winner;
               room.openingRoll = opening;
+            room.openingRollCompleted = false;
+              room.openingRollCompleted = false;
+          room.openingRollCompleted = false;
             } else if (room.targetScore > 1 && previousWinner) {
               // 1'den fazla puanlı oyunlarda (3 veya 5), her el sonunda başlangıç zarı atılmaz!
               // Önceki elde galip gelen oyuncu oyuna başlar.
               room.turn = previousWinner;
               room.openingRoll = null as any;
+            room.openingRollCompleted = true;
+              room.openingRollCompleted = true;
             } else {
               const opening = rollOpeningDice();
               room.turn = opening.winner;
               room.openingRoll = opening;
+            room.openingRollCompleted = false;
+              room.openingRollCompleted = false;
+          room.openingRollCompleted = false;
             }
 
             broadcastToRoom(room.id, {
@@ -1575,15 +1607,20 @@ wss.on('connection', (ws) => {
             const opening = rollOpeningDice();
             room.turn = opening.winner;
             room.openingRoll = opening;
+            room.openingRollCompleted = false;
+          room.openingRollCompleted = false;
           } else if (room.targetScore > 1 && previousWinner) {
             // 1'den fazla puanlı oyunlarda (3 veya 5), her el sonunda başlangıç zarı atılmaz!
             // Önceki elde galip gelen oyuncu oyuna başlar.
             room.turn = previousWinner;
             room.openingRoll = null as any;
+            room.openingRollCompleted = true;
           } else {
             const opening = rollOpeningDice();
             room.turn = opening.winner;
             room.openingRoll = opening;
+            room.openingRollCompleted = false;
+          room.openingRollCompleted = false;
           }
 
           broadcastToRoom(room.id, {

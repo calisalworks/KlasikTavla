@@ -40,7 +40,7 @@ class TavlaAudioManager {
 
     if (!this.cachedDiceAudio && typeof window !== 'undefined') {
       try {
-        this.cachedDiceAudio = new Audio('/dice-roll.wav');
+        this.cachedDiceAudio = new Audio('/dice-roll.mp3');
         this.cachedDiceAudio.preload = 'auto';
         this.cachedDiceAudio.volume = 0.9;
       } catch {
