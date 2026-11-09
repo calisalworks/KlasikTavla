@@ -176,7 +176,7 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
           </button>
         ) : !rolled ? (
           <div className="rounded-full border border-amber-700/50 bg-black/65 px-3 py-1 text-[9px] font-bold text-amber-200/90">
-            {isLocalGame ? 'Rakip atışı bekleniyor' : 'Oyuncunun atışı bekleniyor'}
+            {isLocalGame ? 'Rakip atışı bekleniyor' : 'Rakibin atışı bekleniyor'}
           </div>
         ) : (
           <div className="rounded-full border border-emerald-500/50 bg-black/70 px-3 py-1 text-[9px] font-bold text-emerald-200">
