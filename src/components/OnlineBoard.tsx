@@ -214,6 +214,14 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
 
   const handleOpeningRollComplete = () => {
     setIsOpeningRollOpen(false);
+    if (room?.openingRoll && myColor) {
+      const wonOpeningRoll = room.openingRoll.winner === myColor;
+      setStatusMessage(
+        wonOpeningRoll
+          ? 'Başlangıç atışını kazandınız. Bu iki zar ilk hamlenizde kullanılacak.'
+          : 'Rakibiniz başlangıç atışını kazandı. Bu iki zar ilk hamlesinde kullanılacak.'
+      );
+    }
     if (room?.openingRoll && !room.openingRollCompleted) {
       wsRef.current?.send(JSON.stringify({ type: 'game:opening_roll_complete', roomId: room.id }));
     }
