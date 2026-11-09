@@ -723,7 +723,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
     clearAutoPassTimers();
     if (!room || !myColor || isRolling || room.winnerInfo || room.status !== 'playing') return;
     if (room.turn !== myColor) return;
-    if (!room.turnSnapshot || !room.dice.some((d) => d.used)) return;
+    if (!room.undoHistory?.length) return;
 
     wsRef.current?.send(
       JSON.stringify({
@@ -1343,7 +1343,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
                   </button>
                 )}
 
-                {room.turnSnapshot && room.dice.some((d) => d.used) && !room.winnerInfo && (
+                {room.undoHistory && room.undoHistory.length > 0 && !room.winnerInfo && (
                   <button
                     onClick={handleUndo}
                     className="w-full py-1.5 px-2 rounded-lg bg-[#3d2719] hover:bg-[#4d3221] text-amber-200 text-[11px] font-semibold border border-amber-700/50 shadow active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"
@@ -1654,7 +1654,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             )}
 
             {/* GERİ AL BUTONU: Sağ tarafta kalsın */}
-            {isMyTurn && !room.winnerInfo && room.turnSnapshot && room.dice.some((d) => d.used) && (
+            {isMyTurn && !room.winnerInfo && room.undoHistory && room.undoHistory.length > 0 && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-2 pointer-events-auto animate-in fade-in duration-150">
                 <button
                   onClick={handleUndo}
@@ -1767,7 +1767,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
         <div className="h-7 flex items-center justify-between px-3 mt-1 text-[11px] text-amber-300/80 select-none bg-[#241710]/60 rounded-lg border border-amber-900/30">
           <div className="flex items-center gap-3">
             <span>{room.status === 'waiting' ? 'Rakip oyuncu bekleniyor...' : 'Taşı sürükleyerek veya hedef haneye dokunarak oynayın.'}</span>
-            {isMyTurn && room.turnSnapshot && room.dice.some((d) => d.used) && !room.winnerInfo && (
+            {isMyTurn && room.undoHistory && room.undoHistory.length > 0 && !room.winnerInfo && (
               <button
                 onClick={handleUndo}
                 className="px-2.5 py-0.5 rounded-md bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-600 hover:to-amber-800 text-amber-100 text-[11px] font-bold border border-amber-500/60 shadow flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
