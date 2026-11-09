@@ -38,6 +38,10 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
   const [blackSeconds, setBlackSeconds] = useState(5);
   const requestedRef = useRef<Record<PlayerColor, boolean>>({ white: false, black: false });
   const completedRef = useRef(false);
+  const onRollRef = useRef(onRoll);
+  const onCompleteRef = useRef(onComplete);
+  onRollRef.current = onRoll;
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
     if (isOpen) return;
@@ -55,7 +59,7 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
     if (requestedRef.current[color]) return;
     requestedRef.current[color] = true;
     tavlaAudio.playButtonClick();
-    onRoll(color);
+    onRollRef.current(color);
   };
 
   useEffect(() => {
@@ -128,9 +132,9 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
   useEffect(() => {
     if (!isOpen || !whiteSettled || !blackSettled || completedRef.current) return;
     completedRef.current = true;
-    const finish = setTimeout(onComplete, 450);
+    const finish = setTimeout(() => onCompleteRef.current(), 450);
     return () => clearTimeout(finish);
-  }, [isOpen, whiteSettled, blackSettled, onComplete]);
+  }, [isOpen, whiteSettled, blackSettled]);
 
   if (!isOpen) return null;
 
