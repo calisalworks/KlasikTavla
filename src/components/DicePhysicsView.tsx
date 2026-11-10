@@ -440,7 +440,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       data-dice-rolling={isRolling ? 'true' : 'false'}
       data-roll-sequence={rollSequence}
       data-physics-dice-count={physicsStates.length}
-      className={`relative z-[999] flex items-center justify-center select-none pointer-events-none overflow-visible ${className}`}
+      className={`relative z-20 flex items-center justify-center select-none pointer-events-none overflow-visible ${className}`}
       style={{
         perspective: '800px',
         transform: centerSettledDice
