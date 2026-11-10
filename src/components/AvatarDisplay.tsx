@@ -103,7 +103,7 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
         className={`rounded-full overflow-hidden ${frame.ringClass} ${frame.borderClass} ${frame.glowClass} bg-stone-900 flex items-center justify-center shrink-0 transition-transform ${className}`}
         title={`${name} • Çerçeve: ${frame.name}`}
       >
-        <img src={avatar} alt={name} className="w-full h-full object-cover" />
+        <img src={avatar} alt={name} className="w-full h-full object-cover scale-[1.12]" />
       </div>
     );
   }
