@@ -1145,15 +1145,17 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             <linearGradient id={`point-grad-online-${pointIndex}`} x1="0%" y1="0%" x2="100%" y2="100%">
               {triangleColorDark ? (
                 <>
-                  <stop offset="0%" stopColor="#28211d" />
-                  <stop offset="60%" stopColor="#171411" />
-                  <stop offset="100%" stopColor="#080706" />
+                  <stop offset="0%" stopColor="#8b4053" />
+                  <stop offset="28%" stopColor="#713044" />
+                  <stop offset="68%" stopColor="#4a1c2e" />
+                  <stop offset="100%" stopColor="#260d19" />
                 </>
               ) : (
                 <>
-                  <stop offset="0%" stopColor="#f5e8c9" />
-                  <stop offset="60%" stopColor="#d7bd8b" />
-                  <stop offset="100%" stopColor="#9e8053" />
+                  <stop offset="0%" stopColor="#e2ecd8" />
+                  <stop offset="30%" stopColor="#c0d2b5" />
+                  <stop offset="68%" stopColor="#8da887" />
+                  <stop offset="100%" stopColor="#58745d" />
                 </>
               )}
             </linearGradient>
@@ -1163,13 +1165,13 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             <polygon
               points="0,0 100,0 50,225"
               fill={`url(#point-grad-online-${pointIndex})`}
-              className="stroke-[#c9a46a]/70 stroke-[1.5]"
+              className="stroke-[#c4d0a7]/75 stroke-[1.5]"
             />
           ) : (
             <polygon
               points="0,240 100,240 50,15"
               fill={`url(#point-grad-online-${pointIndex})`}
-              className="stroke-[#c9a46a]/70 stroke-[1.5]"
+              className="stroke-[#c4d0a7]/75 stroke-[1.5]"
             />
           )}
         </svg>
@@ -1398,11 +1400,11 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
         </div>
 
         {/* Master Wooden Table */}
-        <div className="flex-1 relative rounded-2xl p-2 bg-gradient-to-br from-[#6f3518] via-[#3f1d10] to-[#24100b] border-4 border-[#2b130b] shadow-[0_18px_38px_rgba(0,0,0,0.82),inset_0_2px_5px_rgba(255,225,170,0.22)] flex flex-row overflow-hidden">
-          <div className="flex-1 relative rounded-xl bg-[linear-gradient(135deg,#9b6033_0%,#6c3d20_48%,#3b2116_100%)] border-2 border-[#b7864b] shadow-[inset_0_4px_14px_rgba(0,0,0,0.62),inset_0_1px_2px_rgba(255,238,200,0.32)] flex flex-row overflow-hidden">
+        <div className="flex-1 relative rounded-2xl p-2 bg-gradient-to-br from-[#405f4c] via-[#294536] to-[#172d25] border-4 border-[#182f26] shadow-[0_18px_38px_rgba(0,0,0,0.82),inset_0_2px_5px_rgba(213,232,190,0.24)] flex flex-row overflow-hidden">
+          <div className="flex-1 relative rounded-xl bg-[linear-gradient(135deg,#78916d_0%,#526f58_32%,#355542_68%,#263f34_100%)] border-2 border-[#a8b98c] shadow-[inset_0_4px_16px_rgba(0,0,0,0.58),inset_0_1px_3px_rgba(230,242,205,0.38)] flex flex-row overflow-hidden">
             {/* Left Tray */}
-            <div className="flex-1 flex flex-col border-r border-[#bd8c4f]">
-              <div className="flex-1 flex flex-row border-b border-[#d1a56d]/45">
+            <div className="flex-1 flex flex-col border-r border-[#9caf82]">
+              <div className="flex-1 flex flex-row border-b border-[#d4dfbd]/35">
                 {leftTopPoints.map((pt, i) =>
                   renderTriangle(pt, true, i % 2 === 0)
                 )}
@@ -1415,7 +1417,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             </div>
 
             {/* Middle Bar */}
-            <div className="w-11 md:w-14 relative bg-gradient-to-r from-[#2f170d] via-[#6b3b20] to-[#2f170d] border-x-2 border-[#361905] shadow-[inset_0_2px_8px_rgba(0,0,0,0.8),0_0_10px_rgba(0,0,0,0.5)] flex flex-col justify-between items-center py-2 z-20 shrink-0">
+            <div className="w-11 md:w-14 relative bg-gradient-to-r from-[#20392e] via-[#55745a] to-[#20392e] border-x-2 border-[#263e30] shadow-[inset_0_2px_9px_rgba(0,0,0,0.78),0_0_10px_rgba(0,0,0,0.48)] flex flex-col justify-between items-center py-2 z-20 shrink-0">
               <div className="w-8 h-4 rounded-sm bg-gradient-to-b from-[#fcd34d] via-[#d97706] to-[#92400e] border border-[#78350f] shadow-md flex items-center justify-around px-1">
                 <div className="w-1 h-1 rounded-full bg-[#451a03]" />
                 <div className="w-1.5 h-1.5 rounded-full bg-[#78350f]" />
@@ -1496,8 +1498,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             </div>
 
             {/* Right Tray */}
-            <div className="flex-1 flex flex-col border-l border-[#bd8c4f]">
-              <div className="flex-1 flex flex-row border-b border-[#d1a56d]/45">
+            <div className="flex-1 flex flex-col border-l border-[#9caf82]">
+              <div className="flex-1 flex flex-row border-b border-[#d4dfbd]/35">
                 {rightTopPoints.map((pt, i) =>
                   renderTriangle(pt, true, i % 2 === 0)
                 )}
