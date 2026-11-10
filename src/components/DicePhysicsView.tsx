@@ -233,7 +233,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         settled: true,
       };
     }));
-  }, [isRolling, dice.length]);
+  }, [isRolling, dice.length, throwSide]);
 
   // RequestAnimationFrame physics simulation loop
   useEffect(() => {
@@ -375,7 +375,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         cancelAnimationFrame(animFrameRef.current);
       }
     };
-  }, [isRolling, rollSequence]);
+  }, [isRolling, rollSequence, throwSide]);
 
   // Dice face renderer for 3D cube representation
   const render3DCube = (
