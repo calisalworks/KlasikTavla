@@ -27,6 +27,7 @@ import { CheckerPiece } from './CheckerPiece';
 import { DicePhysicsView } from './DicePhysicsView';
 import { AvatarDisplay } from './AvatarDisplay';
 import { OpeningRollOverlay } from './OpeningRollOverlay';
+import { RadioControls } from './RadioControls';
 import { RotateCcw, Check, Settings, Trophy, RefreshCw, Home, AlertTriangle, Bot, Clock, Volume2, VolumeX } from 'lucide-react';
 
 interface BoardProps {
@@ -35,6 +36,11 @@ interface BoardProps {
   targetScore: TargetScore;
   onOpenSettings: () => void;
   onToggleMusic: () => void;
+  isRadioPlaying: boolean;
+  radioChannel: number;
+  onToggleRadio: () => void;
+  onPreviousRadio: () => void;
+  onNextRadio: () => void;
   onOpenRules: () => void;
   onReturnToMenu: () => void;
   onToggleFullscreen: () => void;
@@ -58,6 +64,11 @@ export const Board: React.FC<BoardProps> = ({
   targetScore,
   onOpenSettings,
   onToggleMusic,
+  isRadioPlaying,
+  radioChannel,
+  onToggleRadio,
+  onPreviousRadio,
+  onNextRadio,
   onOpenRules,
   onReturnToMenu,
   onRecordMatch,
@@ -1486,6 +1497,7 @@ export const Board: React.FC<BoardProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <RadioControls isPlaying={isRadioPlaying} stationIndex={radioChannel} onToggle={onToggleRadio} onPrevious={onPreviousRadio} onNext={onNextRadio} />
             <button onClick={onToggleMusic} title={settings.ambientSound ? "Müziği Kapat" : "Müziği Aç"} aria-label={settings.ambientSound ? "Müziği Kapat" : "Müziği Aç"} className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300 border border-amber-700/40 shadow cursor-pointer">{settings.ambientSound ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}</button>
             <button onClick={onOpenSettings} title="Ayarlar" aria-label="Ayarlar" className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300 border border-amber-700/40 shadow cursor-pointer"><Settings className="w-3.5 h-3.5" /></button>
             <span className="text-[11px] text-amber-400/80">Sıra:</span>
