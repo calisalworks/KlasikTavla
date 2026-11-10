@@ -147,10 +147,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       const newStates: PhysicsDieState[] = [];
 
       for (let i = 0; i < count; i++) {
-        // Dynamic impact force: randomized throw impulse with realistic variation
-        const speed = 240 + Math.random() * 180; // throw speed
-        const tossHeight = 70 + Math.random() * 50; // arc height
-
+        // A single repeatable physical throw path is used for every roll.
         newStates.push({
           // Same repeatable throw path on every roll; only the settled face changes.
           x: throwSide === 'right' ? 58 : -58,
