@@ -210,11 +210,11 @@ export const MainMenu: React.FC<MainMenuProps> = ({
       </div>
 
       {/* Main Wood Craft Menu Board */}
-      <div className="relative z-10 w-full max-w-3xl px-2 sm:px-5 py-2 sm:py-4 flex flex-col items-center">
+      <div className="relative z-10 w-full max-w-3xl max-h-[calc(100dvh-5.5rem)] overflow-y-auto overscroll-contain px-2 sm:px-5 py-1 sm:py-2 flex flex-col items-center">
         {/* Header / Title (Küçültülmüş ve yukarı taşınmış Klasik Tavla) */}
-        <div className="text-center mb-5 sm:mb-7 mt-0.5 relative">
-          <svg aria-hidden="true" className="mx-auto mb-1 w-52 sm:w-80 h-8 text-amber-300" viewBox="0 0 420 55" fill="none"><path d="M8 29 H145 C164 29 174 10 190 10 C203 10 205 24 210 29 C215 24 217 10 230 10 C246 10 256 29 275 29 H412 M25 36 H155 M265 36 H395" stroke="#c99a4c" strokeWidth="1.5"/><path d="M210 2 C196 18 196 37 210 49 C224 37 224 18 210 2Z" stroke="#f1d58d" strokeWidth="1.5"/><path d="M185 29 Q197 12 210 29 Q223 12 235 29 M198 40 Q210 50 222 40" stroke="#e4bd70" strokeWidth="1.4"/><circle cx="210" cy="28" r="4" fill="#e7c16e"/><circle cx="145" cy="29" r="2.5" fill="#e7c16e"/><circle cx="275" cy="29" r="2.5" fill="#e7c16e"/></svg>
-          <h1 className="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-[#fff4c9] via-[#e6c477] to-[#9d6928] tracking-[.12em] font-['Cinzel',serif] drop-shadow-[0_3px_8px_rgba(0,0,0,.95)]">
+        <div className="text-center mb-2 sm:mb-3 mt-0 relative shrink-0">
+          <svg aria-hidden="true" className="mx-auto mb-0.5 w-36 sm:w-64 h-5 sm:h-6 text-amber-300" viewBox="0 0 420 55" fill="none"><path d="M8 29 H145 C164 29 174 10 190 10 C203 10 205 24 210 29 C215 24 217 10 230 10 C246 10 256 29 275 29 H412 M25 36 H155 M265 36 H395" stroke="#c99a4c" strokeWidth="1.5"/><path d="M210 2 C196 18 196 37 210 49 C224 37 224 18 210 2Z" stroke="#f1d58d" strokeWidth="1.5"/><path d="M185 29 Q197 12 210 29 Q223 12 235 29 M198 40 Q210 50 222 40" stroke="#e4bd70" strokeWidth="1.4"/><circle cx="210" cy="28" r="4" fill="#e7c16e"/><circle cx="145" cy="29" r="2.5" fill="#e7c16e"/><circle cx="275" cy="29" r="2.5" fill="#e7c16e"/></svg>
+          <h1 className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-[#fff4c9] via-[#e6c477] to-[#9d6928] tracking-[.12em] font-['Cinzel',serif] drop-shadow-[0_3px_8px_rgba(0,0,0,.95)]">
             KLASİK TAVLA
           </h1>
         </div>
@@ -252,25 +252,25 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         )}
 
         {/* Menü Seçenekleri (Sırayla: 'Tek Kişilik', 'Online', 'Arkadaşınla Oyna' - Alt açıklamalar kaldırıldı) */}
-        <div className="w-full space-y-3 sm:space-y-4 mb-5 sm:mb-6">
+        <div className="w-full space-y-2 sm:space-y-3 mb-2 sm:mb-3 shrink-0">
           {/* 1. Tek Kişilik */}
           <button
             onClick={() => {
               tavlaAudio.playButtonClick();
               onStartSinglePlayer();
             }}
-            className="w-full group relative py-4 sm:py-5 px-5 sm:px-7 rounded-xl bg-gradient-to-r from-[#160e0b] via-[#28160f] to-[#100b09] hover:from-[#2a1a11] hover:to-[#1c100b] text-amber-50 font-bold shadow-[0_8px_22px_rgba(0,0,0,.75),inset_0_1px_3px_rgba(255,230,170,.12)] border-2 border-[#b88a43] outline outline-1 outline-offset-[-6px] outline-amber-200/20 active:scale-[.99] transition-all flex items-center justify-between cursor-pointer"
+            className="w-full group relative py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-xl bg-gradient-to-r from-[#160e0b] via-[#28160f] to-[#100b09] hover:from-[#2a1a11] hover:to-[#1c100b] text-amber-50 font-bold shadow-[0_8px_22px_rgba(0,0,0,.75),inset_0_1px_3px_rgba(255,230,170,.12)] border-2 border-[#b88a43] outline outline-1 outline-offset-[-6px] outline-amber-200/20 active:scale-[.99] transition-all flex items-center justify-between cursor-pointer"
           >
             <svg aria-hidden="true" className="pointer-events-none absolute inset-0 w-full h-full rounded-xl" viewBox="0 0 1000 150" preserveAspectRatio="none"><rect x="5" y="5" width="990" height="140" rx="13" fill="none" stroke="#f1d18a" strokeOpacity=".38" strokeWidth="1.5"/><path d="M8 48 C22 45 22 18 48 8 C36 25 42 35 54 34 C67 32 68 18 58 14 C82 17 87 39 68 48 C49 58 29 43 32 29 M992 48 C978 45 978 18 952 8 C964 25 958 35 946 34 C933 32 932 18 942 14 C918 17 913 39 932 48 C951 58 971 43 968 29 M8 102 C22 105 22 132 48 142 C36 125 42 115 54 116 C67 118 68 132 58 136 C82 133 87 111 68 102 C49 92 29 107 32 121 M992 102 C978 105 978 132 952 142 C964 125 958 115 946 116 C933 118 932 132 942 136 C918 133 913 111 932 102 C951 92 971 107 968 121" fill="none" stroke="#e4bd70" strokeOpacity=".72" strokeWidth="2"/><circle cx="48" cy="8" r="3" fill="#f4d994"/><circle cx="952" cy="8" r="3" fill="#f4d994"/><circle cx="48" cy="142" r="3" fill="#f4d994"/><circle cx="952" cy="142" r="3" fill="#f4d994"/></svg>
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#3b210b] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
-                <Bot className="w-5 h-5" />
+              <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#3b210b] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
+                <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <span className="font-extrabold text-[#f6e8c7] text-xl sm:text-2xl tracking-wide font-['Cinzel',serif]">
+              <span className="font-extrabold text-[#f6e8c7] text-base sm:text-xl tracking-wide font-['Cinzel',serif]">
                 Tek Kişilik
               </span>
             </div>
-            <span className="text-sm sm:text-lg font-black text-[#e9c77c] group-hover:translate-x-1 transition-transform">
+            <span className="text-xs sm:text-base font-black text-[#e9c77c] group-hover:translate-x-1 transition-transform">
               OYNA →
             </span>
           </button>
@@ -286,7 +286,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             <svg aria-hidden="true" className="pointer-events-none absolute inset-0 w-full h-full rounded-xl" viewBox="0 0 1000 150" preserveAspectRatio="none"><rect x="5" y="5" width="990" height="140" rx="13" fill="none" stroke="#f1d18a" strokeOpacity=".38" strokeWidth="1.5"/><path d="M8 48 C22 45 22 18 48 8 C36 25 42 35 54 34 C67 32 68 18 58 14 C82 17 87 39 68 48 C49 58 29 43 32 29 M992 48 C978 45 978 18 952 8 C964 25 958 35 946 34 C933 32 932 18 942 14 C918 17 913 39 932 48 C951 58 971 43 968 29 M8 102 C22 105 22 132 48 142 C36 125 42 115 54 116 C67 118 68 132 58 136 C82 133 87 111 68 102 C49 92 29 107 32 121 M992 102 C978 105 978 132 952 142 C964 125 958 115 946 116 C933 118 932 132 942 136 C918 133 913 111 932 102 C951 92 971 107 968 121" fill="none" stroke="#e4bd70" strokeOpacity=".72" strokeWidth="2"/><circle cx="48" cy="8" r="3" fill="#f4d994"/><circle cx="952" cy="8" r="3" fill="#f4d994"/><circle cx="48" cy="142" r="3" fill="#f4d994"/><circle cx="952" cy="142" r="3" fill="#f4d994"/></svg>
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#174132] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
-                <Globe className="w-5 h-5" />
+                <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <span className="font-extrabold text-[#f6e8c7] text-xl sm:text-2xl tracking-wide font-['Cinzel',serif]">
                 Online
@@ -308,7 +308,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             <svg aria-hidden="true" className="pointer-events-none absolute inset-0 w-full h-full rounded-xl" viewBox="0 0 1000 150" preserveAspectRatio="none"><rect x="5" y="5" width="990" height="140" rx="13" fill="none" stroke="#f1d18a" strokeOpacity=".38" strokeWidth="1.5"/><path d="M8 48 C22 45 22 18 48 8 C36 25 42 35 54 34 C67 32 68 18 58 14 C82 17 87 39 68 48 C49 58 29 43 32 29 M992 48 C978 45 978 18 952 8 C964 25 958 35 946 34 C933 32 932 18 942 14 C918 17 913 39 932 48 C951 58 971 43 968 29 M8 102 C22 105 22 132 48 142 C36 125 42 115 54 116 C67 118 68 132 58 136 C82 133 87 111 68 102 C49 92 29 107 32 121 M992 102 C978 105 978 132 952 142 C964 125 958 115 946 116 C933 118 932 132 942 136 C918 133 913 111 932 102 C951 92 971 107 968 121" fill="none" stroke="#e4bd70" strokeOpacity=".72" strokeWidth="2"/><circle cx="48" cy="8" r="3" fill="#f4d994"/><circle cx="952" cy="8" r="3" fill="#f4d994"/><circle cx="48" cy="142" r="3" fill="#f4d994"/><circle cx="952" cy="142" r="3" fill="#f4d994"/></svg>
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#3b210b] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
-                <Users className="w-5 h-5" />
+                <Users className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <span className="font-extrabold text-[#f6e8c7] text-xl sm:text-2xl tracking-wide font-['Cinzel',serif]">
                 Arkadaşınla Oyna
@@ -321,12 +321,12 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         </div>
 
         {/* Alt Bölüm: Ücretsiz Jeton (6 Saatlik Sayaç) & Reklam İzle Kazan Sekmeleri */}
-        <div className="w-full grid grid-cols-2 gap-3 sm:gap-5 pt-1">
+        <div className="w-full grid grid-cols-2 gap-2 sm:gap-4 pt-0.5 shrink-0">
           {/* Ücretsiz Jeton Butonu (6 saatte bir 100 Jeton, küçük sayaçlı) */}
           <button
             onClick={handleClaimDaily}
             disabled={!rewardStatus.canClaimDaily || isClaimingReward}
-            className={`relative p-2.5 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+            className={`relative p-2 sm:p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
               rewardStatus.canClaimDaily
                 ? 'bg-gradient-to-b from-[#3a2010] via-[#4e2a14] to-[#2b1509] border-amber-400 shadow-[0_4px_15px_rgba(245,158,11,0.25)] hover:border-amber-300 hover:scale-[1.02] active:scale-98'
                 : 'bg-[#1a0e07]/80 border-amber-900/40 opacity-75 cursor-not-allowed'
@@ -383,7 +383,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
               tavlaAudio.playButtonClick();
               onOpenRewardedAd();
             }}
-            className="relative p-2.5 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer bg-gradient-to-b from-[#1b2b1a] via-[#223d21] to-[#122112] border-emerald-500/70 shadow-[0_4px_15px_rgba(16,185,129,0.2)] hover:border-emerald-400 hover:scale-[1.02] active:scale-98"
+            className="relative p-2 sm:p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer bg-gradient-to-b from-[#1b2b1a] via-[#223d21] to-[#122112] border-emerald-500/70 shadow-[0_4px_15px_rgba(16,185,129,0.2)] hover:border-emerald-400 hover:scale-[1.02] active:scale-98"
           >
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-1.5">
