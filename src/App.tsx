@@ -61,6 +61,10 @@ export default function App() {
     }
   });
 
+  const radioChannelRef = useRef(radioChannel);
+  const radioPlayRequestRef = useRef(0);
+  useEffect(() => { radioChannelRef.current = radioChannel; }, [radioChannel]);
+
   // Friend Room & URL Invite States
   const [isFriendRoomOpen, setIsFriendRoomOpen] = useState(false);
   const [urlInviteCode, setUrlInviteCode] = useState<string | null>(null);
@@ -249,11 +253,13 @@ export default function App() {
   const playRadioChannel = (index: number) => {
     const audio = radioAudioRef.current;
     if (!audio) return;
+    const requestId = ++radioPlayRequestRef.current;
     audio.pause();
     audio.src = RADIO_STATIONS[index].url;
     audio.volume = (settings.ambientVolume ?? 60) / 100;
     audio.load();
     audio.play().catch((error) => {
+      if (requestId !== radioPlayRequestRef.current) return;
       console.warn('Radyo yayını başlatılamadı:', error);
       setIsRadioPlaying(false);
     });
@@ -269,6 +275,7 @@ export default function App() {
     if (firstEnabled < 0) return;
     const selectedIndex = enabledRadioStations.includes(RADIO_STATIONS[radioChannel].id) ? radioChannel : firstEnabled;
     setRadioChannel(selectedIndex);
+    radioChannelRef.current = selectedIndex;
     tavlaAudio.setAmbientEnabled(false);
     setSettings((prev) => ({ ...prev, ambientSound: false }));
     setIsRadioPlaying(true);
@@ -278,10 +285,11 @@ export default function App() {
   const handleChangeRadioChannel = (direction: -1 | 1) => {
     const enabledIndexes = RADIO_STATIONS.map((station, index) => enabledRadioStations.includes(station.id) ? index : -1).filter((index) => index >= 0);
     if (enabledIndexes.length === 0) return;
-    const currentPosition = enabledIndexes.indexOf(radioChannel);
+    const currentPosition = enabledIndexes.indexOf(radioChannelRef.current);
     const basePosition = currentPosition >= 0 ? currentPosition : 0;
     const nextIndex = enabledIndexes[(basePosition + direction + enabledIndexes.length) % enabledIndexes.length];
     setRadioChannel(nextIndex);
+    radioChannelRef.current = nextIndex;
     if (isRadioPlaying) playRadioChannel(nextIndex);
   };
 
@@ -297,6 +305,7 @@ export default function App() {
         setIsRadioPlaying(false);
       } else {
         setRadioChannel(nextEnabledIndex);
+        radioChannelRef.current = nextEnabledIndex;
         if (isRadioPlaying) playRadioChannel(nextEnabledIndex);
       }
     }
