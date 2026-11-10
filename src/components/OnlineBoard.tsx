@@ -1422,22 +1422,36 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             <span className="font-medium text-amber-100 truncate">{statusMessage}</span>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] text-amber-400/80">Sıra:</span>
-            <div
-              className={`px-2 py-0.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 ${
-                room.turn === 'white'
-                  ? 'bg-amber-100 text-amber-950 shadow-sm'
-                  : 'bg-stone-900 text-stone-100 border border-stone-700 shadow-sm'
-              }`}
-            >
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  room.turn === 'white' ? 'bg-amber-800' : 'bg-amber-400'
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 mr-1 sm:mr-2">
+              <span className="text-[10px] sm:text-[11px] text-amber-400/80">Sıra:</span>
+              <div
+                className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold flex items-center gap-1 sm:gap-1.5 ${
+                  room.turn === 'white'
+                    ? 'bg-amber-100 text-amber-950 shadow-sm'
+                    : 'bg-stone-900 text-stone-100 border border-stone-700 shadow-sm'
                 }`}
-              />
-              {room.turn === 'white' ? 'BEYAZ' : 'SİYAH'}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    room.turn === 'white' ? 'bg-amber-800' : 'bg-amber-400'
+                  }`}
+                />
+                {room.turn === 'white' ? 'BEYAZ' : 'SİYAH'}
+              </div>
             </div>
+            <button
+              onClick={() => {
+                if (room.status === 'playing' && !room.winnerInfo) {
+                  setShowAbandonConfirm(true);
+                } else {
+                  handleConfirmLeave();
+                }
+              }}
+              className="px-2 py-1 rounded-lg bg-red-950/80 hover:bg-red-800 text-red-200 border border-red-500/70 shadow text-[10px] sm:text-[11px] font-bold whitespace-nowrap active:scale-95 transition-all cursor-pointer"
+            >
+              Masadan Ayrıl
+            </button>
           </div>
         </div>
 
