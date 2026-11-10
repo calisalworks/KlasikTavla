@@ -123,7 +123,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
               <div
                 className={`w-2 h-2 rounded-full ${
                   val === 1
-                    ? 'bg-rose-700 shadow-[inset_0_1px_1.5px_rgba(0,0,0,0.8),0_0.5px_1px_rgba(255,255,255,0.4)]'
+                    ? 'bg-[#171411] shadow-[inset_0_1px_1.5px_rgba(0,0,0,0.8),0_0.5px_1px_rgba(255,255,255,0.4)]'
                     : 'bg-[#18181b] shadow-[inset_0_1px_1.5px_rgba(0,0,0,0.8),0_0.5px_1px_rgba(255,255,255,0.4)]'
                 }`}
               />
@@ -417,7 +417,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         >
           {/* Front Face (1) */}
           <div
-            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-white via-[#f5f7fb] to-[#cbd5e1] border border-white/90 shadow-[inset_0_2px_3px_rgba(255,255,255,0.98),inset_0_-3px_5px_rgba(15,23,42,0.2),0_1px_2px_rgba(15,23,42,0.16)] flex items-center justify-center ${
+            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#fffdf4] via-[#f1e5c9] to-[#c4ad84] border border-[#fff4dc] shadow-[inset_0_2px_3px_rgba(255,255,255,0.98),inset_0_-3px_5px_rgba(15,23,42,0.2),0_1px_2px_rgba(15,23,42,0.16)] flex items-center justify-center ${
               isUsed ? 'opacity-35 grayscale' : ''
             }`}
             style={{ transform: `translateZ(${half}px)` }}
@@ -427,7 +427,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           {/* Back Face (6) */}
           <div
-            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#f8fafc] via-[#e2e8f0] to-[#94a3b8] border border-white/80 shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.22)] flex items-center justify-center ${
+            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#fff9e9] via-[#e9dcc0] to-[#bda77f] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.22)] flex items-center justify-center ${
               isUsed ? 'opacity-35 grayscale' : ''
             }`}
             style={{ transform: `rotateY(180deg) translateZ(${half}px)` }}
@@ -437,7 +437,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           {/* Right Face (3) */}
           <div
-            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#f8fafc] via-[#e2e8f0] to-[#a5b4c6] border border-white/85 shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.2)] flex items-center justify-center ${
+            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#fffaf0] via-[#eadfc9] to-[#c4ad87] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.2)] flex items-center justify-center ${
               isUsed ? 'opacity-35 grayscale' : ''
             }`}
             style={{ transform: `rotateY(90deg) translateZ(${half}px)` }}
@@ -447,7 +447,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           {/* Left Face (4) */}
           <div
-            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#f8fafc] via-[#e2e8f0] to-[#94a3b8] border border-white/85 shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.22)] flex items-center justify-center ${
+            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#fff9e9] via-[#e9dcc0] to-[#bda77f] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.22)] flex items-center justify-center ${
               isUsed ? 'opacity-35 grayscale' : ''
             }`}
             style={{ transform: `rotateY(-90deg) translateZ(${half}px)` }}
@@ -467,7 +467,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           {/* Bottom Face (5) */}
           <div
-            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#f1f5f9] via-[#cbd5e1] to-[#94a3b8] border border-white/80 shadow-[inset_0_2px_3px_rgba(255,255,255,0.92),inset_0_-3px_5px_rgba(15,23,42,0.22)] flex items-center justify-center ${
+            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#e9dcc1] via-[#d5c29f] to-[#a68d66] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.92),inset_0_-3px_5px_rgba(15,23,42,0.22)] flex items-center justify-center ${
               isUsed ? 'opacity-35 grayscale' : ''
             }`}
             style={{ transform: `rotateX(-90deg) translateZ(${half}px)` }}
