@@ -1439,7 +1439,7 @@ wss.on('connection', (ws) => {
         case 'game:roll': {
           if (!session.currentRoomId) return;
           const room = rooms.get(session.currentRoomId);
-          if (!room || room.status !== 'playing' || room.winnerInfo) return;
+          if (!room || room.status !== 'playing' || room.winnerInfo || timeoutCompletionRooms.has(room.id)) return;
           if (room.openingRoll && !room.openingRollCompleted) return;
 
           // Check if it's the sender's turn
@@ -1512,7 +1512,7 @@ wss.on('connection', (ws) => {
         case 'game:move': {
           if (!session.currentRoomId) return;
           const room = rooms.get(session.currentRoomId);
-          if (!room || room.status !== 'playing' || room.winnerInfo) return;
+          if (!room || room.status !== 'playing' || room.winnerInfo || timeoutCompletionRooms.has(room.id)) return;
 
           const isWhite = room.whitePlayer?.id === session.playerId;
           const isBlack = room.blackPlayer?.id === session.playerId;
@@ -1603,6 +1603,14 @@ wss.on('connection', (ws) => {
             room,
           });
 
+          // Treat 20 seconds as an inactivity window. Every accepted move resets it.
+          // When the turn is complete, cancel it to avoid racing the 4-second pass.
+          const activeTurnTimer = turnTimeouts.get(room.id);
+          if (activeTurnTimer) {
+            clearTimeout(activeTurnTimer);
+            turnTimeouts.delete(room.id);
+          }
+
           if (turnWillPass) {
             const passTimer = setTimeout(() => {
               if (rooms.get(room.id) === room && !room.winnerInfo) {
@@ -1620,6 +1628,8 @@ wss.on('connection', (ws) => {
               }
             }, 4000);
             passTimeouts.set(room.id, passTimer);
+          } else {
+            scheduleTurnTimeout(room);
           }
           break;
         }
@@ -1627,7 +1637,7 @@ wss.on('connection', (ws) => {
         case 'game:pass': {
           if (!session.currentRoomId) return;
           const room = rooms.get(session.currentRoomId);
-          if (!room || room.status !== 'playing' || room.winnerInfo) return;
+          if (!room || room.status !== 'playing' || room.winnerInfo || timeoutCompletionRooms.has(room.id)) return;
 
           const isWhite = room.whitePlayer?.id === session.playerId;
           const isBlack = room.blackPlayer?.id === session.playerId;
@@ -1705,7 +1715,7 @@ wss.on('connection', (ws) => {
         case 'game:undo': {
           if (!session.currentRoomId) return;
           const room = rooms.get(session.currentRoomId);
-          if (!room || room.status !== 'playing' || room.winnerInfo) return;
+          if (!room || room.status !== 'playing' || room.winnerInfo || timeoutCompletionRooms.has(room.id)) return;
 
           const isWhite = room.whitePlayer?.id === session.playerId;
           const isBlack = room.blackPlayer?.id === session.playerId;
@@ -1731,6 +1741,7 @@ wss.on('connection', (ws) => {
             type: 'game:undo_applied',
             room,
           });
+          scheduleTurnTimeout(room);
           break;
         }
 
