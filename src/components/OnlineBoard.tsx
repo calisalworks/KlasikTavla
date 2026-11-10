@@ -40,6 +40,7 @@ import {
   VolumeX,
   MessageCircle,
   Send,
+  X,
 } from 'lucide-react';
 import { MasterVolumeControl, RadioControls } from './RadioControls';
 import { GameTips } from './GameTips';

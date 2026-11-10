@@ -16,6 +16,7 @@ import {
 import { Die, GameRoom, PlayerColor, RoomPlayer, RoomTierId, TargetScore } from './src/types/game.ts';
 import { verifyFirebaseIdToken } from './src/server/firebaseIdToken.ts';
 import { findBestMovesForPlayer } from './src/utils/aiPlayer.ts';
+import { RADIO_STATIONS } from './src/utils/radioStations.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,6 +61,9 @@ const disconnectTimeouts = new Map<string, NodeJS.Timeout>();
 const turnTimeouts = new Map<string, NodeJS.Timeout>();
 const openingRollFallbacks = new Map<string, NodeJS.Timeout>();
 const openingRollFinalizeTimers = new Map<string, NodeJS.Timeout>();
+const chatHistoryByRoom = new Map<string, Array<{ id: string; senderId: string; senderName: string; senderColor: PlayerColor; text: string; createdAt: number }>>();
+const chatRateLimit = new Map<string, number>();
+let radioStatusCache: { checkedAt: number; statuses: Record<string, boolean> } = { checkedAt: 0, statuses: {} };
 
 /**
  * Rolls opening dice for backgammon (1 die for White, 1 die for Black)
@@ -515,6 +519,34 @@ app.get('/api/health', (_req, res) => {
     activeRooms: rooms.size,
     connectedClients: clients.size,
   });
+});
+
+// Background radio endpoint probe. Small range requests are cancelled immediately and cached for 15 minutes.
+app.get('/api/radio/status', async (_req, res) => {
+  if (Date.now() - radioStatusCache.checkedAt < 15 * 60 * 1000 && Object.keys(radioStatusCache.statuses).length) {
+    return res.json({ statuses: radioStatusCache.statuses, checkedAt: radioStatusCache.checkedAt, cached: true });
+  }
+  const statuses: Record<string, boolean> = {};
+  let nextIndex = 0;
+  const workers = Array.from({ length: 3 }, async () => {
+    while (nextIndex < RADIO_STATIONS.length) {
+      const station = RADIO_STATIONS[nextIndex++];
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 2600);
+      try {
+        const response = await fetch(station.url, { method: 'GET', headers: { Range: 'bytes=0-1' }, signal: controller.signal, redirect: 'follow' });
+        statuses[station.id] = response.ok;
+        if (response.body) await response.body.cancel().catch(() => {});
+      } catch {
+        statuses[station.id] = false;
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+  });
+  await Promise.all(workers);
+  radioStatusCache = { checkedAt: Date.now(), statuses };
+  return res.json({ statuses, checkedAt: radioStatusCache.checkedAt, cached: false });
 });
 
 // Firebase Authentication session probe. Future economy routes must use the verified UID,
@@ -1320,6 +1352,7 @@ wss.on('connection', (ws) => {
             systemMessage: `${playerName} masaya bağlandı.`,
           });
           ws.send(JSON.stringify({ type: 'room:joined', room, myColor: playerColor }));
+          ws.send(JSON.stringify({ type: 'chat:history', messages: chatHistoryByRoom.get(room.id) || [] }));
           broadcastRoomsList();
           break;
         }
@@ -1717,6 +1750,36 @@ wss.on('connection', (ws) => {
             room,
           });
           scheduleTurnTimeout(room);
+          break;
+        }
+
+        case 'chat:send': {
+          const roomId = session.currentRoomId;
+          const room = roomId ? rooms.get(roomId) : null;
+          if (!room || room.status !== 'playing' || room.winnerInfo || (msg.roomId && msg.roomId !== room.id)) break;
+          const isWhite = room.whitePlayer?.id === session.playerId;
+          const isBlack = room.blackPlayer?.id === session.playerId;
+          if (!isWhite && !isBlack) break;
+          const text = typeof msg.text === 'string' ? msg.text.trim().slice(0, 120) : '';
+          if (!text) break;
+          const rateKey = room.id + ':' + session.playerId;
+          const now = Date.now();
+          if (now - (chatRateLimit.get(rateKey) || 0) < 450) break;
+          chatRateLimit.set(rateKey, now);
+          const sender = isWhite ? room.whitePlayer! : room.blackPlayer!;
+          const message = {
+            id: String(now) + '_' + Math.random().toString(36).slice(2, 8),
+            senderId: session.playerId,
+            senderName: sender.name || session.playerName || 'Oyuncu',
+            senderColor: isWhite ? 'white' as PlayerColor : 'black' as PlayerColor,
+            text,
+            createdAt: now,
+          };
+          const history = chatHistoryByRoom.get(room.id) || [];
+          history.push(message);
+          if (history.length > 60) history.splice(0, history.length - 60);
+          chatHistoryByRoom.set(room.id, history);
+          broadcastToRoom(room.id, { type: 'chat:message', message });
           break;
         }
 
