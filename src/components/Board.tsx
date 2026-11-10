@@ -27,7 +27,7 @@ import { CheckerPiece } from './CheckerPiece';
 import { DicePhysicsView } from './DicePhysicsView';
 import { AvatarDisplay } from './AvatarDisplay';
 import { OpeningRollOverlay } from './OpeningRollOverlay';
-import { RotateCcw, Check, Settings, Trophy, RefreshCw, Home, Maximize, AlertTriangle, Bot, Clock, Volume2, VolumeX } from 'lucide-react';
+import { RotateCcw, Check, Settings, Trophy, RefreshCw, Home, AlertTriangle, Bot, Clock, Volume2, VolumeX } from 'lucide-react';
 
 interface BoardProps {
   profile?: UserProfile;
@@ -1196,6 +1196,7 @@ export const Board: React.FC<BoardProps> = ({
     onReturnToMenu();
   };
 
+  const turnProgress = Math.max(0, Math.min(100, ((turnSecondsLeft ?? 20) / 20) * 100));
   const activeFrom = selectedPoint ?? dragState?.from;
   const canSelectedBearOff =
     activeFrom !== null && activeFrom !== undefined && validDestinations.some((d) => d.to === 'off');
@@ -1381,7 +1382,7 @@ export const Board: React.FC<BoardProps> = ({
       className="relative w-full h-full flex flex-row items-stretch select-none overflow-hidden bg-[#181310] touch-none"
     >
       {/* 1. LEFT SIDE PANEL */}
-      <div className="w-36 md:w-44 flex flex-col justify-between py-2.5 px-2 bg-[#221711] border-r border-[#3f291b] shadow-2xl z-20 shrink-0">
+      <div className="w-36 md:w-44 flex flex-col gap-2 py-2.5 px-2 bg-[#221711] border-r border-[#3f291b] shadow-2xl z-20 shrink-0">
         {/* Top: Opponent Card */}
         <div
           className={`relative p-2 rounded-2xl border transition-all ${
@@ -1389,7 +1390,13 @@ export const Board: React.FC<BoardProps> = ({
               ? 'bg-[#3b2416] border-amber-500/80 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
               : 'bg-[#2b1c13] border-[#442c1e]'
           }`}
+          className={`relative flex-1 min-h-0 p-2 rounded-2xl border transition-all ${turn === 'black' ? 'bg-[#3b2416] border-amber-500/80 shadow-[0_0_15px_rgba(245,158,11,0.25)]' : 'bg-[#2b1c13] border-[#442c1e]'}`}
         >
+          {turn === 'black' && turnSecondsLeft !== null && (
+            <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <rect x="1" y="1" width="98" height="98" rx="12" fill="none" stroke="#10b981" strokeWidth="2" pathLength="100" strokeDasharray={`${turnProgress} 100`} strokeDashoffset="25" strokeLinecap="round" />
+            </svg>
+          )}
           {turn === 'black' && (
             <div className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-[#2b1c13] animate-ping" />
           )}
@@ -1432,63 +1439,30 @@ export const Board: React.FC<BoardProps> = ({
           </div>
         </div>
 
-        {/* Center: Match Goal */}
-        <div className="my-auto flex flex-col items-center gap-2 py-1">
-          <div className="px-3 py-1 rounded-xl bg-[#2e1d13] border border-amber-600/40 text-center shadow">
+        {/* Center: Match Goal — only left-side control retained */}
+        <div className="w-full flex items-center justify-center py-2 shrink-0">
+          <div className="w-full px-3 py-3 rounded-xl bg-[#2e1d13] border border-amber-600/40 text-center shadow">
             <div className="text-[9px] uppercase tracking-wider text-amber-300/70 font-semibold">Hedef</div>
             <div className="text-sm font-black text-amber-100 flex items-center gap-1 justify-center">
               <Trophy className="w-3.5 h-3.5 text-amber-400" />
               <span>{targetScore} Puan</span>
             </div>
           </div>
-
-          <div className="w-full flex flex-col gap-1.5 px-1">
-            {!(openingRoll && !openingRoll.isComplete) && turn === 'white' && dice.length === 0 && !isRolling && !winnerInfo && (
-              <button
-                onClick={handleRollDice}
-                className="w-full py-2 px-2 rounded-xl bg-gradient-to-b from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700 text-amber-50 text-xs font-bold shadow-lg border border-amber-400/50 active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"
-              >
-                <span>ZAR AT</span>
-              </button>
-            )}
-
-            <div className="flex items-center justify-center gap-1.5 mt-1">
-              <button
-                onClick={onToggleFullscreen}
-                title={isFullscreen ? 'Tam Ekrandan Çık' : 'Tam Ekran Yap'}
-                className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300/80 hover:text-amber-200 border border-amber-700/40 shadow cursor-pointer transition-colors"
-              >
-                <Maximize className="w-3.5 h-3.5" />
-              </button>
-
-              <button
-                onClick={onToggleMusic}
-                title={settings.ambientSound ? 'Arka Plan Müziğini Kapat' : 'Arka Plan Müziğini Aç'}
-                aria-label={settings.ambientSound ? 'Arka Plan Müziğini Kapat' : 'Arka Plan Müziğini Aç'}
-                className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300/80 hover:text-amber-200 border border-amber-700/40 shadow cursor-pointer transition-colors"
-              >
-                {settings.ambientSound ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-              </button>
-
-              <button
-                onClick={onOpenSettings}
-                title="Ayarlar & Kurallar"
-                className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300/80 hover:text-amber-200 border border-amber-700/40 shadow cursor-pointer transition-colors"
-              >
-                <Settings className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Bottom: Player Card */}
         <div
-          className={`relative p-2 rounded-2xl border transition-all ${
+          className={`relative flex-1 min-h-0 p-2 rounded-2xl border transition-all ${
             turn === 'white'
               ? 'bg-[#3b2416] border-amber-500/80 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
               : 'bg-[#2b1c13] border-[#442c1e]'
           }`}
         >
+          {turn === 'white' && turnSecondsLeft !== null && (
+            <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <rect x="1" y="1" width="98" height="98" rx="12" fill="none" stroke="#10b981" strokeWidth="2" pathLength="100" strokeDasharray={`${turnProgress} 100`} strokeDashoffset="25" strokeLinecap="round" />
+            </svg>
+          )}
           {turn === 'white' && (
             <div className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-[#2b1c13] animate-ping" />
           )}
@@ -1543,6 +1517,8 @@ export const Board: React.FC<BoardProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <button onClick={onToggleMusic} title={settings.ambientSound ? "Müziği Kapat" : "Müziği Aç"} aria-label={settings.ambientSound ? "Müziği Kapat" : "Müziği Aç"} className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300 border border-amber-700/40 shadow cursor-pointer">{settings.ambientSound ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}</button>
+            <button onClick={onOpenSettings} title="Ayarlar" aria-label="Ayarlar" className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300 border border-amber-700/40 shadow cursor-pointer"><Settings className="w-3.5 h-3.5" /></button>
             <span className="text-[11px] text-amber-400/80">Sıra:</span>
             <div
               className={`px-2 py-0.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 ${
