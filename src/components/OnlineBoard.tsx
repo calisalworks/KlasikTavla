@@ -1025,6 +1025,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   const rightTopPoints = isBlackPlayer ? [6, 5, 4, 3, 2, 1] : [19, 20, 21, 22, 23, 24];
   const rightBottomPoints = isBlackPlayer ? [19, 20, 21, 22, 23, 24] : [6, 5, 4, 3, 2, 1];
 
+  const turnProgress = Math.max(0, Math.min(100, ((turnSecondsLeft ?? 20) / 20) * 100));
   const canSelectedBearOff =
     (selectedPoint !== null || dragState?.from !== undefined) &&
     validDestinations.some((d) => d.to === 'off');
@@ -1215,15 +1216,20 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
       className="relative w-full h-full flex flex-row items-stretch select-none overflow-hidden bg-[#181310] touch-none"
     >
       {/* 1. LEFT PANEL */}
-      <div className="w-36 md:w-44 flex flex-col justify-between py-2.5 px-2 bg-[#221711] border-r border-[#3f291b] shadow-2xl z-20 shrink-0">
+      <div className="w-36 md:w-44 flex flex-col gap-2 py-2.5 px-2 bg-[#221711] border-r border-[#3f291b] shadow-2xl z-20 shrink-0">
         {/* Top: Opponent Card */}
         <div
-          className={`relative p-2 rounded-2xl border transition-all ${
+          className={`relative flex-1 min-h-0 p-2 rounded-2xl border transition-all ${
             room.turn === opponentColor
               ? 'bg-[#3b2416] border-amber-500/80 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
               : 'bg-[#2b1c13] border-[#442c1e]'
           }`}
         >
+          {room.turn === opponentColor && turnSecondsLeft !== null && (
+            <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <rect x="1" y="1" width="98" height="98" rx="12" fill="none" stroke="#10b981" strokeWidth="2" pathLength="100" strokeDasharray={`${turnProgress} 100`} strokeDashoffset="25" strokeLinecap="round" />
+            </svg>
+          )}
           {room.turn === opponentColor && (
             <div className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-[#2b1c13] animate-ping" />
           )}
@@ -1268,91 +1274,35 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
           </div>
         </div>
 
-        {/* Center: Match Goal & Controls */}
-        <div className="my-auto flex flex-col items-center gap-2 py-1">
+        {/* Center: Match Goal only */}
+        <div className="my-auto w-full flex flex-col items-center py-2 shrink-0">
           <div className="w-full p-2 rounded-xl bg-[#2e1d13] border border-amber-600/40 text-center shadow space-y-1">
-            <div className="text-xs font-black text-amber-100 truncate">
-              {room.name}
-            </div>
-
+            <div className="text-xs font-black text-amber-100 truncate">{room.name}</div>
             {room.entryFee ? (
               <div className="flex items-center justify-center gap-1 text-[10px]">
                 <span className="text-amber-300 font-semibold">{room.entryFee} Jeton</span>
                 <span className="text-amber-400/50">•</span>
-                <span className="text-emerald-400 font-bold flex items-center gap-0.5">
-                  <Coins className="w-3 h-3 text-amber-400" />
-                  {room.prizePool} Ödül
-                </span>
+                <span className="text-emerald-400 font-bold">{room.prizePool} Ödül</span>
               </div>
             ) : (
-              <div className="text-[9px] uppercase tracking-wider text-amber-300/70 font-semibold">
-                Online Masa ({room.targetScore} Puan)
-              </div>
+              <div className="text-[9px] uppercase tracking-wider text-amber-300/70 font-semibold">Hedef: {room.targetScore} Puan</div>
             )}
-          </div>
-
-          <div className="w-full flex flex-col gap-1.5 px-1">
-            {isMyTurn && (
-              <>
-                {!isOpeningRollOpen && (!room.openingRoll || room.openingRollCompleted === true) && room.dice.length === 0 && !isRolling && !room.winnerInfo && (
-                  <button
-                    onClick={handleRollDice}
-                    className="w-full py-2 px-2 rounded-xl bg-gradient-to-b from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700 text-amber-50 text-xs font-bold shadow-lg border border-amber-400/50 active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"
-                  >
-                    <span>ZAR AT</span>
-                  </button>
-                )}
-
-                {room.undoHistory && room.undoHistory.length > 0 && !room.winnerInfo && (
-                  <button
-                    onClick={handleUndo}
-                    className="w-full py-1.5 px-2 rounded-lg bg-[#3d2719] hover:bg-[#4d3221] text-amber-200 text-[11px] font-semibold border border-amber-700/50 shadow active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"
-                  >
-                    <RotateCcw className="w-3 h-3 text-amber-300" />
-                    <span>GERİ AL</span>
-                  </button>
-                )}
-              </>
-            )}
-
-            {/* Quick Action Icons */}
-            <div className="flex items-center justify-center gap-2 mt-1">
-              <button
-                onClick={onToggleFullscreen}
-                title={isFullscreen ? 'Tam Ekrandan Çık' : 'Tam Ekran Yap'}
-                className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300/80 hover:text-amber-200 border border-amber-700/40 shadow cursor-pointer transition-colors"
-              >
-                <Maximize className="w-3.5 h-3.5" />
-              </button>
-
-              <button
-                onClick={onToggleMusic}
-                title={settings.ambientSound ? 'Arka Plan Müziğini Kapat' : 'Arka Plan Müziğini Aç'}
-                aria-label={settings.ambientSound ? 'Arka Plan Müziğini Kapat' : 'Arka Plan Müziğini Aç'}
-                className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300/80 hover:text-amber-200 border border-amber-700/40 shadow cursor-pointer transition-colors"
-              >
-                {settings.ambientSound ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-              </button>
-
-              <button
-                onClick={onOpenSettings}
-                title="Ayarlar & Kurallar"
-                className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300/80 hover:text-amber-200 border border-amber-700/40 shadow cursor-pointer transition-colors"
-              >
-                <Settings className="w-3.5 h-3.5" />
-              </button>
-            </div>
           </div>
         </div>
 
         {/* Bottom: Player Card */}
         <div
-          className={`relative p-2 rounded-2xl border transition-all ${
+          className={`relative flex-1 min-h-0 p-2 rounded-2xl border transition-all ${
             isMyTurn
               ? 'bg-[#3b2416] border-amber-500/80 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
               : 'bg-[#2b1c13] border-[#442c1e]'
           }`}
         >
+          {isMyTurn && turnSecondsLeft !== null && (
+            <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <rect x="1" y="1" width="98" height="98" rx="12" fill="none" stroke="#10b981" strokeWidth="2" pathLength="100" strokeDasharray={`${turnProgress} 100`} strokeDashoffset="25" strokeLinecap="round" />
+            </svg>
+          )}
           {isMyTurn && (
             <div className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-[#2b1c13] animate-ping" />
           )}
@@ -1407,6 +1357,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <button onClick={onToggleMusic} title={settings.ambientSound ? "Müziği Kapat" : "Müziği Aç"} aria-label={settings.ambientSound ? "Müziği Kapat" : "Müziği Aç"} className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300 border border-amber-700/40 shadow cursor-pointer">{settings.ambientSound ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}</button>
+            <button onClick={onOpenSettings} title="Ayarlar" aria-label="Ayarlar" className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300 border border-amber-700/40 shadow cursor-pointer"><Settings className="w-3.5 h-3.5" /></button>
             <div className="flex items-center gap-1.5 sm:gap-2 mr-1 sm:mr-2">
               <span className="text-[10px] sm:text-[11px] text-amber-400/80">Sıra:</span>
               <div
