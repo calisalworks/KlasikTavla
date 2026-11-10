@@ -211,7 +211,7 @@ export const Board: React.FC<BoardProps> = ({
             autoPlayTimeoutsRef.current.push(stepT);
           });
         }
-      }, 1350);
+      }, 1750);
       autoPlayTimeoutsRef.current.push(dropT);
       return;
     }
@@ -559,7 +559,7 @@ export const Board: React.FC<BoardProps> = ({
             : `Zarlar: ${newDice[0].value} - ${newDice[1].value}. Taşı sürükleyin veya dokunun.`
         );
       }
-    }, 1350);
+    }, 1750);
   };
 
   const clearAutoPassTimers = () => {
@@ -751,7 +751,7 @@ export const Board: React.FC<BoardProps> = ({
 
           aiTimeoutsRef.current.push(startTimer);
         });
-      }, openingDiceAlreadySet ? 0 : 1350);
+      }, openingDiceAlreadySet ? 0 : 1750);
       aiTimeoutsRef.current.push(dropTimer);
     }, 800);
 
@@ -1670,8 +1670,8 @@ export const Board: React.FC<BoardProps> = ({
               <div
                 className="absolute inset-y-0 w-36 pointer-events-none flex items-center justify-center z-[999]"
                 style={turn === 'white'
-                  ? { left: 'calc(50% - 4.5rem)' }
-                  : { right: 'calc(50% - 4.5rem)' }}
+                  ? { left: 'calc(50% + 22px)' }
+                  : { right: 'calc(50% + 22px)' }}
               >
                 <div className="pointer-events-none">
                   <DicePhysicsView
