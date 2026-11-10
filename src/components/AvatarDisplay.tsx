@@ -76,14 +76,12 @@ export const PRESET_AVATARS: PresetAvatar[] = [
   },
 ];
 
-import { getProfileFrame } from '../utils/frameSettings';
 
 interface AvatarDisplayProps {
   avatar?: string;
   name: string;
   size?: number;
   className?: string;
-  frameId?: string;
 }
 
 export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
@@ -91,17 +89,14 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   name,
   size = 40,
   className = '',
-  frameId = 'frame-1',
 }) => {
-  const frame = getProfileFrame(frameId);
-
   // 1. If it's a data URL or image URL
   if (avatar && (avatar.startsWith('data:image') || avatar.startsWith('http') || avatar.startsWith('/'))) {
     return (
       <div
         style={{ width: size, height: size }}
-        className={`rounded-full overflow-hidden ${frame.ringClass} ${frame.borderClass} ${frame.glowClass} bg-stone-900 flex items-center justify-center shrink-0 transition-transform ${className}`}
-        title={`${name} • Çerçeve: ${frame.name}`}
+        className={`rounded-full overflow-hidden  bg-stone-900 flex items-center justify-center shrink-0 transition-transform ${className}`}
+        title={name}
       >
         <img src={avatar} alt={name} className="w-full h-full object-cover scale-[1.35]" />
       </div>
@@ -114,8 +109,8 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
     return (
       <div
         style={{ width: size, height: size, fontSize: Math.floor(size * 0.48) }}
-        className={`rounded-full bg-gradient-to-tr ${preset.gradient} ${frame.ringClass} ${frame.borderClass} ${frame.glowClass} flex items-center justify-center select-none shrink-0 transition-transform ${className}`}
-        title={`${name} • Çerçeve: ${frame.name}`}
+        className={`rounded-full bg-gradient-to-tr ${preset.gradient}  flex items-center justify-center select-none shrink-0 transition-transform ${className}`}
+        title={name}
       >
         <span>{preset.symbol}</span>
       </div>
@@ -127,8 +122,8 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   return (
     <div
       style={{ width: size, height: size, fontSize: Math.floor(size * 0.42) }}
-      className={`rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 ${frame.ringClass} ${frame.borderClass} ${frame.glowClass} flex items-center justify-center text-amber-950 font-black select-none shrink-0 transition-transform ${className}`}
-      title={`${name} • Çerçeve: ${frame.name}`}
+      className={`rounded-full bg-gradient-to-tr from-amber-400 to-amber-600  flex items-center justify-center text-amber-950 font-black select-none shrink-0 transition-transform ${className}`}
+      title={name}
     >
       <span>{initial}</span>
     </div>

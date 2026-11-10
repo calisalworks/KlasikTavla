@@ -42,6 +42,16 @@ export default function App() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const radioAudioRef = useRef<HTMLAudioElement | null>(null);
   const [isRadioPlaying, setIsRadioPlaying] = useState(false);
+  const [radioAvailability, setRadioAvailability] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    let cancelled = false;
+    const scanTimer = window.setTimeout(() => {
+      fetch('/api/radio/status').then((response) => { if (!response.ok) throw new Error('Radyo durumları alınamadı'); return response.json(); })
+        .then((data) => { if (!cancelled && data?.statuses && typeof data.statuses === 'object') setRadioAvailability(data.statuses); })
+        .catch((error) => console.warn('Radyo kanalları arka planda kontrol edilemedi:', error));
+    }, 1800);
+    return () => { cancelled = true; window.clearTimeout(scanTimer); };
+  }, []);
   const [enabledRadioStations, setEnabledRadioStations] = useState<string[]>(() => {
     // Make every configured station available in channel navigation after the radio update.
     return RADIO_STATIONS.map((station) => station.id);
@@ -58,6 +68,7 @@ export default function App() {
   const radioChannelRef = useRef(radioChannel);
   const radioPlayRequestRef = useRef(0);
   useEffect(() => { radioChannelRef.current = radioChannel; }, [radioChannel]);
+  const navigableRadioIndexes = RADIO_STATIONS.map((station, index) => enabledRadioStations.includes(station.id) && radioAvailability[station.id] !== false ? index : -1).filter((index) => index >= 0);
 
   // Friend Room & URL Invite States
   const [isFriendRoomOpen, setIsFriendRoomOpen] = useState(false);
@@ -246,7 +257,7 @@ export default function App() {
 
   const playRadioChannel = (index: number) => {
     const audio = radioAudioRef.current;
-    if (!audio) return;
+    if (!audio || radioAvailability[RADIO_STATIONS[index]?.id] === false) return;
     const requestId = ++radioPlayRequestRef.current;
     audio.pause();
     audio.src = RADIO_STATIONS[index].url;
@@ -265,9 +276,9 @@ export default function App() {
       setIsRadioPlaying(false);
       return;
     }
-    const firstEnabled = RADIO_STATIONS.findIndex((station) => enabledRadioStations.includes(station.id));
+    const firstEnabled = navigableRadioIndexes[0] ?? -1;
     if (firstEnabled < 0) return;
-    const selectedIndex = enabledRadioStations.includes(RADIO_STATIONS[radioChannel].id) ? radioChannel : firstEnabled;
+    const selectedIndex = navigableRadioIndexes.includes(radioChannel) ? radioChannel : firstEnabled;
     setRadioChannel(selectedIndex);
     radioChannelRef.current = selectedIndex;
     tavlaAudio.setAmbientEnabled(false);
@@ -277,7 +288,7 @@ export default function App() {
   };
 
   const handleChangeRadioChannel = (direction: -1 | 1) => {
-    const enabledIndexes = RADIO_STATIONS.map((station, index) => enabledRadioStations.includes(station.id) ? index : -1).filter((index) => index >= 0);
+    const enabledIndexes = navigableRadioIndexes;
     if (enabledIndexes.length === 0) return;
     const currentPosition = enabledIndexes.indexOf(radioChannelRef.current);
     const basePosition = currentPosition >= 0 ? currentPosition : 0;
@@ -293,7 +304,7 @@ export default function App() {
       : [...enabledRadioStations, stationId];
     setEnabledRadioStations(next);
     if (stationId === RADIO_STATIONS[radioChannel].id && !next.includes(stationId)) {
-      const nextEnabledIndex = RADIO_STATIONS.findIndex((station) => next.includes(station.id));
+      const nextEnabledIndex = RADIO_STATIONS.findIndex((station) => next.includes(station.id) && radioAvailability[station.id] !== false);
       if (nextEnabledIndex < 0) {
         radioAudioRef.current?.pause();
         setIsRadioPlaying(false);
@@ -312,6 +323,13 @@ export default function App() {
     }
     setSettings((prev) => ({ ...prev, ambientSound: !prev.ambientSound }));
   };
+
+  useEffect(() => {
+    if (isRadioPlaying && radioAvailability[RADIO_STATIONS[radioChannel]?.id] === false) {
+      radioAudioRef.current?.pause();
+      setIsRadioPlaying(false);
+    }
+  }, [radioAvailability, radioChannel, isRadioPlaying]);
 
   useEffect(() => {
     try {
@@ -493,7 +511,7 @@ export default function App() {
             onOpenSettings={() => setIsSettingsOpen(true)}
             onToggleMusic={handleToggleMusic}
             isRadioPlaying={isRadioPlaying}
-            hasEnabledRadioStations={enabledRadioStations.length > 0}
+            hasEnabledRadioStations={navigableRadioIndexes.length > 0}
             radioChannel={radioChannel}
             onToggleRadio={handleToggleRadio}
             onPreviousRadio={() => handleChangeRadioChannel(-1)}
@@ -516,7 +534,7 @@ export default function App() {
             onOpenSettings={() => setIsSettingsOpen(true)}
             onToggleMusic={handleToggleMusic}
             isRadioPlaying={isRadioPlaying}
-            hasEnabledRadioStations={enabledRadioStations.length > 0}
+            hasEnabledRadioStations={navigableRadioIndexes.length > 0}
             radioChannel={radioChannel}
             onToggleRadio={handleToggleRadio}
             onPreviousRadio={() => handleChangeRadioChannel(-1)}
@@ -594,6 +612,7 @@ export default function App() {
         settings={settings}
         onUpdateSettings={(part) => setSettings((prev) => ({ ...prev, ...part }))}
         enabledRadioStations={enabledRadioStations}
+        radioAvailability={radioAvailability}
         onToggleRadioStation={handleToggleRadioStation}
       />
 
