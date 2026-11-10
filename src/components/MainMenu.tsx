@@ -88,7 +88,12 @@ export const MainMenu: React.FC<MainMenuProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1c0f08] via-[#2a170d] to-[#120803] p-3 select-none overflow-hidden">
+    <div className="relative w-full h-full flex items-center justify-center bg-[#090707] p-3 sm:p-5 select-none overflow-hidden" style={{ backgroundImage: 'radial-gradient(ellipse at 50% 48%, rgba(74,39,19,.58) 0%, rgba(24,13,10,.78) 43%, rgba(5,5,7,.98) 100%), repeating-linear-gradient(135deg, rgba(196,151,76,.035) 0px, rgba(196,151,76,.035) 1px, transparent 1px, transparent 7px)' }}>
+      <div className="pointer-events-none absolute inset-3 sm:inset-5 border border-amber-700/50 shadow-[inset_0_0_45px_rgba(0,0,0,.9),0_0_18px_rgba(180,123,48,.12)] rounded-sm" />
+      <div className="pointer-events-none absolute inset-5 sm:inset-8 border border-amber-300/15 rounded-sm" />
+      <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[70vw] h-[50vh] rounded-full bg-amber-500/5 blur-3xl" />
+      <div className="pointer-events-none absolute left-5 bottom-5 text-amber-700/50 text-5xl sm:text-7xl font-serif">❧</div>
+      <div className="pointer-events-none absolute right-5 top-20 rotate-180 text-amber-700/50 text-5xl sm:text-7xl font-serif">❧</div>
       {/* Top-Left Corner: Profile Avatar, Details & Google Login/Logout */}
       <div className="absolute top-3 left-3 z-30 flex items-center gap-2">
         <div
@@ -190,10 +195,11 @@ export const MainMenu: React.FC<MainMenuProps> = ({
       </div>
 
       {/* Main Wood Craft Menu Board */}
-      <div className="relative z-10 w-full max-w-md sm:max-w-lg rounded-3xl bg-gradient-to-b from-[#6b3816] via-[#4e270d] to-[#341807] border-4 border-[#241004] p-4 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.95),inset_0_2px_4px_rgba(255,255,255,0.2)] flex flex-col items-center">
+      <div className="relative z-10 w-full max-w-3xl px-2 sm:px-5 py-2 sm:py-4 flex flex-col items-center">
         {/* Header / Title (Küçültülmüş ve yukarı taşınmış Klasik Tavla) */}
-        <div className="text-center mb-4 mt-0.5">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-200 to-amber-400 tracking-wider font-['Cinzel',serif] drop-shadow-md">
+        <div className="text-center mb-5 sm:mb-7 mt-0.5 relative">
+          <div className="flex items-center justify-center gap-3 text-amber-300/90 text-[10px] sm:text-xs tracking-[.45em] mb-1"><span className="w-12 sm:w-24 h-px bg-gradient-to-r from-transparent to-amber-500/80" />✦ ❖ ✦<span className="w-12 sm:w-24 h-px bg-gradient-to-l from-transparent to-amber-500/80" /></div>
+          <h1 className="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-[#fff4c9] via-[#e6c477] to-[#9d6928] tracking-[.12em] font-['Cinzel',serif] drop-shadow-[0_3px_8px_rgba(0,0,0,.95)]">
             KLASİK TAVLA
           </h1>
         </div>
@@ -231,24 +237,24 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         )}
 
         {/* Menü Seçenekleri (Sırayla: 'Tek Kişilik', 'Online', 'Arkadaşınla Oyna' - Alt açıklamalar kaldırıldı) */}
-        <div className="w-full space-y-2.5 mb-4">
+        <div className="w-full space-y-3 sm:space-y-4 mb-5 sm:mb-6">
           {/* 1. Tek Kişilik */}
           <button
             onClick={() => {
               tavlaAudio.playButtonClick();
               onStartSinglePlayer();
             }}
-            className="w-full group relative py-3.5 px-5 rounded-2xl bg-gradient-to-b from-amber-600 via-amber-700 to-amber-900 hover:from-amber-500 hover:to-amber-800 text-amber-50 font-bold shadow-[0_6px_16px_rgba(0,0,0,0.6),inset_0_1px_2px_rgba(255,255,255,0.35)] border border-amber-400/60 active:scale-98 transition-all flex items-center justify-between cursor-pointer"
+            className="w-full group relative py-4 sm:py-5 px-5 sm:px-7 rounded-xl bg-gradient-to-r from-[#160e0b] via-[#28160f] to-[#100b09] hover:from-[#2a1a11] hover:to-[#1c100b] text-amber-50 font-bold shadow-[0_8px_22px_rgba(0,0,0,.75),inset_0_1px_3px_rgba(255,230,170,.12)] border-2 border-[#b88a43] outline outline-1 outline-offset-[-6px] outline-amber-200/20 active:scale-[.99] transition-all flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-950/60 border border-amber-400/40 flex items-center justify-center text-amber-300 group-hover:scale-105 transition-transform shadow-inner">
+              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#3b210b] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
                 <Bot className="w-5 h-5" />
               </div>
-              <span className="font-extrabold text-white text-base sm:text-lg tracking-wide">
+              <span className="font-extrabold text-[#f6e8c7] text-xl sm:text-2xl tracking-wide font-['Cinzel',serif]">
                 Tek Kişilik
               </span>
             </div>
-            <span className="text-xs sm:text-sm font-bold text-amber-300 group-hover:translate-x-1 transition-transform">
+            <span className="text-sm sm:text-lg font-black text-[#e9c77c] group-hover:translate-x-1 transition-transform">
               OYNA →
             </span>
           </button>
@@ -259,17 +265,17 @@ export const MainMenu: React.FC<MainMenuProps> = ({
               tavlaAudio.playButtonClick();
               onOpenOnlineLobby();
             }}
-            className="w-full group relative py-3.5 px-5 rounded-2xl bg-gradient-to-b from-emerald-700 via-emerald-800 to-emerald-950 hover:from-emerald-600 hover:to-emerald-900 text-white font-bold shadow-[0_6px_16px_rgba(0,0,0,0.6),inset_0_1px_2px_rgba(255,255,255,0.25)] border border-emerald-400/60 active:scale-98 transition-all flex items-center justify-between cursor-pointer"
+            className="w-full group relative py-4 sm:py-5 px-5 sm:px-7 rounded-xl bg-gradient-to-r from-[#061b16] via-[#073b2d] to-[#061a15] hover:from-[#0b3025] hover:to-[#08271e] text-white font-bold shadow-[0_8px_22px_rgba(0,0,0,.75),inset_0_1px_3px_rgba(255,230,170,.12)] border-2 border-[#b88a43] outline outline-1 outline-offset-[-6px] outline-amber-200/20 active:scale-[.99] transition-all flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-950/70 border border-emerald-400/40 flex items-center justify-center text-emerald-300 group-hover:scale-105 transition-transform shadow-inner">
+              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#174132] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
                 <Globe className="w-5 h-5" />
               </div>
-              <span className="font-extrabold text-white text-base sm:text-lg tracking-wide">
+              <span className="font-extrabold text-[#f6e8c7] text-xl sm:text-2xl tracking-wide font-['Cinzel',serif]">
                 Online
               </span>
             </div>
-            <span className="text-xs sm:text-sm font-bold text-emerald-300 group-hover:translate-x-1 transition-transform">
+            <span className="text-sm sm:text-lg font-black text-[#e9c77c] group-hover:translate-x-1 transition-transform">
               ODALAR →
             </span>
           </button>
@@ -280,24 +286,24 @@ export const MainMenu: React.FC<MainMenuProps> = ({
               tavlaAudio.playButtonClick();
               onOpenFriendRoom();
             }}
-            className="w-full group relative py-3.5 px-5 rounded-2xl bg-gradient-to-b from-[#d97706] via-[#b45309] to-[#78350f] hover:from-[#f59e0b] hover:to-[#92400e] text-white font-bold shadow-[0_6px_16px_rgba(0,0,0,0.6),inset_0_1px_2px_rgba(255,255,255,0.3)] border border-amber-400/70 active:scale-98 transition-all flex items-center justify-between cursor-pointer"
+            className="w-full group relative py-4 sm:py-5 px-5 sm:px-7 rounded-xl bg-gradient-to-r from-[#1b100c] via-[#352014] to-[#130b08] hover:from-[#352014] hover:to-[#21130c] text-white font-bold shadow-[0_8px_22px_rgba(0,0,0,.75),inset_0_1px_3px_rgba(255,230,170,.12)] border-2 border-[#b88a43] outline outline-1 outline-offset-[-6px] outline-amber-200/20 active:scale-[.99] transition-all flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-950/80 border border-amber-300/50 flex items-center justify-center text-amber-300 group-hover:scale-105 transition-transform shadow-inner">
+              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#3b210b] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
                 <Users className="w-5 h-5" />
               </div>
-              <span className="font-extrabold text-white text-base sm:text-lg tracking-wide">
+              <span className="font-extrabold text-[#f6e8c7] text-xl sm:text-2xl tracking-wide font-['Cinzel',serif]">
                 Arkadaşınla Oyna
               </span>
             </div>
-            <span className="text-xs sm:text-sm font-bold text-amber-200 group-hover:translate-x-1 transition-transform">
+            <span className="text-sm sm:text-lg font-black text-[#e9c77c] group-hover:translate-x-1 transition-transform">
               GİRİŞ →
             </span>
           </button>
         </div>
 
         {/* Alt Bölüm: Ücretsiz Jeton (6 Saatlik Sayaç) & Reklam İzle Kazan Sekmeleri */}
-        <div className="w-full grid grid-cols-2 gap-2.5 pt-2 border-t border-amber-900/60">
+        <div className="w-full grid grid-cols-2 gap-3 sm:gap-5 pt-1">
           {/* Ücretsiz Jeton Butonu (6 saatte bir 100 Jeton, küçük sayaçlı) */}
           <button
             onClick={handleClaimDaily}
