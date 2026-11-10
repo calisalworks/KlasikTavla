@@ -12,6 +12,7 @@ export const RADIO_STATIONS = [
   { id: 'number1slow', name: 'Number1 Türk Slow', url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/NUMBER1TURK_SLOWAAC.aac' },
   { id: 'babaradyo', name: 'Baba Radyo', url: 'https://officialbabaradyo.radyotvonline.net/babaofficial' },
   { id: 'radyo45lik', name: 'Radyo 45lik', url: 'https://stream.radyo45lik.com:4545/stream' },
+  { id: 'kralTurk', name: 'Kral Türk FM', url: 'https://live.radyositesihazir.com/8032/stream' },
   { id: 'radyoilef', name: 'Radyo İlef', url: 'https://radyoilef.ankara.edu.tr/live' },
   { id: 'fenomen', name: 'Radyo Fenomen', url: 'https://live.radyofenomen.com/fenomen/256/icecast.audio' },
 ] as const;
