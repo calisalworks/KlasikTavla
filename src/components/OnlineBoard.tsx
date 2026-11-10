@@ -1317,22 +1317,6 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
 
             {/* Quick Action Icons */}
             <div className="flex items-center justify-center gap-2 mt-1">
-              {/* Anamenü Butonu */}
-              <button
-                onClick={() => {
-                  if (room.status === 'playing' && !room.winnerInfo) {
-                    setShowAbandonConfirm(true);
-                  } else {
-                    handleConfirmLeave();
-                  }
-                }}
-                title="Anamenüye Dön"
-                className="px-2 py-1.5 rounded-lg bg-[#2e1d13] hover:bg-red-950/80 text-amber-300 hover:text-red-300 border border-amber-700/40 shadow cursor-pointer transition-colors flex items-center gap-1 text-[11px] font-bold"
-              >
-                <Home className="w-3.5 h-3.5 text-amber-400" />
-                <span className="hidden sm:inline">Anamenü</span>
-              </button>
-
               <button
                 onClick={onToggleFullscreen}
                 title={isFullscreen ? 'Tam Ekrandan Çık' : 'Tam Ekran Yap'}
