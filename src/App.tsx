@@ -23,6 +23,7 @@ import { claimDailyCoins, claimAdRewardCoins, getRewardStatus } from './firebase
 import { RewardedAdModal } from './components/RewardedAdModal';
 import { RewardCelebrationModal } from './components/RewardCelebrationModal';
 import { tavlaAudio } from './utils/audio';
+import { getWebSocketConfig } from './utils/wsConfig';
 import { Capacitor } from '@capacitor/core';
 import { ScreenOrientation } from '@capacitor/screen-orientation';
 import { StatusBar } from '@capacitor/status-bar';
@@ -46,7 +47,9 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     const scanTimer = window.setTimeout(() => {
-      fetch('/api/radio/status').then((response) => { if (!response.ok) throw new Error('Radyo durumları alınamadı'); return response.json(); })
+      const wsUrl = getWebSocketConfig().url;
+      const statusUrl = wsUrl ? wsUrl.replace(/^wss:/, 'https:').replace(/^ws:/, 'http:').replace(/\\/ws$/, '/api/radio/status') : '/api/radio/status';
+      fetch(statusUrl).then((response) => { if (!response.ok) throw new Error('Radyo durumları alınamadı'); return response.json(); })
         .then((data) => { if (!cancelled && data?.statuses && typeof data.statuses === 'object') setRadioAvailability(data.statuses); })
         .catch((error) => console.warn('Radyo kanalları arka planda kontrol edilemedi:', error));
     }, 1800);

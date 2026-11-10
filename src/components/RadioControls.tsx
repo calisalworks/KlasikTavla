@@ -1,8 +1,7 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, RadioTower, Volume2 } from 'lucide-react';
-
+import { RADIO_STATIONS } from '../utils/radioStations';
 export { RADIO_STATIONS } from '../utils/radioStations';
-import { RADIO_STATIONS } from '../utils/radioStations';;
 
 interface RadioControlsProps {
   isPlaying: boolean;
