@@ -5,7 +5,7 @@ import { tavlaAudio } from '../utils/audio';
 interface DicePhysicsProps {
   dice: Die[];
   isRolling: boolean;
-  rollSequence: number;
+  rollSequence?: number;
   canRoll: boolean;
   onRollClick: () => void;
   className?: string;
@@ -82,7 +82,7 @@ const resolveDiceCollision = (states: PhysicsDieState[], bounce: boolean): Physi
 export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
   dice,
   isRolling,
-  rollSequence,
+  rollSequence = 0,
   canRoll,
   onRollClick,
   className = '',
