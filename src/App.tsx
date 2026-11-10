@@ -471,8 +471,6 @@ export default function App() {
             onOpenProfile={() => setIsProfileOpen(true)}
             onOpenRules={() => setIsRulesOpen(true)}
             onOpenSettings={() => setIsSettingsOpen(true)}
-            onToggleFullscreen={toggleFullscreen}
-            isFullscreen={isFullscreen}
             profile={profile}
             onLoginWithGoogle={handleLoginWithGoogle}
             onLogout={handleLogout}
