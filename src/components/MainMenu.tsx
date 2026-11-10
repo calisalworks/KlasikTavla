@@ -9,7 +9,6 @@ import {
   Globe,
   BookOpen,
   Settings,
-  Maximize,
   Trophy,
   User as UserIcon,
   Sparkles,
@@ -31,8 +30,6 @@ interface MainMenuProps {
   onOpenProfile: () => void;
   onOpenRules: () => void;
   onOpenSettings: () => void;
-  onToggleFullscreen: () => void;
-  isFullscreen: boolean;
   profile: UserProfile;
   onLoginWithGoogle: () => void;
   onLogout: () => void;
@@ -51,8 +48,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({
   onOpenProfile,
   onOpenRules,
   onOpenSettings,
-  onToggleFullscreen,
-  isFullscreen,
   profile,
   onLoginWithGoogle,
   onLogout,
@@ -186,16 +181,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({
           <span className="text-xs font-bold text-amber-200">Sıralama</span>
         </button>
 
-        <button
-          onClick={() => {
-            tavlaAudio.playButtonClick();
-            onToggleFullscreen();
-          }}
-          title={isFullscreen ? 'Tam Ekrandan Çık' : 'Tam Ekran Yap'}
-          className="p-2 rounded-xl bg-[#261308]/95 hover:bg-[#381c0c] text-amber-300 border border-amber-600/60 shadow-[0_4px_12px_rgba(0,0,0,0.7)] cursor-pointer transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
-        >
-          <Maximize className="w-4 h-4 text-amber-300" />
-        </button>
 
         <button
           onClick={() => {
