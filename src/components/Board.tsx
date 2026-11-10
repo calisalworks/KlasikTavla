@@ -1667,11 +1667,17 @@ export const Board: React.FC<BoardProps> = ({
 
             {/* Hide normal game dice completely until the one-die opening roll is completed. */}
             {openingRoll?.isComplete && (
-              <div className="absolute inset-y-0 right-0 w-1/2 pointer-events-none flex items-center justify-center z-30">
+              <div
+                className="absolute inset-y-0 w-36 pointer-events-none flex items-center justify-center z-30"
+                style={turn === 'white'
+                  ? { left: 'calc(50% + 22px)' }
+                  : { right: 'calc(50% + 22px)' }}
+              >
                 <div className="pointer-events-auto">
                   <DicePhysicsView
                     dice={dice}
                     isRolling={isRolling}
+                    throwSide={turn === 'white' ? 'right' : 'left'}
                     canRoll={turn === 'white' && dice.length === 0 && !winnerInfo && !matchWinner}
                     onRollClick={handleRollDice}
                   />
