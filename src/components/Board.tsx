@@ -211,7 +211,7 @@ export const Board: React.FC<BoardProps> = ({
             autoPlayTimeoutsRef.current.push(stepT);
           });
         }
-      }, 1150);
+      }, 1750);
       autoPlayTimeoutsRef.current.push(dropT);
       return;
     }
