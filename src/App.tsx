@@ -43,14 +43,8 @@ export default function App() {
   const radioAudioRef = useRef<HTMLAudioElement | null>(null);
   const [isRadioPlaying, setIsRadioPlaying] = useState(false);
   const [enabledRadioStations, setEnabledRadioStations] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('klasik-tavla-radio-enabled');
-      if (!saved) return RADIO_STATIONS.map((station) => station.id);
-      const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) ? parsed.filter((id) => RADIO_STATIONS.some((station) => station.id === id)) : RADIO_STATIONS.map((station) => station.id);
-    } catch {
-      return RADIO_STATIONS.map((station) => station.id);
-    }
+    // Make every configured station available in channel navigation after the radio update.
+    return RADIO_STATIONS.map((station) => station.id);
   });
   const [radioChannel, setRadioChannel] = useState(() => {
     try {
