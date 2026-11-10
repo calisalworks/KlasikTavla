@@ -372,6 +372,13 @@ function broadcastToRoom(roomId: string, message: object) {
 function completeTimedOutTurn(room: GameRoom, timedOutColor: PlayerColor) {
   if (rooms.get(room.id) !== room || room.status !== 'playing' || room.winnerInfo || room.turn !== timedOutColor) return;
 
+  // A pending manual auto-pass must never race the server-owned timeout sequence.
+  const pendingPass = passTimeouts.get(room.id);
+  if (pendingPass) {
+    clearTimeout(pendingPass);
+    passTimeouts.delete(room.id);
+  }
+
   const moves = room.dice.length > 0
     ? findBestMovesForPlayer(room.board, timedOutColor, room.dice, 'medium')
     : [];
@@ -419,8 +426,6 @@ function completeTimedOutTurn(room: GameRoom, timedOutColor: PlayerColor) {
       return;
     }
 
-    const pendingPass = passTimeouts.get(room.id);
-    if (pendingPass) { clearTimeout(pendingPass); passTimeouts.delete(room.id); }
     room.dice = [];
     room.turnSnapshot = null;
     room.undoHistory = [];
@@ -485,7 +490,8 @@ function scheduleTurnTimeout(room: GameRoom) {
       room.lastActivity = Date.now();
       const hasMoves = hasAnyLegalMoves(room.board, timedOutColor, dice);
       broadcastToRoom(room.id, { type: 'game:rolled', dice, hasMoves, autoPlay: true, room });
-      setTimeout(() => completeTimedOutTurn(room, timedOutColor), 500);
+      // Let both clients finish the physical dice animation before the first automatic checker move.
+      setTimeout(() => completeTimedOutTurn(room, timedOutColor), 1400);
       return;
     }
 
