@@ -76,6 +76,9 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
 }) => {
   const [room, setRoom] = useState<GameRoom | null>(null);
   const [myColor, setMyColor] = useState<PlayerColor | null>(null);
+  // WebSocket callbacks live for the whole connection and must read the latest assigned player color.
+  const myColorRef = useRef<PlayerColor | null>(null);
+  myColorRef.current = myColor;
   const [isRolling, setIsRolling] = useState(false);
   const [rollAnimationSequence, setRollAnimationSequence] = useState(0);
   const [selectedPoint, setSelectedPoint] = useState<number | 'bar' | null>(null);
@@ -254,7 +257,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
       if (rem <= 0) {
         clearTurnTimer();
         const currentActive = activeTurn || roomRef.current?.turn;
-        if (myColor && currentActive === myColor) {
+        if (myColorRef.current && currentActive === myColorRef.current) {
           setStatusMessage('Süre doldu. Sunucu otomatik zar atıp hamleleri tamamlıyor...');
         }
       } else {
@@ -401,8 +404,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
               setDragState(null);
 
               // If opponent moved, display animated sliding checker across the board
-              if (myColor && msg.room.turn !== myColor && msg.from !== undefined && msg.to !== undefined) {
-                const oppColor: PlayerColor = myColor === 'white' ? 'black' : 'white';
+              if (myColorRef.current && msg.room.turn !== myColorRef.current && msg.from !== undefined && msg.to !== undefined) {
+                const oppColor: PlayerColor = myColorRef.current === 'white' ? 'black' : 'white';
                 triggerOpponentSlide(msg.from, msg.to, oppColor, !!msg.hit);
               }
 
@@ -419,8 +422,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
               clearAutoPassTimers();
               // Server timeout moves are followed by a server-authoritative turn_passed event.
               // Never start a second client-side auto-pass countdown for those moves.
-              if (!msg.autoPlay && myColor && msg.room.turn === myColor && !msg.room.winnerInfo) {
-                const hasRemaining = hasAnyLegalMoves(msg.room.board, myColor, msg.room.dice);
+              if (!msg.autoPlay && myColorRef.current && msg.room.turn === myColorRef.current && !msg.room.winnerInfo) {
+                const hasRemaining = hasAnyLegalMoves(msg.room.board, myColorRef.current, msg.room.dice);
                 const allUsed = msg.room.dice.every((d: Die) => d.used);
                 if (allUsed || !hasRemaining) {
                   setAutoPassSecondsLeft(4);
@@ -470,7 +473,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
               setDragState(null);
               if (msg.room.status === 'playing' && !msg.room.winnerInfo) {
                 startTurnTimer(msg.room.turn);
-                if (myColor && msg.room.turn === myColor) {
+                if (myColorRef.current && msg.room.turn === myColorRef.current) {
                   tavlaAudio.playTurnNotification();
                 }
               }
@@ -478,7 +481,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             }
 
             case 'game:afk_warning': {
-              if (msg.playerColor === myColor) {
+              if (msg.playerColor === myColorRef.current) {
                 setShowAfkWarning(true);
                 tavlaAudio.playButtonClick();
               } else {
@@ -492,7 +495,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
               clearAutoPassTimers();
               roomRef.current = msg.room;
               setRoom(msg.room);
-              if (msg.forfeitedColor === myColor) {
+              if (msg.forfeitedColor === myColorRef.current) {
                 setForfeitNotice('3 kez yapılan uyarının ardından tekrar 20 saniye içinde hamle yapmadığınız için HÜKMEN MAĞLUP sayıldınız.');
                 setStatusMessage('Zaman aşımı nedeniyle HÜKMEN MAĞLUP oldunuz!');
               } else {
@@ -519,7 +522,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
               prizeAwardedRef.current = false;
               if (!msg.room.openingRoll) {
                 setIsOpeningRollOpen(false);
-                const isMyTurnNow = myColor && msg.room.turn === myColor;
+                const isMyTurnNow = myColorRef.current && msg.room.turn === myColorRef.current;
                 setStatusMessage(
                   isMyTurnNow
                     ? 'Önceki eli siz kazandığınız için yeni ele siz başlıyorsunuz! Zarları atın.'
