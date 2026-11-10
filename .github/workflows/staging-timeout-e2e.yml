@@ -1,0 +1,57 @@
+name: Staging timeout end-to-end proof
+
+on:
+  push:
+    branches:
+      - fix/launch-screen-and-typescript
+    paths:
+      - tests/onlineMatchRobustness.test.ts
+      - .github/workflows/staging-timeout-e2e.yml
+  workflow_dispatch:
+
+concurrency:
+  group: staging-timeout-e2e
+  cancel-in-progress: false
+
+jobs:
+  staging-timeout-e2e:
+    name: Two real WebSocket clients against Render staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Wait for staging health
+        env:
+          TAVLA_BASE_URL: https://klasik-tavla-staging.onrender.com
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl --silent --show-error --fail "$TAVLA_BASE_URL/api/health"; then
+              echo
+              echo "Render staging is responding."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Render staging did not become healthy within 5 minutes."
+          exit 1
+
+      - name: Run two-client timeout and turn-handoff proof on Render
+        env:
+          TAVLA_BASE_URL: https://klasik-tavla-staging.onrender.com
+          TAVLA_WS_URL: wss://klasik-tavla-staging.onrender.com/ws
+        run: bun tests/onlineMatchRobustness.test.ts
