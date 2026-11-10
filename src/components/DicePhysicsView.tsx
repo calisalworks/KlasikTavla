@@ -80,12 +80,12 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     const activePips = pipPositions[val] || [4];
 
     return (
-      <div className="grid grid-cols-3 grid-rows-3 w-full h-full p-1.5 gap-0 pointer-events-none" style={{ filter: blurred ? 'blur(0.55px)' : 'none' }}>
+      <div className="grid grid-cols-3 grid-rows-3 w-full h-full p-0.5 gap-0.5 pointer-events-none" style={{ filter: blurred ? 'blur(1.35px)' : 'none' }}>
         {Array.from({ length: 9 }).map((_, i) => (
           <div key={i} className="flex items-center justify-center">
             {activePips.includes(i) && (
               <div
-                className={`w-[5px] h-[5px] rounded-full ${
+                className={`w-2 h-2 rounded-full ${
                   val === 1
                     ? 'bg-[#171411] shadow-[inset_0_1px_1.5px_rgba(0,0,0,0.8),0_0.5px_1px_rgba(255,255,255,0.4)]'
                     : 'bg-[#18181b] shadow-[inset_0_1px_1.5px_rgba(0,0,0,0.8),0_0.5px_1px_rgba(255,255,255,0.4)]'
@@ -112,7 +112,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         // Every throw starts at the outer edge, never at the previous landing point.
         // The dice travel at a steady pace, hit the centre bar, then rebound at half speed.
         newStates.push({
-          x: throwSide === 'right' ? 62 : -62,
+          x: throwSide === 'right' ? 90 : -90,
           y: count === 1 ? 0 : (i === 0 ? -18 : 18),
           vx: throwSide === 'right' ? -190 : 190,
           vy: count === 1 ? 0 : (i === 0 ? -8 : 8),
@@ -231,10 +231,9 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           x += vx * dt;
           y += vy * dt;
 
-          const collisionX = throwSide === 'right' ? 14 : -14;
-          const centreHit = throwSide === 'right' ? x <= collisionX : x >= collisionX;
+          const centreHit = throwSide === 'right' ? x <= 0 : x >= 0;
           if (!bounced && centreHit) {
-            x = collisionX;
+            x = 0;
             vx = throwSide === 'right' ? 95 : -95;
             vy += idx === 0 ? -13 : 13;
             vz = 52;
@@ -251,7 +250,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             const friction = Math.exp(-3.0 * dt);
             vx *= friction;
             vy *= Math.exp(-3.0 * dt);
-            vRotZ *= Math.exp(-3.0 * dt);
+            vRotZ *= Math.exp(-2.2 * dt);
           }
 
           // A small, visible tabletop hop accompanies the horizontal rebound.
@@ -273,8 +272,8 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           // Finish only after the rebound has visibly travelled and all
           // horizontal and rotational movement has nearly faded out.
-          const settled = bounced && age > 1.05 &&
-            Math.abs(vx) < 8 && Math.abs(vy) < 5 && Math.abs(vRotZ) < 55 &&
+          const settled = bounced && age > 1.25 &&
+            Math.abs(vx) < 7 && Math.abs(vy) < 5 && Math.abs(vRotZ) < 42 &&
             z === 0 && Math.abs(vz) < 1;
 
           return {
@@ -324,7 +323,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       <div className="relative select-none pointer-events-none" style={{ width: size, height: size }}>
         {/* Physical Drop Shadow onto Wooden Board */}
         <div
-          className="absolute rounded-[6px] bg-black pointer-events-none transition-transform"
+          className="absolute rounded-lg bg-black pointer-events-none transition-transform"
           style={{
             width: size * 0.95,
             height: size * 0.95,
@@ -346,7 +345,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         >
           {/* Front Face (1) */}
           <div
-            className={`absolute inset-0 rounded-[6px] bg-gradient-to-br from-[#fffdf4] via-[#f1e5c9] to-[#c4ad84] border border-[#fff4dc] shadow-[inset_0_2px_3px_rgba(255,255,255,0.98),inset_0_-3px_5px_rgba(15,23,42,0.2),0_1px_2px_rgba(15,23,42,0.16)] flex items-center justify-center ${
+            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#fffdf4] via-[#f1e5c9] to-[#c4ad84] border border-[#fff4dc] shadow-[inset_0_2px_3px_rgba(255,255,255,0.98),inset_0_-3px_5px_rgba(15,23,42,0.2),0_1px_2px_rgba(15,23,42,0.16)] flex items-center justify-center ${
               isUsed ? 'opacity-35 grayscale' : ''
             }`}
             style={{ transform: `translateZ(${half}px)` }}
@@ -356,7 +355,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           {/* Back Face (6) */}
           <div
-            className={`absolute inset-0 rounded-[6px] bg-gradient-to-br from-[#fff9e9] via-[#e9dcc0] to-[#bda77f] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.22)] flex items-center justify-center ${
+            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#fff9e9] via-[#e9dcc0] to-[#bda77f] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.22)] flex items-center justify-center ${
               isUsed ? 'opacity-35 grayscale' : ''
             }`}
             style={{ transform: `rotateY(180deg) translateZ(${half}px)` }}
@@ -366,7 +365,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           {/* Right Face (3) */}
           <div
-            className={`absolute inset-0 rounded-[6px] bg-gradient-to-br from-[#fffaf0] via-[#eadfc9] to-[#c4ad87] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.2)] flex items-center justify-center ${
+            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#fffaf0] via-[#eadfc9] to-[#c4ad87] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.2)] flex items-center justify-center ${
               isUsed ? 'opacity-35 grayscale' : ''
             }`}
             style={{ transform: `rotateY(90deg) translateZ(${half}px)` }}
@@ -376,7 +375,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           {/* Left Face (4) */}
           <div
-            className={`absolute inset-0 rounded-[6px] bg-gradient-to-br from-[#fff9e9] via-[#e9dcc0] to-[#bda77f] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.22)] flex items-center justify-center ${
+            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#fff9e9] via-[#e9dcc0] to-[#bda77f] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.22)] flex items-center justify-center ${
               isUsed ? 'opacity-35 grayscale' : ''
             }`}
             style={{ transform: `rotateY(-90deg) translateZ(${half}px)` }}
@@ -386,7 +385,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           {/* Top Face (2) */}
           <div
-            className={`absolute inset-0 rounded-[6px] bg-gradient-to-br from-white via-[#f1f5f9] to-[#cbd5e1] border border-white shadow-[inset_0_2px_3px_rgba(255,255,255,0.98),inset_0_-3px_5px_rgba(15,23,42,0.2)] flex items-center justify-center ${
+            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-white via-[#f1f5f9] to-[#cbd5e1] border border-white shadow-[inset_0_2px_3px_rgba(255,255,255,0.98),inset_0_-3px_5px_rgba(15,23,42,0.2)] flex items-center justify-center ${
               isUsed ? 'opacity-35 grayscale' : ''
             }`}
             style={{ transform: `rotateX(90deg) translateZ(${half}px)` }}
@@ -396,7 +395,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           {/* Bottom Face (5) */}
           <div
-            className={`absolute inset-0 rounded-[6px] bg-gradient-to-br from-[#e9dcc1] via-[#d5c29f] to-[#a68d66] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.92),inset_0_-3px_5px_rgba(15,23,42,0.22)] flex items-center justify-center ${
+            className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#e9dcc1] via-[#d5c29f] to-[#a68d66] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.92),inset_0_-3px_5px_rgba(15,23,42,0.22)] flex items-center justify-center ${
               isUsed ? 'opacity-35 grayscale' : ''
             }`}
             style={{ transform: `rotateX(-90deg) translateZ(${half}px)` }}
