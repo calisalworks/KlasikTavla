@@ -5,6 +5,7 @@ import { tavlaAudio } from '../utils/audio';
 interface DicePhysicsProps {
   dice: Die[];
   isRolling: boolean;
+  rollSequence: number;
   canRoll: boolean;
   onRollClick: () => void;
   className?: string;
@@ -81,6 +82,7 @@ const resolveDiceCollision = (states: PhysicsDieState[], bounce: boolean): Physi
 export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
   dice,
   isRolling,
+  rollSequence,
   canRoll,
   onRollClick,
   className = '',
@@ -169,7 +171,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       setPhysicsStates(newStates);
       lastTimeRef.current = performance.now();
     }
-  }, [isRolling]);
+  }, [isRolling, rollSequence]);
 
   // Stop immediately on the result face. Do not run a second rotation after the dice land.
   useEffect(() => {
