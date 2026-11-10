@@ -4,12 +4,8 @@ export const RADIO_STATIONS = [
   { id: 'joyturk', name: 'JoyTürk', url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_TURK_ITUNES.mp3' },
   { id: 'metrofm', name: 'Metro FM', url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/METRO_FM.mp3' },
   { id: 'alemfm', name: 'Alem FM', url: 'https://turkmedya.radyotvonline.net/alemfmaac' },
-  { id: 'slowturk', name: 'Slow Türk', url: 'https://radyo.duhnet.tv/ak_dtvh_slowturk' },
-  { id: 'number1turk', name: 'Number1 Türk', url: 'https://19643.live.streamtheworld.com/NUMBER1TURK_FMAAC.aac' },
-  { id: 'number1slow', name: 'Number1 Türk Slow', url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/NUMBER1TURK_SLOWAAC.aac' },
   { id: 'babaradyo', name: 'Baba Radyo', url: 'https://officialbabaradyo.radyotvonline.net/babaofficial' },
   { id: 'radyo45lik', name: 'Radyo 45lik', url: 'https://stream.radyo45lik.com:4545/stream' },
   { id: 'kralTurk', name: 'Kral Türk FM', url: 'https://live.radyositesihazir.com/8032/stream' },
-  { id: 'radyoilef', name: 'Radyo İlef', url: 'https://radyoilef.ankara.edu.tr/live' },
   { id: 'fenomen', name: 'Radyo Fenomen', url: 'https://live.radyofenomen.com/fenomen/256/icecast.audio' },
 ] as const;

@@ -135,17 +135,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               </div>
             </div>
 
-            <div className="flex-1 min-h-0 p-2.5 rounded-xl bg-[#211108] border border-amber-900/50 overflow-hidden">
+            <div className="flex-1 min-h-0 p-2 rounded-xl bg-[#211108] border border-amber-900/50 overflow-hidden">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-bold text-amber-200 uppercase tracking-wide">Profil Fotoğrafı Seç</span>
                 <span className="text-[9px] text-amber-400/60">Hazır fotoğraflar</span>
               </div>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 gap-1.5">
                 {PRESET_AVATARS.map((preset) => {
                   const selected = profile.avatar === preset.id;
                   return (
-                    <button key={preset.id} onClick={() => handleSelectPresetAvatar(preset.id)} title={preset.name} aria-pressed={selected} className={selected ? "relative min-h-0 p-1.5 rounded-xl flex flex-col items-center justify-center gap-1 bg-amber-600/40 ring-2 ring-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.4)] cursor-pointer" : "relative min-h-0 p-1.5 rounded-xl flex flex-col items-center justify-center gap-1 bg-[#190d06] border border-amber-900/40 hover:bg-[#2b170c] cursor-pointer"}>
-                      <AvatarDisplay avatar={preset.id} name={preset.name} size={34} />
+                    <button key={preset.id} onClick={() => handleSelectPresetAvatar(preset.id)} title={preset.name} aria-pressed={selected} className={selected ? "relative min-h-0 p-1 rounded-lg flex flex-col items-center justify-center gap-1 bg-amber-600/40 ring-2 ring-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.4)] cursor-pointer" : "relative min-h-0 p-1 rounded-lg flex flex-col items-center justify-center gap-1 bg-[#190d06] border border-amber-900/40 hover:bg-[#2b170c] cursor-pointer"}>
+                      <AvatarDisplay avatar={preset.id} name={preset.name} size={32} />
                       <span className="text-[9px] text-amber-200/80 truncate max-w-full">{preset.name}</span>
                       {selected && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border border-white flex items-center justify-center text-[8px] text-white font-black">✓</span>}
                     </button>
@@ -186,7 +186,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               </div>
             </div>
 
-            <div className="flex-1 min-h-0 p-2.5 rounded-xl bg-[#1c0d05] border border-amber-900/50 flex flex-col justify-between overflow-hidden">
+            <div className="flex-1 min-h-0 p-2 rounded-xl bg-[#1c0d05] border border-amber-900/50 flex flex-col justify-between overflow-hidden">
               <div>
                 <div className="text-[10px] font-bold text-amber-300 uppercase tracking-wider mb-2">Hesap ve Seviye</div>
                 <div className="flex flex-wrap gap-1.5">

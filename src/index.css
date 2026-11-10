@@ -25,3 +25,45 @@
     will-change: transform;
   }
 }
+
+
+/* Optional global interface palettes. The classic green board surface stays unchanged. */
+[data-ui-theme="dark"] { background-color: #080d16 !important; color-scheme: dark; }
+[data-ui-theme="dark"] [class*="bg-[#120d09]"],
+[data-ui-theme="dark"] [class*="bg-[#181310]"],
+[data-ui-theme="dark"] [class*="bg-[#221711]"],
+[data-ui-theme="dark"] [class*="bg-[#1b130e]"],
+[data-ui-theme="dark"] [class*="bg-[#1c0d05]"],
+[data-ui-theme="dark"] [class*="bg-[#211108]"],
+[data-ui-theme="dark"] [class*="bg-[#1b1009]"],
+[data-ui-theme="dark"] [class*="bg-[#221004]"],
+[data-ui-theme="dark"] [class*="bg-[#2b1c13]"],
+[data-ui-theme="dark"] [class*="bg-[#2e1d13]"],
+[data-ui-theme="dark"] [class*="bg-[#241710]"] { background-color: #111b2a !important; }
+[data-ui-theme="dark"] [class*="from-[#2e1a0e]"],
+[data-ui-theme="dark"] [class*="from-[#3a2010]"],
+[data-ui-theme="dark"] [class*="from-[#3a1a0c]"] { background-image: none !important; background-color: #111b2a !important; }
+[data-ui-theme="dark"] [class*="text-amber-100"] { color: #e5edf8 !important; }
+[data-ui-theme="dark"] [class*="text-amber-200"] { color: #cbd8e9 !important; }
+[data-ui-theme="dark"] [class*="border-amber-900"] { border-color: #34465f !important; }
+
+[data-ui-theme="light"] { background-color: #e8e4dc !important; color: #342b21; color-scheme: light; }
+[data-ui-theme="light"] [class*="bg-[#120d09]"],
+[data-ui-theme="light"] [class*="bg-[#181310]"],
+[data-ui-theme="light"] [class*="bg-[#221711]"],
+[data-ui-theme="light"] [class*="bg-[#1b130e]"],
+[data-ui-theme="light"] [class*="bg-[#1c0d05]"],
+[data-ui-theme="light"] [class*="bg-[#211108]"],
+[data-ui-theme="light"] [class*="bg-[#1b1009]"],
+[data-ui-theme="light"] [class*="bg-[#221004]"],
+[data-ui-theme="light"] [class*="bg-[#2b1c13]"],
+[data-ui-theme="light"] [class*="bg-[#2e1d13]"],
+[data-ui-theme="light"] [class*="bg-[#241710]"] { background-color: #f4f0e8 !important; }
+[data-ui-theme="light"] [class*="from-[#2e1a0e]"],
+[data-ui-theme="light"] [class*="from-[#3a2010]"],
+[data-ui-theme="light"] [class*="from-[#3a1a0c]"] { background-image: none !important; background-color: #f4f0e8 !important; }
+[data-ui-theme="light"] [class*="text-amber-100"],
+[data-ui-theme="light"] [class*="text-amber-200"] { color: #3d3023 !important; }
+[data-ui-theme="light"] [class*="text-amber-300"] { color: #60482e !important; }
+[data-ui-theme="light"] [class*="text-amber-400"] { color: #80613c !important; }
+[data-ui-theme="light"] [class*="border-amber-900"] { border-color: #c6b89f !important; }

@@ -62,7 +62,8 @@ export default function App() {
   const [radioChannel, setRadioChannel] = useState(() => {
     try {
       const saved = Number(localStorage.getItem('klasik-tavla-radio-channel'));
-      return Number.isInteger(saved) && saved >= 0 && saved < RADIO_STATIONS.length ? saved : 0;
+      const migrated = saved <= 4 ? saved : saved === 8 ? 5 : saved === 9 ? 6 : saved === 10 ? 7 : saved === 12 ? 8 : 0;
+      return Number.isInteger(migrated) && migrated >= 0 && migrated < RADIO_STATIONS.length ? migrated : 0;
     } catch {
       return 0;
     }
@@ -240,6 +241,7 @@ export default function App() {
       autoRoll: false,
       highlightMoves: true,
       aiDifficulty: 'medium',
+      uiTheme: 'default',
     };
     try {
       const saved = localStorage.getItem('klasik-tavla-settings');
@@ -270,6 +272,7 @@ export default function App() {
       if (requestId !== radioPlayRequestRef.current) return;
       console.warn('Radyo yayını başlatılamadı:', error);
       setIsRadioPlaying(false);
+      setRadioAvailability((previous) => ({ ...previous, [RADIO_STATIONS[index].id]: false }));
     });
   };
 
@@ -469,8 +472,8 @@ export default function App() {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#120d09] font-['Plus_Jakarta_Sans',sans-serif] flex flex-col select-none touch-none">
-      <audio ref={radioAudioRef} preload="none" onError={() => setIsRadioPlaying(false)} className="hidden" />
+    <div data-ui-theme={settings.uiTheme ?? 'default'} className="relative w-screen h-screen overflow-hidden bg-[#120d09] font-['Plus_Jakarta_Sans',sans-serif] flex flex-col select-none touch-none">
+      <audio ref={radioAudioRef} preload="none" onError={() => { setIsRadioPlaying(false); const failedId = RADIO_STATIONS[radioChannel]?.id; if (failedId) setRadioAvailability((previous) => ({ ...previous, [failedId]: false })); }} className="hidden" />
       {showBrandSplash && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black">
           <img src="/calisal-works-intro.jpg" alt="CALISAL WORKS" className="h-full w-full object-contain" />

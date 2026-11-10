@@ -136,7 +136,8 @@ export const Board: React.FC<BoardProps> = ({
   const [chatMessages, setChatMessages] = useState<AIChatMessage[]>([]);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatDraft, setChatDraft] = useState('');
-  const [latestChatMessage, setLatestChatMessage] = useState<AIChatMessage | null>(null);
+  const [latestPlayerChatMessage, setLatestPlayerChatMessage] = useState<AIChatMessage | null>(null);
+  const [latestAIChatMessage, setLatestAIChatMessage] = useState<AIChatMessage | null>(null);
   const [showBarWarning, setShowBarWarning] = useState(false);
   const barWarningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const showBarBlockedNotice = () => {
@@ -144,7 +145,8 @@ export const Board: React.FC<BoardProps> = ({
     if (barWarningTimeoutRef.current) clearTimeout(barWarningTimeoutRef.current);
     barWarningTimeoutRef.current = setTimeout(() => setShowBarWarning(false), 2000);
   };
-  const chatToastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const playerChatToastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const aiChatToastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const aiChatReplyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const sendChatMessage = (value = chatDraft) => {
@@ -153,9 +155,9 @@ export const Board: React.FC<BoardProps> = ({
     const now = Date.now();
     const playerMessage: AIChatMessage = { id: `${now}-player`, sender: 'player', text, createdAt: now };
     setChatMessages((previous) => [...previous, playerMessage].slice(-60));
-    setLatestChatMessage(playerMessage);
-    if (chatToastTimeoutRef.current) clearTimeout(chatToastTimeoutRef.current);
-    chatToastTimeoutRef.current = setTimeout(() => setLatestChatMessage(null), 4600);
+    setLatestPlayerChatMessage(playerMessage);
+    if (playerChatToastTimeoutRef.current) clearTimeout(playerChatToastTimeoutRef.current);
+    playerChatToastTimeoutRef.current = setTimeout(() => setLatestPlayerChatMessage(null), 4000);
     setChatDraft('');
     setIsChatOpen(false);
     if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) document.activeElement.blur();
@@ -164,14 +166,15 @@ export const Board: React.FC<BoardProps> = ({
       const replies = ['🙂 Güzel hamle!', '👍 Devam edelim.', '🎲 Şans senden yana olsun!', '😎 Bakalım sıradaki hamle ne olacak.', '👏 İyi oyun!', '😠 Rekabet kızışıyor!'];
       const reply: AIChatMessage = { id: `${Date.now()}-ai`, sender: 'ai', text: text.length <= 3 && !/[a-zA-Z0-9ğüşöçıİĞÜŞÖÇ]/.test(text) ? '😄' : replies[Math.floor(Math.random() * replies.length)], createdAt: Date.now() };
       setChatMessages((previous) => [...previous, reply].slice(-60));
-      setLatestChatMessage(reply);
-      if (chatToastTimeoutRef.current) clearTimeout(chatToastTimeoutRef.current);
-      chatToastTimeoutRef.current = setTimeout(() => setLatestChatMessage(null), 4600);
+      setLatestAIChatMessage(reply);
+      if (aiChatToastTimeoutRef.current) clearTimeout(aiChatToastTimeoutRef.current);
+      aiChatToastTimeoutRef.current = setTimeout(() => setLatestAIChatMessage(null), 4000);
     }, 850);
   };
 
   useEffect(() => () => {
-    if (chatToastTimeoutRef.current) clearTimeout(chatToastTimeoutRef.current);
+    if (playerChatToastTimeoutRef.current) clearTimeout(playerChatToastTimeoutRef.current);
+    if (aiChatToastTimeoutRef.current) clearTimeout(aiChatToastTimeoutRef.current);
     if (aiChatReplyTimeoutRef.current) clearTimeout(aiChatReplyTimeoutRef.current);
     if (barWarningTimeoutRef.current) clearTimeout(barWarningTimeoutRef.current);
   }, []);
@@ -1451,7 +1454,7 @@ export const Board: React.FC<BoardProps> = ({
                 </div>
               </div>
               <button type="button" onClick={() => setIsChatOpen(true)} title="Yapay zekâ ile sohbet et" aria-label="Sohbeti aç" className="absolute -top-1.5 -right-2 z-30 w-7 h-7 rounded-full flex items-center justify-center bg-amber-500 text-amber-950 border-2 border-[#2b1c13] shadow-lg hover:bg-amber-300 active:scale-90 cursor-pointer touch-manipulation"><MessageCircle className="w-4 h-4" /></button>
-              {latestChatMessage?.sender === 'ai' && <div className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+8px)] z-40 max-w-[170px] px-3 py-2 rounded-xl rounded-bl-sm bg-white text-[#21170f] text-[12px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestChatMessage.text}</div>}
+              {latestAIChatMessage && <div className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+8px)] z-40 max-w-[170px] px-3 py-2 rounded-xl rounded-bl-sm bg-white text-[#21170f] text-[12px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestAIChatMessage.text}</div>}
             </div>
             <div className="w-full min-w-0 text-center">
               <div className="text-xs font-bold text-amber-100 truncate tracking-wide">Yapay Zeka</div>
@@ -1515,7 +1518,7 @@ export const Board: React.FC<BoardProps> = ({
             <div className="relative">
               <AvatarDisplay avatar={profile?.avatar} name={profile?.name || 'SİZ'} size={60} className="border-2 border-amber-500/80 shadow-inner" />
               <button type="button" onClick={() => setIsChatOpen(true)} title="Sohbeti aç" aria-label="Sohbeti aç" className="absolute -top-1.5 -right-2 z-30 w-7 h-7 rounded-full flex items-center justify-center bg-amber-500 text-amber-950 border-2 border-[#2b1c13] shadow-lg hover:bg-amber-300 active:scale-90 cursor-pointer touch-manipulation"><MessageCircle className="w-4 h-4" /></button>
-              {latestChatMessage?.sender === 'player' && <div className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+8px)] z-40 max-w-[170px] px-3 py-2 rounded-xl rounded-bl-sm bg-white text-[#21170f] text-[12px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestChatMessage.text}</div>}
+              {latestPlayerChatMessage && <div className="absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+8px)] z-40 max-w-[170px] px-3 py-2 rounded-xl rounded-bl-sm bg-white text-[#21170f] text-[12px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestPlayerChatMessage.text}</div>}
             </div>
             <div className="w-full min-w-0 text-center">
               <div className="text-xs font-bold text-amber-100 truncate tracking-wide">

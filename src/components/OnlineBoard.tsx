@@ -129,7 +129,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatDraft, setChatDraft] = useState('');
-  const [latestChatMessage, setLatestChatMessage] = useState<ChatMessage | null>(null);
+  const [latestPlayerChatMessage, setLatestPlayerChatMessage] = useState<ChatMessage | null>(null);
+  const [latestOpponentChatMessage, setLatestOpponentChatMessage] = useState<ChatMessage | null>(null);
   const [showBarWarning, setShowBarWarning] = useState(false);
   const barWarningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const showBarBlockedNotice = () => {
@@ -137,7 +138,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
     if (barWarningTimeoutRef.current) clearTimeout(barWarningTimeoutRef.current);
     barWarningTimeoutRef.current = setTimeout(() => setShowBarWarning(false), 2000);
   };
-  const chatToastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const playerChatToastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const opponentChatToastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -332,7 +334,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   }, [settings.soundEnabled, settings.ambientSound]);
 
   useEffect(() => () => {
-    if (chatToastTimeoutRef.current) clearTimeout(chatToastTimeoutRef.current);
+    if (playerChatToastTimeoutRef.current) clearTimeout(playerChatToastTimeoutRef.current);
+    if (opponentChatToastTimeoutRef.current) clearTimeout(opponentChatToastTimeoutRef.current);
     if (barWarningTimeoutRef.current) clearTimeout(barWarningTimeoutRef.current);
   }, []);
 
@@ -389,9 +392,15 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
               const incoming = msg.message as ChatMessage;
               if (!incoming || typeof incoming.text !== 'string') break;
               setChatMessages((previous) => [...previous.filter((item) => item.id !== incoming.id), incoming].slice(-60));
-              setLatestChatMessage(incoming);
-              if (chatToastTimeoutRef.current) clearTimeout(chatToastTimeoutRef.current);
-              chatToastTimeoutRef.current = setTimeout(() => setLatestChatMessage(null), 4600);
+              if (incoming.senderId === profile.id) {
+                setLatestPlayerChatMessage(incoming);
+                if (playerChatToastTimeoutRef.current) clearTimeout(playerChatToastTimeoutRef.current);
+                playerChatToastTimeoutRef.current = setTimeout(() => setLatestPlayerChatMessage(null), 4000);
+              } else {
+                setLatestOpponentChatMessage(incoming);
+                if (opponentChatToastTimeoutRef.current) clearTimeout(opponentChatToastTimeoutRef.current);
+                opponentChatToastTimeoutRef.current = setTimeout(() => setLatestOpponentChatMessage(null), 4000);
+              }
               break;
             }
 
@@ -1309,7 +1318,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             <div className="relative">
               <AvatarDisplay avatar={opponentPlayer?.avatar} name={opponentPlayer?.name || 'Rakip'} size={60} className="border-2 border-amber-600/70 shadow-inner" />
               <button type="button" onClick={() => setIsChatOpen(true)} disabled={!opponentPlayer} title="Rakiple sohbet et" aria-label="Sohbeti aç" className="absolute -top-1.5 -right-2 z-30 w-7 h-7 rounded-full flex items-center justify-center bg-amber-500 text-amber-950 border-2 border-[#2b1c13] shadow-lg hover:bg-amber-300 active:scale-90 disabled:opacity-40 cursor-pointer touch-manipulation"><MessageCircle className="w-4 h-4" /></button>
-              {latestChatMessage && latestChatMessage.senderId !== profile.id && <div className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+8px)] z-40 max-w-[170px] px-3 py-2 rounded-xl rounded-bl-sm bg-white text-[#21170f] text-[12px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestChatMessage.text}</div>}
+              {latestOpponentChatMessage && <div className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+8px)] z-40 max-w-[170px] px-3 py-2 rounded-xl rounded-bl-sm bg-white text-[#21170f] text-[12px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestOpponentChatMessage.text}</div>}
             </div>
             <div className="w-full min-w-0 text-center">
               <div className="text-xs font-bold text-amber-100 truncate tracking-wide">
@@ -1381,7 +1390,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             <div className="relative">
               <AvatarDisplay avatar={profile.avatar} name={profile.name} size={60} className="border-2 border-amber-500/80 shadow-inner" />
               <button type="button" onClick={() => setIsChatOpen(true)} title="Sohbeti aç" aria-label="Sohbeti aç" className="absolute -top-1.5 -right-2 z-30 w-7 h-7 rounded-full flex items-center justify-center bg-amber-500 text-amber-950 border-2 border-[#2b1c13] shadow-lg hover:bg-amber-300 active:scale-90 cursor-pointer touch-manipulation"><MessageCircle className="w-4 h-4" /></button>
-              {latestChatMessage && latestChatMessage.senderId === profile.id && <div className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+8px)] z-40 max-w-[170px] px-3 py-2 rounded-xl rounded-bl-sm bg-white text-[#21170f] text-[12px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestChatMessage.text}</div>}
+              {latestPlayerChatMessage && <div className="absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+8px)] z-40 max-w-[170px] px-3 py-2 rounded-xl rounded-bl-sm bg-white text-[#21170f] text-[12px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestPlayerChatMessage.text}</div>}
             </div>
             <div className="w-full min-w-0 text-center">
               <div className="text-xs font-bold text-amber-100 truncate tracking-wide">

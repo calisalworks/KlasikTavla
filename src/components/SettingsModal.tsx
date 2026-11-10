@@ -12,6 +12,9 @@ import {
   Sliders,
   CheckCircle2,
   Radio,
+  Palette,
+  Moon,
+  Sun,
 } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -36,6 +39,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [activeTab, setActiveTab] = useState<'SETTINGS' | 'RADIO' | 'RULES'>('SETTINGS');
 
   if (!isOpen) return null;
+
+  const availableRadioStations = RADIO_STATIONS.filter((station) => radioAvailability[station.id] !== false);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 select-none">
@@ -95,6 +100,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5 text-xs">
           {activeTab === 'SETTINGS' ? (
             <>
+              {/* Genel oyun teması */}
+              <div className="p-3 rounded-xl bg-[#1c0d05] border border-amber-900/50 space-y-2">
+                <div className="flex items-center gap-2 text-amber-300 font-bold text-[11px]"><Palette className="w-4 h-4" /> Genel Tema Rengi</div>
+                <div className="grid grid-cols-3 gap-2">
+                  <button type="button" onClick={() => onUpdateSettings({ uiTheme: 'default' })} aria-pressed={(settings.uiTheme ?? 'default') === 'default'} className={(settings.uiTheme ?? 'default') === 'default' ? 'p-2 rounded-xl border border-amber-400 bg-amber-900/50 ring-1 ring-amber-400/60 flex flex-col items-center gap-1.5' : 'p-2 rounded-xl border border-amber-900/50 bg-black/20 flex flex-col items-center gap-1.5'}><span className="w-full h-5 rounded-md bg-gradient-to-br from-[#3b2416] to-[#172d25]" /><span className="flex items-center gap-1 text-[10px] font-bold text-amber-100"><Palette className="w-3 h-3" />Varsayılan</span></button>
+                  <button type="button" onClick={() => onUpdateSettings({ uiTheme: 'dark' })} aria-pressed={settings.uiTheme === 'dark'} className={settings.uiTheme === 'dark' ? 'p-2 rounded-xl border border-amber-400 bg-amber-900/50 ring-1 ring-amber-400/60 flex flex-col items-center gap-1.5' : 'p-2 rounded-xl border border-amber-900/50 bg-black/20 flex flex-col items-center gap-1.5'}><span className="w-full h-5 rounded-md bg-gradient-to-br from-slate-800 to-slate-950" /><span className="flex items-center gap-1 text-[10px] font-bold text-amber-100"><Moon className="w-3 h-3" />Koyu</span></button>
+                  <button type="button" onClick={() => onUpdateSettings({ uiTheme: 'light' })} aria-pressed={settings.uiTheme === 'light'} className={settings.uiTheme === 'light' ? 'p-2 rounded-xl border border-amber-400 bg-amber-900/50 ring-1 ring-amber-400/60 flex flex-col items-center gap-1.5' : 'p-2 rounded-xl border border-amber-900/50 bg-black/20 flex flex-col items-center gap-1.5'}><span className="w-full h-5 rounded-md bg-gradient-to-br from-stone-100 to-amber-200" /><span className="flex items-center gap-1 text-[10px] font-bold text-amber-100"><Sun className="w-3 h-3" />Açık</span></button>
+                </div>
+              </div>
+
               {/* Audio Toggles Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {/* 1. Ses Efektleri */}
@@ -207,11 +222,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
                 <p className="text-[10px] text-amber-400/70 mt-1">Aktif kanallar oyun ekranındaki sağ ve sol oklarla seçilebilir. Pasif kanallar geçiş sırasında atlanır.</p>
                 <div className="flex justify-between items-center mt-2 text-[10px] text-amber-300/80">
-                  <span>{enabledRadioStations.length} / {RADIO_STATIONS.length} kanal aktif</span>
+                  <span>{availableRadioStations.filter((station) => enabledRadioStations.includes(station.id)).length} / {availableRadioStations.length} kanal aktif</span>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {RADIO_STATIONS.map((station, index) => {
+                {availableRadioStations.map((station, index) => {
                   const enabled = enabledRadioStations.includes(station.id);
                   return (
                     <div key={station.id} className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#1c0d05] border border-amber-900/50">
