@@ -142,28 +142,65 @@ async function runOnlineRobustnessSuite() {
   expect(currentRoomState.status === 'playing', 'Oda durumu "playing" (oyunda) olarak doğrulandı');
   expect(Boolean(currentRoomState.openingRoll), 'Başlangıç zarı authoritative olarak atıldı', `Beyaz: ${currentRoomState.openingRoll.whiteDie}, Siyah: ${currentRoomState.openingRoll.blackDie}, Başlayan: ${currentRoomState.turn}`);
 
-  // --- TEST 3: İLK ZAR ATILMASI & İLK HAMLE ---
-  console.log('\n--- 3. İlk Zar Atılması ve Oyun Senkronizasyonu ---');
-  const startingTurn = currentRoomState.turn;
-  const activeSocket = startingTurn === p1Color ? wsBoard1 : wsBoard2;
-  const passiveSocket = startingTurn === p1Color ? wsBoard2 : wsBoard1;
+  // --- TEST 3: AÇILIŞ ZARI ZAMAN AŞIMI, OTOMATİK HAMLE VE SIRA DEVRİ ---
+  console.log('\n--- 3. Açılış Zarı Zaman Aşımı: Sunucu Otomatik Oynar ve Sırayı Devreder ---');
 
-  let rolledDice: any[] = [];
-  const rollPromise = new Promise<void>((res) => {
+  const openingReadyPromise = new Promise<void>((resolve, reject) => {
     const handler = (data: any) => {
       const msg = JSON.parse(data.toString());
-      if (msg.type === 'game:rolled') {
-        rolledDice = msg.dice;
-        activeSocket.off('message', handler);
-        res();
+      if (msg.type === 'room:updated' && msg.room?.openingRollCompleted && msg.room.dice?.length === 2) {
+        currentRoomState = msg.room;
+        wsBoard1.off('message', handler);
+        wsBoard2.off('message', handler);
+        clearTimeout(timeout);
+        resolve();
       }
     };
-    activeSocket.on('message', handler);
+    const timeout = setTimeout(() => {
+      wsBoard1.off('message', handler);
+      wsBoard2.off('message', handler);
+      reject(new Error('Açılış zarları zamanında tamamlanmadı.'));
+    }, 10000);
+    wsBoard1.on('message', handler);
+    wsBoard2.on('message', handler);
+    wsBoard1.send(JSON.stringify({ type: 'game:opening_roll_complete', roomId: matchedRoomId }));
   });
 
-  activeSocket.send(JSON.stringify({ type: 'game:roll', roomId: matchedRoomId }));
-  await rollPromise;
-  expect(rolledDice.length > 0, 'Sırası gelen oyuncu ilk zarları başarıyla attı', `Zarlar: ${rolledDice.map((d: any) => d.value).join(' - ')}`);
+  await openingReadyPromise;
+  expect(currentRoomState.openingRollCompleted === true, 'Açılış zarı sunucu tarafından tamamlandı');
+  expect(currentRoomState.dice.length === 2, 'Açılış zarları ilk hamle için odada hazır');
+
+  const startingTurn = currentRoomState.turn;
+  let automaticMoves = 0;
+  let handedOffRoom: any = null;
+
+  const timeoutTurnPromise = new Promise<void>((resolve, reject) => {
+    const handler = (data: any) => {
+      const msg = JSON.parse(data.toString());
+      if (msg.type === 'game:moved' && msg.room?.turn === startingTurn) {
+        automaticMoves++;
+      }
+      if (msg.type === 'game:turn_passed' && msg.room?.turn !== startingTurn) {
+        handedOffRoom = msg.room;
+        wsBoard1.off('message', handler);
+        wsBoard2.off('message', handler);
+        clearTimeout(timeout);
+        resolve();
+      }
+    };
+    const timeout = setTimeout(() => {
+      wsBoard1.off('message', handler);
+      wsBoard2.off('message', handler);
+      reject(new Error('Otomatik hamle sonrası sıra 30 saniye içinde rakibe geçmedi.'));
+    }, 30000);
+    wsBoard1.on('message', handler);
+    wsBoard2.on('message', handler);
+  });
+
+  await timeoutTurnPromise;
+  expect(automaticMoves > 0, 'Süre dolunca en az bir otomatik hamle sunucu tarafından oynatıldı', `Hamle sayısı: ${automaticMoves}`);
+  expect(handedOffRoom.turn !== startingTurn, 'Otomatik hamle tamamlanınca sıra rakibe geçti');
+  expect(handedOffRoom.dice.length === 0, 'Sıra devrinde önceki zarlar temizlendi');
 
   // --- TEST 4: KRİTİK TEST - İLK ZARDAN SONRA "RAKİBİNİZ ÇIKTI" HATASI OLUŞMUYOR MU? ---
   console.log('\n--- 4. Öncelikli Hata Doğrulaması: 25 Saniye Boyunca Sahte Çıkış/Terk Yok ---');
