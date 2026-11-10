@@ -368,27 +368,59 @@ function broadcastToRoom(roomId: string, message: object) {
   }
 }
 
-// Apply AI-selected moves sequentially so both clients can animate each automatic checker move.
+// Apply timeout moves defensively. A failed AI calculation or an individual move
+// must never strand the room on the same player's turn: the server owns the handoff.
+const timeoutCompletionRooms = new Set<string>();
+
 function completeTimedOutTurn(room: GameRoom, timedOutColor: PlayerColor) {
   if (rooms.get(room.id) !== room || room.status !== 'playing' || room.winnerInfo || room.turn !== timedOutColor) return;
+  if (timeoutCompletionRooms.has(room.id)) return;
+  timeoutCompletionRooms.add(room.id);
 
-  // A pending manual auto-pass must never race the server-owned timeout sequence.
   const pendingPass = passTimeouts.get(room.id);
   if (pendingPass) {
     clearTimeout(pendingPass);
     passTimeouts.delete(room.id);
   }
 
-  const moves = room.dice.length > 0
-    ? findBestMovesForPlayer(room.board, timedOutColor, room.dice, 'medium')
-    : [];
+  const finishTurn = () => {
+    if (rooms.get(room.id) !== room || room.status !== 'playing' || room.winnerInfo || room.turn !== timedOutColor) {
+      timeoutCompletionRooms.delete(room.id);
+      return;
+    }
+    room.dice = [];
+    room.turnSnapshot = null;
+    room.undoHistory = [];
+    room.turn = timedOutColor === 'white' ? 'black' : 'white';
+    room.lastActivity = Date.now();
+    timeoutCompletionRooms.delete(room.id);
+    broadcastToRoom(room.id, { type: 'game:turn_passed', room, reason: 'Süre doldu (otomatik hamle)' });
+    scheduleTurnTimeout(room);
+  };
+
+  let moves: ReturnType<typeof findBestMovesForPlayer> = [];
+  try {
+    moves = room.dice.length > 0
+      ? findBestMovesForPlayer(room.board, timedOutColor, room.dice, 'medium')
+      : [];
+  } catch (error) {
+    console.error('[TURN TIMEOUT] AI move selection failed; passing turn safely:', error);
+  }
+
   let moveIndex = 0;
-
   const applyNextMove = () => {
-    if (rooms.get(room.id) !== room || room.status !== 'playing' || room.winnerInfo || room.turn !== timedOutColor) return;
+    if (rooms.get(room.id) !== room || room.status !== 'playing' || room.winnerInfo || room.turn !== timedOutColor) {
+      timeoutCompletionRooms.delete(room.id);
+      return;
+    }
 
-    if (moveIndex < moves.length) {
-      const step = moves[moveIndex++];
+    if (moveIndex >= moves.length) {
+      finishTurn();
+      return;
+    }
+
+    const step = moves[moveIndex++];
+    try {
       const die = room.dice[step.dieIndex];
       if (die && !die.used) {
         const result = applyMove(room.board, step.from, step.to, timedOutColor);
@@ -419,20 +451,17 @@ function completeTimedOutTurn(room: GameRoom, timedOutColor: PlayerColor) {
           const activeTimer = turnTimeouts.get(room.id);
           if (activeTimer) clearTimeout(activeTimer);
           turnTimeouts.delete(room.id);
+          timeoutCompletionRooms.delete(room.id);
           return;
         }
       }
-      setTimeout(applyNextMove, 750);
-      return;
+    } catch (error) {
+      console.error('[TURN TIMEOUT] Automatic move failed; completing turn safely:', error);
+      // Do not retry a bad move forever or leave the room locked on this turn.
+      moveIndex = moves.length;
     }
 
-    room.dice = [];
-    room.turnSnapshot = null;
-    room.undoHistory = [];
-    room.turn = timedOutColor === 'white' ? 'black' : 'white';
-    room.lastActivity = Date.now();
-    broadcastToRoom(room.id, { type: 'game:turn_passed', room, reason: 'Süre doldu (otomatik hamle)' });
-    scheduleTurnTimeout(room);
+    setTimeout(applyNextMove, 750);
   };
 
   applyNextMove();
