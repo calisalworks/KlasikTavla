@@ -1383,7 +1383,7 @@ export const Board: React.FC<BoardProps> = ({
       <div className="w-36 md:w-44 flex flex-col gap-2 py-2.5 px-2 bg-[#221711] border-r border-[#3f291b] shadow-2xl z-20 shrink-0">
         {/* Top: Opponent Card */}
         <div
-          className={`relative flex-1 min-h-0 p-2 rounded-2xl border transition-all ${
+          className={`relative flex flex-col justify-between flex-1 min-h-0 p-2 rounded-2xl border transition-all ${
             turn === 'black'
               ? 'bg-[#3b2416] border-amber-500/80 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
               : 'bg-[#2b1c13] border-[#442c1e]'
@@ -1449,7 +1449,7 @@ export const Board: React.FC<BoardProps> = ({
 
         {/* Bottom: Player Card */}
         <div
-          className={`relative flex-1 min-h-0 p-2 rounded-2xl border transition-all ${
+          className={`relative flex flex-col justify-between flex-1 min-h-0 p-2 rounded-2xl border transition-all ${
             turn === 'white'
               ? 'bg-[#3b2416] border-amber-500/80 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
               : 'bg-[#2b1c13] border-[#442c1e]'
