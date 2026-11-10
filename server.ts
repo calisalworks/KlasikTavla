@@ -15,6 +15,7 @@ import {
 } from './src/utils/backgammonLogic.ts';
 import { Die, GameRoom, PlayerColor, RoomPlayer, RoomTierId, TargetScore } from './src/types/game.ts';
 import { verifyFirebaseIdToken } from './src/server/firebaseIdToken.ts';
+import { findBestMovesForPlayer } from './src/utils/aiPlayer.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -124,6 +125,7 @@ function finalizeOpeningRoll(room: GameRoom) {
     room.openingRollCompleted = true;
     room.lastActivity = Date.now();
     const hasMoves = hasAnyLegalMoves(room.board, room.turn, room.dice);
+    if (hasMoves) scheduleTurnTimeout(room);
     broadcastToRoom(room.id, { type: 'room:updated', room });
 
     if (!hasMoves) {
@@ -363,6 +365,108 @@ function broadcastToRoom(roomId: string, message: object) {
       client.ws.send(payload);
     }
   }
+}
+
+// Server-authoritative turn timeout: execute the remaining legal moves and hand off the turn atomically.
+function scheduleTurnTimeout(room: GameRoom) {
+  const previous = turnTimeouts.get(room.id);
+  if (previous) clearTimeout(previous);
+
+  const timer = setTimeout(() => {
+    turnTimeouts.delete(room.id);
+    if (rooms.get(room.id) !== room || room.status !== 'playing' || room.winnerInfo) return;
+
+    const timedOutColor = room.turn;
+    if (timedOutColor === 'white') {
+      room.whiteTimeouts = (room.whiteTimeouts || 0) + 1;
+    } else {
+      room.blackTimeouts = (room.blackTimeouts || 0) + 1;
+    }
+    const strikes = timedOutColor === 'white' ? room.whiteTimeouts : room.blackTimeouts;
+
+    if (strikes >= 4) {
+      const winnerColor: PlayerColor = timedOutColor === 'white' ? 'black' : 'white';
+      room.winnerInfo = { winner: winnerColor, winType: 'normal', points: room.targetScore };
+      room.status = 'finished';
+      if (winnerColor === 'white') room.whiteScore = room.targetScore;
+      else room.blackScore = room.targetScore;
+      room.dice = [];
+      room.turnSnapshot = null;
+      room.undoHistory = [];
+      broadcastToRoom(room.id, {
+        type: 'game:forfeit_afk',
+        forfeitedColor: timedOutColor,
+        winnerColor,
+        room,
+        message: `${timedOutColor === 'white' ? room.whitePlayer?.name : room.blackPlayer?.name} üst üste 20 saniye içinde hamle yapmadığı için hükmen mağlup oldu.`,
+      });
+      return;
+    }
+
+    if (strikes === 3) {
+      broadcastToRoom(room.id, {
+        type: 'game:afk_warning',
+        playerColor: timedOutColor,
+        strikes: 3,
+        message: '3 kez süreniz doldu! Eğer bir sonraki turda da hamle yapmazsanız otomatik olarak hükmen mağlup sayılacaksınız.',
+      });
+    }
+
+    // Calculate and apply the remaining moves against the authoritative server board.
+    const moves = room.dice.length > 0
+      ? findBestMovesForPlayer(room.board, timedOutColor, room.dice, 'medium')
+      : [];
+
+    for (const step of moves) {
+      const die = room.dice[step.dieIndex];
+      if (!die || die.used || room.winnerInfo) continue;
+
+      const result = applyMove(room.board, step.from, step.to, timedOutColor);
+      room.board = result.newBoard;
+      die.used = true;
+      room.lastActivity = Date.now();
+
+      const win = evaluateWin(room.board);
+      if (win) {
+        room.winnerInfo = win;
+        if (win.winner === 'white') room.whiteScore += win.points;
+        else room.blackScore += win.points;
+        if (room.whiteScore >= room.targetScore || room.blackScore >= room.targetScore) {
+          room.status = 'finished';
+        }
+      }
+
+      broadcastToRoom(room.id, {
+        type: 'game:moved',
+        from: step.from,
+        to: step.to,
+        dieValue: step.dieValue,
+        hit: result.hit,
+        win,
+        room,
+      });
+      if (win) break;
+    }
+
+    if (!room.winnerInfo) {
+      const pendingPass = passTimeouts.get(room.id);
+      if (pendingPass) {
+        clearTimeout(pendingPass);
+        passTimeouts.delete(room.id);
+      }
+      room.dice = [];
+      room.turnSnapshot = null;
+      room.undoHistory = [];
+      room.turn = room.turn === 'white' ? 'black' : 'white';
+      broadcastToRoom(room.id, {
+        type: 'game:turn_passed',
+        room,
+        reason: 'Süre doldu (otomatik hamle)',
+      });
+    }
+  }, 23000);
+
+  turnTimeouts.set(room.id, timer);
 }
 
 // REST health check endpoint for Render monitoring, keep-alive and diagnostics
@@ -1311,63 +1415,7 @@ wss.on('connection', (ws) => {
             turnTimeouts.delete(room.id);
           }
 
-          if (hasMoves) {
-            // 23s server safety timeout (20s client timer + 3s network buffer)
-            const tTimer = setTimeout(() => {
-              turnTimeouts.delete(room.id);
-              const activeRoom = rooms.get(room.id);
-              if (activeRoom && activeRoom.status === 'playing' && !activeRoom.winnerInfo) {
-                if (activeRoom.dice.length > 0 && activeRoom.dice.some((d) => !d.used)) {
-                  // Track consecutive timeouts for AFK detection
-                  const activeColor = activeRoom.turn;
-                  if (activeColor === 'white') {
-                    activeRoom.whiteTimeouts = (activeRoom.whiteTimeouts || 0) + 1;
-                  } else {
-                    activeRoom.blackTimeouts = (activeRoom.blackTimeouts || 0) + 1;
-                  }
-                  const strikes = (activeColor === 'white' ? activeRoom.whiteTimeouts : activeRoom.blackTimeouts) ?? 0;
-
-                  if (strikes >= 4) {
-                    // 4th Timeout: HÜKMEN MAĞLUBİYET!
-                    const winnerColor: PlayerColor = activeColor === 'white' ? 'black' : 'white';
-                    activeRoom.winnerInfo = { winner: winnerColor, winType: 'normal', points: activeRoom.targetScore };
-                    activeRoom.status = 'finished';
-                    if (winnerColor === 'white') activeRoom.whiteScore = activeRoom.targetScore;
-                    else activeRoom.blackScore = activeRoom.targetScore;
-
-                    broadcastToRoom(activeRoom.id, {
-                      type: 'game:forfeit_afk',
-                      forfeitedColor: activeColor,
-                      winnerColor,
-                      room: activeRoom,
-                      message: `${activeColor === 'white' ? activeRoom.whitePlayer?.name : activeRoom.blackPlayer?.name} üst üste 20 saniye içinde hamle yapmadığı için hükmen mağlup oldu.`,
-                    });
-                    return;
-                  }
-
-                  if (strikes === 3) {
-                    broadcastToRoom(activeRoom.id, {
-                      type: 'game:afk_warning',
-                      playerColor: activeColor,
-                      strikes: 3,
-                      message: '3 kez süreniz doldu! Eğer bir sonraki turda da hamle yapmazsanız otomatik olarak hükmen mağlup sayılacaksınız.',
-                    });
-                  }
-
-                  activeRoom.dice = [];
-                  activeRoom.turnSnapshot = null;
-                  activeRoom.undoHistory = [];
-                  activeRoom.turn = activeRoom.turn === 'white' ? 'black' : 'white';
-                  broadcastToRoom(activeRoom.id, {
-                    type: 'game:turn_passed',
-                    room: activeRoom,
-                    reason: 'Süre doldu (20 sn)',
-                  });
-                }
-              }
-            }, 23000);
-            turnTimeouts.set(room.id, tTimer);
-          }
+          if (hasMoves) scheduleTurnTimeout(room);
 
           broadcastToRoom(room.id, {
             type: 'game:rolled',
@@ -1380,6 +1428,8 @@ wss.on('connection', (ws) => {
           if (!hasMoves) {
             const passTimer = setTimeout(() => {
               if (rooms.get(room.id) === room) {
+                const activeTurnTimer = turnTimeouts.get(room.id);
+                if (activeTurnTimer) { clearTimeout(activeTurnTimer); turnTimeouts.delete(room.id); }
                 room.dice = [];
                 room.turnSnapshot = null;
                 room.undoHistory = [];
@@ -1493,6 +1543,8 @@ wss.on('connection', (ws) => {
           if (turnWillPass) {
             const passTimer = setTimeout(() => {
               if (rooms.get(room.id) === room && !room.winnerInfo) {
+                const activeTurnTimer = turnTimeouts.get(room.id);
+                if (activeTurnTimer) { clearTimeout(activeTurnTimer); turnTimeouts.delete(room.id); }
                 room.dice = [];
                 room.turnSnapshot = null;
                 room.undoHistory = [];

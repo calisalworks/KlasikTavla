@@ -14,7 +14,6 @@ import {
   LegalMoveInfo,
 } from '../utils/backgammonLogic';
 import { tavlaAudio } from '../utils/audio';
-import { findBestMovesForPlayer } from '../utils/aiPlayer';
 import { CheckerPiece } from './CheckerPiece';
 import { DicePhysicsView } from './DicePhysicsView';
 import { AvatarDisplay } from './AvatarDisplay';
@@ -253,49 +252,21 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
         clearTurnTimer();
         const currentActive = activeTurn || room?.turn;
         if (myColor && currentActive === myColor) {
-          autoPlayRemainingDiceWithAI();
+          const activeRoom = roomRef.current;
+          if (activeRoom && activeRoom.turn === myColor && activeRoom.dice.length === 0) {
+            wsRef.current?.send(JSON.stringify({
+              type: 'game:pass',
+              roomId: activeRoom.id,
+              isTimeout: true,
+            }));
+          }
+          // If dice are already on the board (including opening dice), the server
+          // performs the remaining legal moves and turn handoff at its 23s deadline.
         }
       } else {
         setTurnSecondsLeft(rem);
       }
     }, 1000);
-  };
-
-  const autoPlayRemainingDiceWithAI = () => {
-    setRoom((currRoom) => {
-      if (!currRoom || !myColor || currRoom.turn !== myColor || currRoom.winnerInfo) return currRoom;
-      const unusedDice = currRoom.dice.filter((d) => !d.used);
-      if (currRoom.dice.length === 0 || unusedDice.length === 0) {
-        wsRef.current?.send(JSON.stringify({ type: 'game:pass', roomId: currRoom.id, isTimeout: true }));
-        return currRoom;
-      }
-
-      const moves = findBestMovesForPlayer(currRoom.board, myColor, currRoom.dice, 'medium');
-      if (moves && moves.length > 0) {
-        moves.forEach((step, idx) => {
-          setTimeout(() => {
-            wsRef.current?.send(
-              JSON.stringify({
-                type: 'game:move',
-                from: step.from,
-                to: step.to,
-                dieValue: step.dieValue,
-                dieIndex: step.dieIndex,
-                roomId: currRoom.id,
-              })
-            );
-          }, idx * 1350);
-        });
-        setStatusMessage('20 saniyelik süre doldu! Hamle yapay zeka tarafından oynatıldı ve sıra devredildi.');
-        // After AI moves are played, pass turn to opponent
-        setTimeout(() => {
-          wsRef.current?.send(JSON.stringify({ type: 'game:pass', roomId: currRoom.id, isTimeout: true }));
-        }, moves.length * 1350 + 600);
-      } else {
-        wsRef.current?.send(JSON.stringify({ type: 'game:pass', roomId: currRoom.id, isTimeout: true }));
-      }
-      return currRoom;
-    });
   };
 
   const clearAutoPassTimers = () => {
