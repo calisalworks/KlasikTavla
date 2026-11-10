@@ -39,6 +39,7 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
+import { RadioControls } from './RadioControls';
 
 interface OnlineBoardProps {
   roomId: string;
@@ -46,6 +47,11 @@ interface OnlineBoardProps {
   settings: GameSettings;
   onOpenSettings: () => void;
   onToggleMusic: () => void;
+  isRadioPlaying: boolean;
+  radioChannel: number;
+  onToggleRadio: () => void;
+  onPreviousRadio: () => void;
+  onNextRadio: () => void;
   onOpenRules: () => void;
   onLeaveRoom: () => void;
   onToggleFullscreen: () => void;
@@ -70,6 +76,11 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   settings,
   onOpenSettings,
   onToggleMusic,
+  isRadioPlaying,
+  radioChannel,
+  onToggleRadio,
+  onPreviousRadio,
+  onNextRadio,
   onOpenRules,
   onLeaveRoom,
   onRecordMatch,
@@ -1353,6 +1364,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <RadioControls isPlaying={isRadioPlaying} stationIndex={radioChannel} onToggle={onToggleRadio} onPrevious={onPreviousRadio} onNext={onNextRadio} />
             <button onClick={onToggleMusic} title={settings.ambientSound ? "Müziği Kapat" : "Müziği Aç"} aria-label={settings.ambientSound ? "Müziği Kapat" : "Müziği Aç"} className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300 border border-amber-700/40 shadow cursor-pointer">{settings.ambientSound ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}</button>
             <button onClick={onOpenSettings} title="Ayarlar" aria-label="Ayarlar" className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300 border border-amber-700/40 shadow cursor-pointer"><Settings className="w-3.5 h-3.5" /></button>
             <div className="flex items-center gap-1.5 sm:gap-2 mr-1 sm:mr-2">
