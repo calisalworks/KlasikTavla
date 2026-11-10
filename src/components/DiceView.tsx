@@ -68,7 +68,7 @@ export const DiceView: React.FC<DiceViewProps> = ({
           {dice.map((die, index) => (
             <div
               key={die.id || index}
-              className={`relative w-7 h-7 rounded-lg bg-gradient-to-b from-[#ffffff] via-[#f7f5f0] to-[#e8e4dc] border border-[#d4cfc3] shadow-[0_4px_8px_rgba(0,0,0,0.4),0_2px_3px_rgba(0,0,0,0.25)] flex items-center justify-center transition-all ${
+              className={`relative w-7 h-7 rounded-lg bg-gradient-to-b from-[#fffdf4] via-[#f1e5c9] to-[#c4ad84] border border-[#bba77f] shadow-[0_4px_8px_rgba(0,0,0,0.4),0_2px_3px_rgba(0,0,0,0.25)] flex items-center justify-center transition-all ${
                 isRolling ? 'animate-bounce rotate-12 scale-105' : ''
               } ${die.used ? 'opacity-30 grayscale scale-90' : 'opacity-100'}`}
               style={{
