@@ -48,7 +48,7 @@ export default function App() {
     let cancelled = false;
     const scanTimer = window.setTimeout(() => {
       const wsUrl = getWebSocketConfig().url;
-      const statusUrl = wsUrl ? wsUrl.replace(/^wss:/, 'https:').replace(/^ws:/, 'http:').replace(/\\/ws$/, '/api/radio/status') : '/api/radio/status';
+      const statusUrl = wsUrl ? wsUrl.replace(/^wss:/, 'https:').replace(/^ws:/, 'http:').replace('/ws', '/api/radio/status') : '/api/radio/status';
       fetch(statusUrl).then((response) => { if (!response.ok) throw new Error('Radyo durumları alınamadı'); return response.json(); })
         .then((data) => { if (!cancelled && data?.statuses && typeof data.statuses === 'object') setRadioAvailability(data.statuses); })
         .catch((error) => console.warn('Radyo kanalları arka planda kontrol edilemedi:', error));
