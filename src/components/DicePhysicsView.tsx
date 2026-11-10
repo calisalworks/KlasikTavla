@@ -93,7 +93,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
   // Blocks any queued physics tick from running after the final settle phase begins.
   const settlingRef = useRef(false);
 
-  // Dynamic physics states for up to 4 dice
+  // Dynamic physics states for the two visible physical dice
   const [physicsStates, setPhysicsStates] = useState<PhysicsDieState[]>([]);
   const physicsStatesRef = useRef<PhysicsDieState[]>([]);
   const diceRef = useRef(dice);
@@ -192,7 +192,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       setPhysicsStates(visibleDice.map((die, i) => {
         const target = FACE_ROTATIONS[die.value] || { rx: 0, ry: 0 };
         return {
-          x: (i - (resultDice.length - 1) / 2) * 34,
+          x: (i - (visibleDice.length - 1) / 2) * 34,
           y: 0,
           vx: 0,
           vy: 0,
