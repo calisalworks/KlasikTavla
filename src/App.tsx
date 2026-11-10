@@ -202,7 +202,7 @@ export default function App() {
   const [settings, setSettings] = useState<GameSettings>(() => {
     const defaults: GameSettings = {
       soundEnabled: true,
-      ambientSound: false,
+      ambientSound: true,
       autoRoll: false,
       highlightMoves: true,
       aiDifficulty: 'medium',
