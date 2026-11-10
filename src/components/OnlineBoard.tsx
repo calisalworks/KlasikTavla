@@ -250,18 +250,9 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
       rem -= 1;
       if (rem <= 0) {
         clearTurnTimer();
-        const currentActive = activeTurn || room?.turn;
+        const currentActive = activeTurn || roomRef.current?.turn;
         if (myColor && currentActive === myColor) {
-          const activeRoom = roomRef.current;
-          if (activeRoom && activeRoom.turn === myColor && activeRoom.dice.length === 0) {
-            wsRef.current?.send(JSON.stringify({
-              type: 'game:pass',
-              roomId: activeRoom.id,
-              isTimeout: true,
-            }));
-          }
-          // If dice are already on the board (including opening dice), the server
-          // performs the remaining legal moves and turn handoff at its 23s deadline.
+          setStatusMessage('Süre doldu. Sunucu otomatik zar atıp hamleleri tamamlıyor...');
         }
       } else {
         setTurnSecondsLeft(rem);

@@ -204,6 +204,45 @@ async function runOnlineRobustnessSuite() {
   expect(handedOffRoom.turn !== startingTurn, 'Otomatik hamle tamamlanınca sıra rakibe geçti');
   expect(handedOffRoom.dice.length === 0, 'Sıra devrinde önceki zarlar temizlendi');
 
+  // --- TEST 4: ZAR ATMADAN SÜRE DOLUNCA SUNUCU ZAR ATAR, ANİMASYON OLAYI GÖNDERİR VE OYNAR ---
+  console.log('\n--- 4. Zar Atılmadan Zaman Aşımı: Otomatik Zar ve Sıra Devri ---');
+
+  const secondTurnColor = handedOffRoom.turn;
+  let automaticRollSeen = false;
+  let secondTurnAutomaticMoves = 0;
+  let secondTurnHandedOff: any = null;
+
+  const secondTimeoutPromise = new Promise<void>((resolve, reject) => {
+    let timeout: ReturnType<typeof setTimeout>;
+    const handler = (data: any) => {
+      const msg = JSON.parse(data.toString());
+      if (msg.type === 'game:rolled' && msg.autoPlay === true && msg.room?.turn === secondTurnColor) {
+        automaticRollSeen = true;
+        expect(msg.dice?.length === 2, 'Zar atılmayan turda sunucu iki yeni zar üretti');
+      }
+      if (msg.type === 'game:moved' && msg.autoPlay === true && msg.room?.turn === secondTurnColor) secondTurnAutomaticMoves++;
+      if (msg.type === 'game:turn_passed' && msg.room?.turn !== secondTurnColor) {
+        secondTurnHandedOff = msg.room;
+        wsBoard1.off('message', handler);
+        wsBoard2.off('message', handler);
+        clearTimeout(timeout);
+        resolve();
+      }
+    };
+    timeout = setTimeout(() => {
+      wsBoard1.off('message', handler);
+      wsBoard2.off('message', handler);
+      reject(new Error('Zar atılmayan turda otomatik zar/hamle/sıra devri 30 saniyede tamamlanmadı.'));
+    }, 30000);
+    wsBoard1.on('message', handler);
+    wsBoard2.on('message', handler);
+  });
+
+  await secondTimeoutPromise;
+  expect(automaticRollSeen, 'Zar atılmayan turda animasyon için game:rolled olayı gönderildi');
+  expect(secondTurnAutomaticMoves > 0, 'Otomatik zarın ardından en az bir hamle yapıldı', 'Hamle sayısı: ' + secondTurnAutomaticMoves);
+  expect(secondTurnHandedOff.turn !== secondTurnColor, 'Otomatik zar ve hamlelerden sonra sıra rakibe geçti');
+  expect(secondTurnHandedOff.dice.length === 0, 'Otomatik tur sonunda zarlar temizlendi');
   // --- TEST 4: KRİTİK TEST - İLK ZARDAN SONRA "RAKİBİNİZ ÇIKTI" HATASI OLUŞMUYOR MU? ---
   console.log('\n--- 4. Öncelikli Hata Doğrulaması: 25 Saniye Boyunca Sahte Çıkış/Terk Yok ---');
   let falseAbandonDetected = false;

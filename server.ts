@@ -136,6 +136,7 @@ function finalizeOpeningRoll(room: GameRoom) {
           room.undoHistory = [];
           room.turn = room.turn === 'white' ? 'black' : 'white';
           broadcastToRoom(room.id, { type: 'game:turn_passed', room, reason: 'Hamle yok' });
+          scheduleTurnTimeout(room);
         }
         passTimeouts.delete(room.id);
       }, 1200);
@@ -367,21 +368,85 @@ function broadcastToRoom(roomId: string, message: object) {
   }
 }
 
-// Server-authoritative turn timeout: execute the remaining legal moves and hand off the turn atomically.
+// Apply AI-selected moves sequentially so both clients can animate each automatic checker move.
+function completeTimedOutTurn(room: GameRoom, timedOutColor: PlayerColor) {
+  if (rooms.get(room.id) !== room || room.status !== 'playing' || room.winnerInfo || room.turn !== timedOutColor) return;
+
+  const moves = room.dice.length > 0
+    ? findBestMovesForPlayer(room.board, timedOutColor, room.dice, 'medium')
+    : [];
+  let moveIndex = 0;
+
+  const applyNextMove = () => {
+    if (rooms.get(room.id) !== room || room.status !== 'playing' || room.winnerInfo || room.turn !== timedOutColor) return;
+
+    if (moveIndex < moves.length) {
+      const step = moves[moveIndex++];
+      const die = room.dice[step.dieIndex];
+      if (die && !die.used) {
+        const result = applyMove(room.board, step.from, step.to, timedOutColor);
+        room.board = result.newBoard;
+        die.used = true;
+        room.lastActivity = Date.now();
+
+        const win = evaluateWin(room.board);
+        if (win) {
+          room.winnerInfo = win;
+          if (win.winner === 'white') room.whiteScore += win.points;
+          else room.blackScore += win.points;
+          if (room.whiteScore >= room.targetScore || room.blackScore >= room.targetScore) room.status = 'finished';
+        }
+
+        broadcastToRoom(room.id, {
+          type: 'game:moved',
+          from: step.from,
+          to: step.to,
+          dieValue: step.dieValue,
+          hit: result.hit,
+          win,
+          autoPlay: true,
+          room,
+        });
+
+        if (win) {
+          const activeTimer = turnTimeouts.get(room.id);
+          if (activeTimer) clearTimeout(activeTimer);
+          turnTimeouts.delete(room.id);
+          return;
+        }
+      }
+      setTimeout(applyNextMove, 750);
+      return;
+    }
+
+    const pendingPass = passTimeouts.get(room.id);
+    if (pendingPass) { clearTimeout(pendingPass); passTimeouts.delete(room.id); }
+    room.dice = [];
+    room.turnSnapshot = null;
+    room.undoHistory = [];
+    room.turn = timedOutColor === 'white' ? 'black' : 'white';
+    room.lastActivity = Date.now();
+    broadcastToRoom(room.id, { type: 'game:turn_passed', room, reason: 'Süre doldu (otomatik hamle)' });
+    scheduleTurnTimeout(room);
+  };
+
+  applyNextMove();
+}
+
+// Every turn gets a server-owned deadline. If the player has not rolled yet,
+// the server rolls, broadcasts the normal dice animation event, then auto-plays.
 function scheduleTurnTimeout(room: GameRoom) {
   const previous = turnTimeouts.get(room.id);
   if (previous) clearTimeout(previous);
 
   const timer = setTimeout(() => {
+    if (turnTimeouts.get(room.id) !== timer) return;
     turnTimeouts.delete(room.id);
     if (rooms.get(room.id) !== room || room.status !== 'playing' || room.winnerInfo) return;
 
     const timedOutColor = room.turn;
-    if (timedOutColor === 'white') {
-      room.whiteTimeouts = (room.whiteTimeouts || 0) + 1;
-    } else {
-      room.blackTimeouts = (room.blackTimeouts || 0) + 1;
-    }
+    if (timedOutColor === 'white') room.whiteTimeouts = (room.whiteTimeouts || 0) + 1;
+    else room.blackTimeouts = (room.blackTimeouts || 0) + 1;
     const strikes = (timedOutColor === 'white' ? room.whiteTimeouts : room.blackTimeouts) ?? 0;
 
     if (strikes >= 4) {
@@ -398,7 +463,7 @@ function scheduleTurnTimeout(room: GameRoom) {
         forfeitedColor: timedOutColor,
         winnerColor,
         room,
-        message: `${timedOutColor === 'white' ? room.whitePlayer?.name : room.blackPlayer?.name} üst üste 20 saniye içinde hamle yapmadığı için hükmen mağlup oldu.`,
+        message: (timedOutColor === 'white' ? room.whitePlayer?.name : room.blackPlayer?.name) + ' üst üste 20 saniye içinde hamle yapmadığı için hükmen mağlup oldu.',
       });
       return;
     }
@@ -412,59 +477,21 @@ function scheduleTurnTimeout(room: GameRoom) {
       });
     }
 
-    // Calculate and apply the remaining moves against the authoritative server board.
-    const moves = room.dice.length > 0
-      ? findBestMovesForPlayer(room.board, timedOutColor, room.dice, 'medium')
-      : [];
-
-    for (const step of moves) {
-      const die = room.dice[step.dieIndex];
-      if (!die || die.used || room.winnerInfo) continue;
-
-      const result = applyMove(room.board, step.from, step.to, timedOutColor);
-      room.board = result.newBoard;
-      die.used = true;
-      room.lastActivity = Date.now();
-
-      const win = evaluateWin(room.board);
-      if (win) {
-        room.winnerInfo = win;
-        if (win.winner === 'white') room.whiteScore += win.points;
-        else room.blackScore += win.points;
-        if (room.whiteScore >= room.targetScore || room.blackScore >= room.targetScore) {
-          room.status = 'finished';
-        }
-      }
-
-      broadcastToRoom(room.id, {
-        type: 'game:moved',
-        from: step.from,
-        to: step.to,
-        dieValue: step.dieValue,
-        hit: result.hit,
-        win,
-        room,
-      });
-      if (win) break;
-    }
-
-    if (!room.winnerInfo) {
-      const pendingPass = passTimeouts.get(room.id);
-      if (pendingPass) {
-        clearTimeout(pendingPass);
-        passTimeouts.delete(room.id);
-      }
-      room.dice = [];
-      room.turnSnapshot = null;
+    if (room.dice.length === 0) {
+      const dice = rollDice();
+      room.dice = dice;
+      room.turnSnapshot = { board: cloneBoard(room.board), dice: dice.map((die) => ({ ...die })), movesMade: [] };
       room.undoHistory = [];
-      room.turn = room.turn === 'white' ? 'black' : 'white';
-      broadcastToRoom(room.id, {
-        type: 'game:turn_passed',
-        room,
-        reason: 'Süre doldu (otomatik hamle)',
-      });
+      room.lastActivity = Date.now();
+      const hasMoves = hasAnyLegalMoves(room.board, timedOutColor, dice);
+      broadcastToRoom(room.id, { type: 'game:rolled', dice, hasMoves, autoPlay: true, room });
+      setTimeout(() => completeTimedOutTurn(room, timedOutColor), 500);
+      return;
     }
-  }, 23000);
+
+    // Opening-roll dice have already been animated; use those exact dice.
+    completeTimedOutTurn(room, timedOutColor);
+  }, 20500);
 
   turnTimeouts.set(room.id, timer);
 }
@@ -1439,6 +1466,7 @@ wss.on('connection', (ws) => {
                   room,
                   reason: 'Hamle yok',
                 });
+                scheduleTurnTimeout(room);
               }
             }, 1200);
             passTimeouts.set(room.id, passTimer);
@@ -1553,6 +1581,7 @@ wss.on('connection', (ws) => {
                   type: 'game:turn_passed',
                   room,
                 });
+                scheduleTurnTimeout(room);
               }
             }, 4000);
             passTimeouts.set(room.id, passTimer);
@@ -1572,6 +1601,7 @@ wss.on('connection', (ws) => {
           if (myColor !== room.turn) return;
 
           const isTimeout = !!msg.isTimeout;
+          if (isTimeout) break;
           if (isTimeout) {
             if (myColor === 'white') {
               room.whiteTimeouts = (room.whiteTimeouts || 0) + 1;
@@ -1633,6 +1663,7 @@ wss.on('connection', (ws) => {
             type: 'game:turn_passed',
             room,
           });
+          scheduleTurnTimeout(room);
           break;
         }
 
@@ -1721,7 +1752,8 @@ wss.on('connection', (ws) => {
             room.openingRollCompleted = false;
             }
 
-            scheduleOpeningRollFallback(room);
+            if (room.openingRoll) scheduleOpeningRollFallback(room);
+            else scheduleTurnTimeout(room);
             broadcastToRoom(room.id, {
               type: 'game:reset',
               room,
@@ -1773,7 +1805,8 @@ wss.on('connection', (ws) => {
             room.openingRollCompleted = false;
           }
 
-          scheduleOpeningRollFallback(room);
+          if (room.openingRoll) scheduleOpeningRollFallback(room);
+          else scheduleTurnTimeout(room);
           broadcastToRoom(room.id, {
             room,
           });
