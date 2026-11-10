@@ -231,9 +231,13 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           x += vx * dt;
           y += vy * dt;
 
-          const centreHit = throwSide === 'right' ? x <= 0 : x >= 0;
+          // The dice stage is offset from the board centre. Stop at the inner
+          // edge of the leftmost checker in the right tray (mirrored for left throws).
+          // This places the impact at the visible edge of the middle bar/checker line.
+          const collisionX = throwSide === 'right' ? -52 : 52;
+          const centreHit = throwSide === 'right' ? x <= collisionX : x >= collisionX;
           if (!bounced && centreHit) {
-            x = 0;
+            x = collisionX;
             vx = throwSide === 'right' ? 95 : -95;
             vy += idx === 0 ? -13 : 13;
             vz = 52;
