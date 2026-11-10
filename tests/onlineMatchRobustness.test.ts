@@ -231,7 +231,7 @@ async function runOnlineRobustnessSuite() {
       const msg = JSON.parse(data.toString());
       if (msg.type === 'game:rolled' && msg.autoPlay === true && msg.room?.turn === secondTurnColor) {
         automaticRollSeen = true;
-        expect(msg.dice?.length === 2, 'Zar atılmayan turda sunucu iki yeni zar üretti');
+        expect((msg.dice?.length === 2 || msg.dice?.length === 4), 'Zar atılmayan turda sunucu iki veya çift zar için dört zar üretti');
       }
       if (msg.type === 'game:moved' && msg.autoPlay === true && msg.room?.turn === secondTurnColor) secondTurnAutomaticMoves++;
       if (msg.type === 'game:turn_passed' && msg.room?.turn !== secondTurnColor) {
@@ -274,7 +274,7 @@ async function runOnlineRobustnessSuite() {
         const msg = JSON.parse(data.toString());
         if (msg.type === 'game:rolled' && msg.autoPlay === true && msg.room?.turn === previousTurn) {
           rollReceived = true;
-          expect(msg.dice?.length === 2, 'Tur ' + cycle + ': sunucu yeni iki zar gönderdi');
+          expect((msg.dice?.length === 2 || msg.dice?.length === 4), 'Tur ' + cycle + ': sunucu yeni zarları gönderdi (2 veya 4)');
         }
         if (msg.type === 'game:moved' && msg.autoPlay === true && msg.room?.turn === previousTurn) moveCount++;
         if (msg.type === 'game:turn_passed' && msg.room?.turn !== previousTurn) {
