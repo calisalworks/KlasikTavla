@@ -42,6 +42,16 @@ export default function App() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const radioAudioRef = useRef<HTMLAudioElement | null>(null);
   const [isRadioPlaying, setIsRadioPlaying] = useState(false);
+  const [enabledRadioStations, setEnabledRadioStations] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('klasik-tavla-radio-enabled');
+      if (!saved) return RADIO_STATIONS.map((station) => station.id);
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed.filter((id) => RADIO_STATIONS.some((station) => station.id === id)) : RADIO_STATIONS.map((station) => station.id);
+    } catch {
+      return RADIO_STATIONS.map((station) => station.id);
+    }
+  });
   const [radioChannel, setRadioChannel] = useState(() => {
     try {
       const saved = Number(localStorage.getItem('klasik-tavla-radio-channel'));
@@ -253,16 +263,42 @@ export default function App() {
       setIsRadioPlaying(false);
       return;
     }
+    const firstEnabled = RADIO_STATIONS.findIndex((station) => enabledRadioStations.includes(station.id));
+    if (firstEnabled < 0) return;
+    const selectedIndex = enabledRadioStations.includes(RADIO_STATIONS[radioChannel].id) ? radioChannel : firstEnabled;
+    setRadioChannel(selectedIndex);
     tavlaAudio.setAmbientEnabled(false);
     setSettings((prev) => ({ ...prev, ambientSound: false }));
     setIsRadioPlaying(true);
-    playRadioChannel(radioChannel);
+    playRadioChannel(selectedIndex);
   };
 
   const handleChangeRadioChannel = (direction: -1 | 1) => {
-    const nextIndex = (radioChannel + direction + RADIO_STATIONS.length) % RADIO_STATIONS.length;
+    const enabledIndexes = RADIO_STATIONS.map((station, index) => enabledRadioStations.includes(station.id) ? index : -1).filter((index) => index >= 0);
+    if (enabledIndexes.length === 0) return;
+    const currentPosition = enabledIndexes.indexOf(radioChannel);
+    const basePosition = currentPosition >= 0 ? currentPosition : 0;
+    const nextIndex = enabledIndexes[(basePosition + direction + enabledIndexes.length) % enabledIndexes.length];
     setRadioChannel(nextIndex);
     if (isRadioPlaying) playRadioChannel(nextIndex);
+  };
+
+  const handleToggleRadioStation = (stationId: string) => {
+    setEnabledRadioStations((previous) => {
+      const next = previous.includes(stationId) ? previous.filter((id) => id !== stationId) : [...previous, stationId];
+      const changedIndex = RADIO_STATIONS.findIndex((station) => station.id === stationId);
+      if (stationId === RADIO_STATIONS[radioChannel].id && !next.includes(stationId)) {
+        const nextEnabledIndex = RADIO_STATIONS.findIndex((station) => next.includes(station.id));
+        if (nextEnabledIndex < 0) {
+          radioAudioRef.current?.pause();
+          setIsRadioPlaying(false);
+        } else {
+          setRadioChannel(nextEnabledIndex);
+          if (isRadioPlaying) playRadioChannel(nextEnabledIndex);
+        }
+      }
+      return next;
+    });
   };
 
   const handleToggleMusic = () => {
@@ -272,6 +308,14 @@ export default function App() {
     }
     setSettings((prev) => ({ ...prev, ambientSound: !prev.ambientSound }));
   };
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('klasik-tavla-radio-enabled', JSON.stringify(enabledRadioStations));
+    } catch {
+      // Storage may be unavailable in private browsing.
+    }
+  }, [enabledRadioStations]);
 
   useEffect(() => {
     try {
@@ -539,6 +583,8 @@ export default function App() {
         onClose={() => setIsSettingsOpen(false)}
         settings={settings}
         onUpdateSettings={(part) => setSettings((prev) => ({ ...prev, ...part }))}
+        enabledRadioStations={enabledRadioStations}
+        onToggleRadioStation={handleToggleRadioStation}
       />
 
       {/* 5. Rules Modal */}
