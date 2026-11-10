@@ -26,7 +26,6 @@ import {
   Settings,
   Trophy,
   Info,
-  Maximize,
   LogOut,
   Home,
   Users,
@@ -73,8 +72,6 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   onToggleMusic,
   onOpenRules,
   onLeaveRoom,
-  onToggleFullscreen,
-  isFullscreen,
   onRecordMatch,
   onProfileUpdated,
 }) => {
