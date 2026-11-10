@@ -111,6 +111,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
 
   const [turnSecondsLeft, setTurnSecondsLeft] = useState<number | null>(null);
   const turnTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Track the server-triggered dice animation so a late callback cannot restore stale turn state.
+  const rollAnimationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isUnmountedRef = useRef<boolean>(false);
   const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef<number>(0);
@@ -360,13 +362,21 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             }
 
             case 'game:rolled': {
+              // Apply the authoritative roll immediately so the physics component receives
+              // the actual dice values while it animates. Never restore this snapshot later:
+              // a turn_passed event may arrive while the animation timer is still pending.
+              if (rollAnimationTimeoutRef.current) {
+                clearTimeout(rollAnimationTimeoutRef.current);
+                rollAnimationTimeoutRef.current = null;
+              }
+              roomRef.current = msg.room;
+              setRoom(msg.room);
               setIsRolling(true);
               tavlaAudio.playDiceRoll();
-              setTimeout(() => {
+              rollAnimationTimeoutRef.current = setTimeout(() => {
+                rollAnimationTimeoutRef.current = null;
                 setIsRolling(false);
                 tavlaAudio.playDiceDrop();
-                roomRef.current = msg.room;
-                setRoom(msg.room);
                 if (!msg.hasMoves) {
                   clearTurnTimer();
                   setStatusMessage('Hamle yok! Sıra diğer oyuncuya geçiyor.');
@@ -374,10 +384,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
                   setStatusMessage(
                     `Zarlar: ${msg.dice.map((d: Die) => d.value).join(' - ')}`
                   );
-                  // Start turn timer for active player!
-                  startTurnTimer(msg.room.turn);
                 }
-              }, 1250);
+              }, 1500);
               break;
             }
 
@@ -444,6 +452,13 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             case 'game:turn_passed': {
               clearTurnTimer();
               clearAutoPassTimers();
+              // A server pass is authoritative; cancel any pending roll callback before
+              // it can overwrite the newly handed-off room with an older snapshot.
+              if (rollAnimationTimeoutRef.current) {
+                clearTimeout(rollAnimationTimeoutRef.current);
+                rollAnimationTimeoutRef.current = null;
+              }
+              setIsRolling(false);
               roomRef.current = msg.room;
               setRoom(msg.room);
               setSelectedPoint(null);
