@@ -171,8 +171,6 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           settled: true,
           bounced: true,
           age: 0,
-          bounced: true,
-          age: 0,
         };
       }));
       return;
@@ -249,10 +247,10 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           // Friction starts after the centre-bar rebound, not during the run-up.
           if (bounced) {
-            const friction = Math.exp(-2.15 * dt);
+            const friction = Math.exp(-3.0 * dt);
             vx *= friction;
-            vy *= Math.exp(-2.4 * dt);
-            vRotZ *= Math.exp(-0.42 * dt);
+            vy *= Math.exp(-3.0 * dt);
+            vRotZ *= Math.exp(-2.2 * dt);
           }
 
           // A small, visible tabletop hop accompanies the horizontal rebound.
