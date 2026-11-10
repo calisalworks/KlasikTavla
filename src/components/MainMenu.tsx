@@ -214,7 +214,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         {/* Header / Title (Küçültülmüş ve yukarı taşınmış Klasik Tavla) */}
         <div className="text-center mb-2 sm:mb-3 mt-0 relative shrink-0">
           <svg aria-hidden="true" className="mx-auto mb-0.5 w-36 sm:w-64 h-5 sm:h-6 text-amber-300" viewBox="0 0 420 55" fill="none"><path d="M8 29 H145 C164 29 174 10 190 10 C203 10 205 24 210 29 C215 24 217 10 230 10 C246 10 256 29 275 29 H412 M25 36 H155 M265 36 H395" stroke="#c99a4c" strokeWidth="1.5"/><path d="M210 2 C196 18 196 37 210 49 C224 37 224 18 210 2Z" stroke="#f1d58d" strokeWidth="1.5"/><path d="M185 29 Q197 12 210 29 Q223 12 235 29 M198 40 Q210 50 222 40" stroke="#e4bd70" strokeWidth="1.4"/><circle cx="210" cy="28" r="4" fill="#e7c16e"/><circle cx="145" cy="29" r="2.5" fill="#e7c16e"/><circle cx="275" cy="29" r="2.5" fill="#e7c16e"/></svg>
-          <h1 className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-[#fff4c9] via-[#e6c477] to-[#9d6928] tracking-[.12em] font-['Cinzel',serif] drop-shadow-[0_3px_8px_rgba(0,0,0,.95)]">
+          <h1 className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-b from-[#fff4c9] via-[#e6c477] to-[#9d6928] tracking-[.12em] font-['Cinzel',serif] drop-shadow-[0_3px_8px_rgba(0,0,0,.95)]">
             KLASİK TAVLA
           </h1>
         </div>
@@ -259,18 +259,18 @@ export const MainMenu: React.FC<MainMenuProps> = ({
               tavlaAudio.playButtonClick();
               onStartSinglePlayer();
             }}
-            className="w-full group relative py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-xl bg-gradient-to-r from-[#160e0b] via-[#28160f] to-[#100b09] hover:from-[#2a1a11] hover:to-[#1c100b] text-amber-50 font-bold shadow-[0_8px_22px_rgba(0,0,0,.75),inset_0_1px_3px_rgba(255,230,170,.12)] border-2 border-[#b88a43] outline outline-1 outline-offset-[-6px] outline-amber-200/20 active:scale-[.99] transition-all flex items-center justify-between cursor-pointer"
+            className="w-full group relative py-2 sm:py-2.5 px-2.5 sm:px-4 rounded-xl bg-gradient-to-r from-[#160e0b] via-[#28160f] to-[#100b09] hover:from-[#2a1a11] hover:to-[#1c100b] text-amber-50 font-bold shadow-[0_8px_22px_rgba(0,0,0,.75),inset_0_1px_3px_rgba(255,230,170,.12)] border-2 border-[#b88a43] outline outline-1 outline-offset-[-6px] outline-amber-200/20 active:scale-[.99] transition-all flex items-center justify-between cursor-pointer"
           >
             <svg aria-hidden="true" className="pointer-events-none absolute inset-0 w-full h-full rounded-xl" viewBox="0 0 1000 150" preserveAspectRatio="none"><rect x="5" y="5" width="990" height="140" rx="13" fill="none" stroke="#f1d18a" strokeOpacity=".38" strokeWidth="1.5"/><path d="M8 48 C22 45 22 18 48 8 C36 25 42 35 54 34 C67 32 68 18 58 14 C82 17 87 39 68 48 C49 58 29 43 32 29 M992 48 C978 45 978 18 952 8 C964 25 958 35 946 34 C933 32 932 18 942 14 C918 17 913 39 932 48 C951 58 971 43 968 29 M8 102 C22 105 22 132 48 142 C36 125 42 115 54 116 C67 118 68 132 58 136 C82 133 87 111 68 102 C49 92 29 107 32 121 M992 102 C978 105 978 132 952 142 C964 125 958 115 946 116 C933 118 932 132 942 136 C918 133 913 111 932 102 C951 92 971 107 968 121" fill="none" stroke="#e4bd70" strokeOpacity=".72" strokeWidth="2"/><circle cx="48" cy="8" r="3" fill="#f4d994"/><circle cx="952" cy="8" r="3" fill="#f4d994"/><circle cx="48" cy="142" r="3" fill="#f4d994"/><circle cx="952" cy="142" r="3" fill="#f4d994"/></svg>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#3b210b] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
-                <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#3b210b] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
+                <Bot className="w-3.5 h-3.5 sm:w-4 h-4" />
               </div>
-              <span className="font-extrabold text-[#f6e8c7] text-base sm:text-xl tracking-wide font-['Cinzel',serif]">
+              <span className="font-extrabold text-[#f6e8c7] text-sm sm:text-base tracking-wide font-['Cinzel',serif]">
                 Tek Kişilik
               </span>
             </div>
-            <span className="text-xs sm:text-base font-black text-[#e9c77c] group-hover:translate-x-1 transition-transform">
+            <span className="text-[10px] sm:text-xs font-black text-[#e9c77c] group-hover:translate-x-1 transition-transform">
               OYNA →
             </span>
           </button>
@@ -281,18 +281,18 @@ export const MainMenu: React.FC<MainMenuProps> = ({
               tavlaAudio.playButtonClick();
               onOpenOnlineLobby();
             }}
-            className="w-full group relative py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-xl bg-gradient-to-r from-[#061b16] via-[#073b2d] to-[#061a15] hover:from-[#0b3025] hover:to-[#08271e] text-white font-bold shadow-[0_8px_22px_rgba(0,0,0,.75),inset_0_1px_3px_rgba(255,230,170,.12)] border-2 border-[#b88a43] outline outline-1 outline-offset-[-6px] outline-amber-200/20 active:scale-[.99] transition-all flex items-center justify-between cursor-pointer"
+            className="w-full group relative py-2 sm:py-2.5 px-2.5 sm:px-4 rounded-xl bg-gradient-to-r from-[#061b16] via-[#073b2d] to-[#061a15] hover:from-[#0b3025] hover:to-[#08271e] text-white font-bold shadow-[0_8px_22px_rgba(0,0,0,.75),inset_0_1px_3px_rgba(255,230,170,.12)] border-2 border-[#b88a43] outline outline-1 outline-offset-[-6px] outline-amber-200/20 active:scale-[.99] transition-all flex items-center justify-between cursor-pointer"
           >
             <svg aria-hidden="true" className="pointer-events-none absolute inset-0 w-full h-full rounded-xl" viewBox="0 0 1000 150" preserveAspectRatio="none"><rect x="5" y="5" width="990" height="140" rx="13" fill="none" stroke="#f1d18a" strokeOpacity=".38" strokeWidth="1.5"/><path d="M8 48 C22 45 22 18 48 8 C36 25 42 35 54 34 C67 32 68 18 58 14 C82 17 87 39 68 48 C49 58 29 43 32 29 M992 48 C978 45 978 18 952 8 C964 25 958 35 946 34 C933 32 932 18 942 14 C918 17 913 39 932 48 C951 58 971 43 968 29 M8 102 C22 105 22 132 48 142 C36 125 42 115 54 116 C67 118 68 132 58 136 C82 133 87 111 68 102 C49 92 29 107 32 121 M992 102 C978 105 978 132 952 142 C964 125 958 115 946 116 C933 118 932 132 942 136 C918 133 913 111 932 102 C951 92 971 107 968 121" fill="none" stroke="#e4bd70" strokeOpacity=".72" strokeWidth="2"/><circle cx="48" cy="8" r="3" fill="#f4d994"/><circle cx="952" cy="8" r="3" fill="#f4d994"/><circle cx="48" cy="142" r="3" fill="#f4d994"/><circle cx="952" cy="142" r="3" fill="#f4d994"/></svg>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#174132] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
-                <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#174132] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
+                <Globe className="w-3.5 h-3.5 sm:w-4 h-4" />
               </div>
-              <span className="font-extrabold text-[#f6e8c7] text-base sm:text-xl tracking-wide font-['Cinzel',serif]">
+              <span className="font-extrabold text-[#f6e8c7] text-sm sm:text-base tracking-wide font-['Cinzel',serif]">
                 Online
               </span>
             </div>
-            <span className="text-xs sm:text-base font-black text-[#e9c77c] group-hover:translate-x-1 transition-transform">
+            <span className="text-[10px] sm:text-xs font-black text-[#e9c77c] group-hover:translate-x-1 transition-transform">
               ODALAR →
             </span>
           </button>
@@ -303,18 +303,18 @@ export const MainMenu: React.FC<MainMenuProps> = ({
               tavlaAudio.playButtonClick();
               onOpenFriendRoom();
             }}
-            className="w-full group relative py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-xl bg-gradient-to-r from-[#1b100c] via-[#352014] to-[#130b08] hover:from-[#352014] hover:to-[#21130c] text-white font-bold shadow-[0_8px_22px_rgba(0,0,0,.75),inset_0_1px_3px_rgba(255,230,170,.12)] border-2 border-[#b88a43] outline outline-1 outline-offset-[-6px] outline-amber-200/20 active:scale-[.99] transition-all flex items-center justify-between cursor-pointer"
+            className="w-full group relative py-2 sm:py-2.5 px-2.5 sm:px-4 rounded-xl bg-gradient-to-r from-[#1b100c] via-[#352014] to-[#130b08] hover:from-[#352014] hover:to-[#21130c] text-white font-bold shadow-[0_8px_22px_rgba(0,0,0,.75),inset_0_1px_3px_rgba(255,230,170,.12)] border-2 border-[#b88a43] outline outline-1 outline-offset-[-6px] outline-amber-200/20 active:scale-[.99] transition-all flex items-center justify-between cursor-pointer"
           >
             <svg aria-hidden="true" className="pointer-events-none absolute inset-0 w-full h-full rounded-xl" viewBox="0 0 1000 150" preserveAspectRatio="none"><rect x="5" y="5" width="990" height="140" rx="13" fill="none" stroke="#f1d18a" strokeOpacity=".38" strokeWidth="1.5"/><path d="M8 48 C22 45 22 18 48 8 C36 25 42 35 54 34 C67 32 68 18 58 14 C82 17 87 39 68 48 C49 58 29 43 32 29 M992 48 C978 45 978 18 952 8 C964 25 958 35 946 34 C933 32 932 18 942 14 C918 17 913 39 932 48 C951 58 971 43 968 29 M8 102 C22 105 22 132 48 142 C36 125 42 115 54 116 C67 118 68 132 58 136 C82 133 87 111 68 102 C49 92 29 107 32 121 M992 102 C978 105 978 132 952 142 C964 125 958 115 946 116 C933 118 932 132 942 136 C918 133 913 111 932 102 C951 92 971 107 968 121" fill="none" stroke="#e4bd70" strokeOpacity=".72" strokeWidth="2"/><circle cx="48" cy="8" r="3" fill="#f4d994"/><circle cx="952" cy="8" r="3" fill="#f4d994"/><circle cx="48" cy="142" r="3" fill="#f4d994"/><circle cx="952" cy="142" r="3" fill="#f4d994"/></svg>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#3b210b] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
-                <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#3b210b] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
+                <Users className="w-3.5 h-3.5 sm:w-4 h-4" />
               </div>
-              <span className="font-extrabold text-[#f6e8c7] text-base sm:text-xl tracking-wide font-['Cinzel',serif]">
+              <span className="font-extrabold text-[#f6e8c7] text-sm sm:text-base tracking-wide font-['Cinzel',serif]">
                 Arkadaşınla Oyna
               </span>
             </div>
-            <span className="text-xs sm:text-base font-black text-[#e9c77c] group-hover:translate-x-1 transition-transform">
+            <span className="text-[10px] sm:text-xs font-black text-[#e9c77c] group-hover:translate-x-1 transition-transform">
               GİRİŞ →
             </span>
           </button>
