@@ -1391,7 +1391,7 @@ export const Board: React.FC<BoardProps> = ({
         >
           {turn === 'black' && turnSecondsLeft !== null && (
             <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              <rect x="1" y="1" width="98" height="98" rx="12" fill="none" stroke="#10b981" strokeWidth="2" pathLength="100" strokeDasharray={`${turnProgress} 100`} strokeDashoffset="25" strokeLinecap="round" />
+              <rect x="1" y="1" width="98" height="98" rx="12" fill="none" stroke={turnSecondsLeft <= 5 ? "#ef4444" : "#10b981"} strokeWidth="2" pathLength="100" strokeDasharray={`${turnProgress} 100`} strokeDashoffset="25" strokeLinecap="round" style={{ transition: "stroke-dasharray 1s linear, stroke 150ms linear" }} />
             </svg>
           )}
           {turn === 'black' && (
@@ -1457,7 +1457,7 @@ export const Board: React.FC<BoardProps> = ({
         >
           {turn === 'white' && turnSecondsLeft !== null && (
             <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              <rect x="1" y="1" width="98" height="98" rx="12" fill="none" stroke="#10b981" strokeWidth="2" pathLength="100" strokeDasharray={`${turnProgress} 100`} strokeDashoffset="25" strokeLinecap="round" />
+              <rect x="1" y="1" width="98" height="98" rx="12" fill="none" stroke={turnSecondsLeft <= 5 ? "#ef4444" : "#10b981"} strokeWidth="2" pathLength="100" strokeDasharray={`${turnProgress} 100`} strokeDashoffset="25" strokeLinecap="round" style={{ transition: "stroke-dasharray 1s linear, stroke 150ms linear" }} />
             </svg>
           )}
           {turn === 'white' && (
