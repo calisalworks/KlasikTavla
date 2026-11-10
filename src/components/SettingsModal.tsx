@@ -206,7 +206,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <p className="text-[10px] text-amber-400/70 mt-1">Aktif kanallar oyun ekranındaki sağ ve sol oklarla seçilebilir. Pasif kanallar geçiş sırasında atlanır.</p>
                 <div className="flex justify-between items-center mt-2 text-[10px] text-amber-300/80">
                   <span>{enabledRadioStations.length} / {RADIO_STATIONS.length} kanal aktif</span>
-                  <button onClick={() => RADIO_STATIONS.forEach((station) => { if (!enabledRadioStations.includes(station.id)) onToggleRadioStation(station.id); })} className="underline underline-offset-2 hover:text-amber-100">Tümünü etkinleştir</button>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
