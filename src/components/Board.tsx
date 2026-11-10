@@ -27,13 +27,14 @@ import { CheckerPiece } from './CheckerPiece';
 import { DicePhysicsView } from './DicePhysicsView';
 import { AvatarDisplay } from './AvatarDisplay';
 import { OpeningRollOverlay } from './OpeningRollOverlay';
-import { RotateCcw, Check, Settings, Trophy, RefreshCw, Home, Maximize, AlertTriangle, Bot, Clock } from 'lucide-react';
+import { RotateCcw, Check, Settings, Trophy, RefreshCw, Home, Maximize, AlertTriangle, Bot, Clock, Volume2, VolumeX } from 'lucide-react';
 
 interface BoardProps {
   profile?: UserProfile;
   settings: GameSettings;
   targetScore: TargetScore;
   onOpenSettings: () => void;
+  onToggleMusic: () => void;
   onOpenRules: () => void;
   onReturnToMenu: () => void;
   onToggleFullscreen: () => void;
@@ -56,6 +57,7 @@ export const Board: React.FC<BoardProps> = ({
   settings,
   targetScore,
   onOpenSettings,
+  onToggleMusic,
   onOpenRules,
   onReturnToMenu,
   onToggleFullscreen,
@@ -1465,6 +1467,15 @@ export const Board: React.FC<BoardProps> = ({
                 className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300/80 hover:text-amber-200 border border-amber-700/40 shadow cursor-pointer transition-colors"
               >
                 <Maximize className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                onClick={onToggleMusic}
+                title={settings.ambientSound ? 'Arka Plan Müziğini Kapat' : 'Arka Plan Müziğini Aç'}
+                aria-label={settings.ambientSound ? 'Arka Plan Müziğini Kapat' : 'Arka Plan Müziğini Aç'}
+                className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300/80 hover:text-amber-200 border border-amber-700/40 shadow cursor-pointer transition-colors"
+              >
+                {settings.ambientSound ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
               </button>
 
               <button
