@@ -159,6 +159,7 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
             dice={[die]}
             isRolling={rolling}
             throwSide={isMySide ? 'right' : 'left'}
+            impactOffset={152}
             canRoll={false}
             onRollClick={() => undefined}
             className="scale-90"
