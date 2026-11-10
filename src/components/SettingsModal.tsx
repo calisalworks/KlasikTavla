@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { GameSettings } from '../types/game';
+import { RADIO_STATIONS } from './RadioControls';
 import {
   X,
   Volume2,
@@ -10,6 +11,7 @@ import {
   BookOpen,
   Sliders,
   CheckCircle2,
+  Radio,
 } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -17,6 +19,8 @@ interface SettingsModalProps {
   onClose: () => void;
   settings: GameSettings;
   onUpdateSettings: (newSettings: Partial<GameSettings>) => void;
+  enabledRadioStations: string[];
+  onToggleRadioStation: (stationId: string) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -24,8 +28,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   settings,
   onUpdateSettings,
+  enabledRadioStations,
+  onToggleRadioStation,
 }) => {
-  const [activeTab, setActiveTab] = useState<'SETTINGS' | 'RULES'>('SETTINGS');
+  const [activeTab, setActiveTab] = useState<'SETTINGS' | 'RADIO' | 'RULES'>('SETTINGS');
 
   if (!isOpen) return null;
 
@@ -47,6 +53,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             >
               <Sliders className="w-3.5 h-3.5" />
               <span>Ayarlar</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('RADIO')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'RADIO'
+                  ? 'bg-amber-700 text-white shadow border border-amber-400/50'
+                  : 'text-amber-300/70 hover:text-amber-200 hover:bg-amber-900/40'
+              }`}
+            >
+              <Radio className="w-3.5 h-3.5" />
+              <span>Radyo</span>
             </button>
 
             <button
@@ -179,6 +197,35 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </button>
               </div>
             </>
+          ) : activeTab === 'RADIO' ? (
+            <div className="space-y-2.5 text-amber-200/90 pr-1">
+              <div className="p-3 rounded-xl bg-[#1c0d05] border border-amber-900/50">
+                <div className="flex items-center gap-2 text-amber-300 font-bold text-sm">
+                  <Radio className="w-4 h-4" /> Radyo Kanalları
+                </div>
+                <p className="text-[10px] text-amber-400/70 mt-1">Aktif kanallar oyun ekranındaki sağ ve sol oklarla seçilebilir. Pasif kanallar geçiş sırasında atlanır.</p>
+                <div className="flex justify-between items-center mt-2 text-[10px] text-amber-300/80">
+                  <span>{enabledRadioStations.length} / {RADIO_STATIONS.length} kanal aktif</span>
+                  <button onClick={() => RADIO_STATIONS.forEach((station) => { if (!enabledRadioStations.includes(station.id)) onToggleRadioStation(station.id); })} className="underline underline-offset-2 hover:text-amber-100">Tümünü etkinleştir</button>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {RADIO_STATIONS.map((station) => {
+                  const enabled = enabledRadioStations.includes(station.id);
+                  return (
+                    <div key={station.id} className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#1c0d05] border border-amber-900/50">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-[11px] text-amber-100">{station.name}</div>
+                        <div className="text-[9px] text-amber-400/60">{enabled ? 'Kanal kullanılabilir' : 'Kanal devre dışı'}</div>
+                      </div>
+                      <button type="button" role="switch" aria-checked={enabled} aria-label={`${station.name} kanalını ${enabled ? 'pasif' : 'aktif'} yap`} onClick={() => onToggleRadioStation(station.id)} className={`w-10 h-6 rounded-full p-0.5 transition-colors cursor-pointer border shrink-0 ${enabled ? 'bg-amber-600 border-amber-400' : 'bg-stone-800 border-stone-600'}`}>
+                        <span className={`block w-4 h-4 rounded-full bg-white shadow transform transition-transform ${enabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           ) : (
             /* RULES TAB */
             <div className="space-y-2.5 text-amber-200/90 pr-1">
