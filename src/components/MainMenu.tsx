@@ -92,8 +92,23 @@ export const MainMenu: React.FC<MainMenuProps> = ({
       <div className="pointer-events-none absolute inset-3 sm:inset-5 border border-amber-700/50 shadow-[inset_0_0_45px_rgba(0,0,0,.9),0_0_18px_rgba(180,123,48,.12)] rounded-sm" />
       <div className="pointer-events-none absolute inset-5 sm:inset-8 border border-amber-300/15 rounded-sm" />
       <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[70vw] h-[50vh] rounded-full bg-amber-500/5 blur-3xl" />
-      <div className="pointer-events-none absolute left-5 bottom-5 text-amber-700/50 text-5xl sm:text-7xl font-serif">❧</div>
-      <div className="pointer-events-none absolute right-5 top-20 rotate-180 text-amber-700/50 text-5xl sm:text-7xl font-serif">❧</div>
+      <svg aria-hidden="true" className="pointer-events-none absolute inset-0 w-full h-full opacity-75" viewBox="0 0 1200 800" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="menuGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fff0b0"/><stop offset=".38" stopColor="#c99543"/><stop offset=".72" stopColor="#7b4b1b"/><stop offset="1" stopColor="#f3d88a"/></linearGradient>
+          <pattern id="menuDamask" width="100" height="100" patternUnits="userSpaceOnUse">
+            <path d="M50 5 C68 20 68 32 50 50 C32 32 32 20 50 5 M50 95 C32 80 32 68 50 50 C68 68 68 80 50 95 M5 50 C20 32 32 32 50 50 C32 68 20 68 5 50 M95 50 C80 68 68 68 50 50 C68 32 80 32 95 50" fill="none" stroke="#b68a4b" strokeOpacity=".13" strokeWidth="1.1"/>
+            <circle cx="50" cy="50" r="4" fill="none" stroke="#d8b56e" strokeOpacity=".12"/>
+          </pattern>
+        </defs>
+        <rect width="1200" height="800" fill="url(#menuDamask)"/>
+        <rect x="18" y="18" width="1164" height="764" rx="3" fill="none" stroke="url(#menuGold)" strokeOpacity=".65" strokeWidth="1.5"/>
+        <rect x="25" y="25" width="1150" height="750" rx="2" fill="none" stroke="#e5c47d" strokeOpacity=".22"/>
+        {[[30,30,1,1],[1170,30,-1,1],[30,770,1,-1],[1170,770,-1,-1]].map(([x,y,sx,sy],i)=><g key={i} transform={`translate(${x} ${y}) scale(${sx} ${sy})`} fill="none" stroke="url(#menuGold)" strokeWidth="2">
+          <path d="M0 105 C5 55 20 20 75 0 C45 28 43 48 62 58 C82 67 95 42 78 28 C112 38 112 75 83 86 C57 96 33 77 39 55 C15 70 14 91 0 105Z"/>
+          <path d="M8 82 C28 70 31 45 17 31 C43 38 49 60 35 76 M54 13 C69 20 73 34 68 45 M16 105 C30 93 47 93 59 101"/>
+          <circle cx="78" cy="28" r="4" fill="#d6ae60" stroke="none"/>
+        </g>)}
+      </svg>
       {/* Top-Left Corner: Profile Avatar, Details & Google Login/Logout */}
       <div className="absolute top-3 left-3 z-30 flex items-center gap-2">
         <div
@@ -198,7 +213,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
       <div className="relative z-10 w-full max-w-3xl px-2 sm:px-5 py-2 sm:py-4 flex flex-col items-center">
         {/* Header / Title (Küçültülmüş ve yukarı taşınmış Klasik Tavla) */}
         <div className="text-center mb-5 sm:mb-7 mt-0.5 relative">
-          <div className="flex items-center justify-center gap-3 text-amber-300/90 text-[10px] sm:text-xs tracking-[.45em] mb-1"><span className="w-12 sm:w-24 h-px bg-gradient-to-r from-transparent to-amber-500/80" />✦ ❖ ✦<span className="w-12 sm:w-24 h-px bg-gradient-to-l from-transparent to-amber-500/80" /></div>
+          <svg aria-hidden="true" className="mx-auto mb-1 w-52 sm:w-80 h-8 text-amber-300" viewBox="0 0 420 55" fill="none"><path d="M8 29 H145 C164 29 174 10 190 10 C203 10 205 24 210 29 C215 24 217 10 230 10 C246 10 256 29 275 29 H412 M25 36 H155 M265 36 H395" stroke="#c99a4c" strokeWidth="1.5"/><path d="M210 2 C196 18 196 37 210 49 C224 37 224 18 210 2Z" stroke="#f1d58d" strokeWidth="1.5"/><path d="M185 29 Q197 12 210 29 Q223 12 235 29 M198 40 Q210 50 222 40" stroke="#e4bd70" strokeWidth="1.4"/><circle cx="210" cy="28" r="4" fill="#e7c16e"/><circle cx="145" cy="29" r="2.5" fill="#e7c16e"/><circle cx="275" cy="29" r="2.5" fill="#e7c16e"/></svg>
           <h1 className="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-[#fff4c9] via-[#e6c477] to-[#9d6928] tracking-[.12em] font-['Cinzel',serif] drop-shadow-[0_3px_8px_rgba(0,0,0,.95)]">
             KLASİK TAVLA
           </h1>
@@ -246,6 +261,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             }}
             className="w-full group relative py-4 sm:py-5 px-5 sm:px-7 rounded-xl bg-gradient-to-r from-[#160e0b] via-[#28160f] to-[#100b09] hover:from-[#2a1a11] hover:to-[#1c100b] text-amber-50 font-bold shadow-[0_8px_22px_rgba(0,0,0,.75),inset_0_1px_3px_rgba(255,230,170,.12)] border-2 border-[#b88a43] outline outline-1 outline-offset-[-6px] outline-amber-200/20 active:scale-[.99] transition-all flex items-center justify-between cursor-pointer"
           >
+            <svg aria-hidden="true" className="pointer-events-none absolute inset-0 w-full h-full rounded-xl" viewBox="0 0 1000 150" preserveAspectRatio="none"><rect x="5" y="5" width="990" height="140" rx="13" fill="none" stroke="#f1d18a" strokeOpacity=".38" strokeWidth="1.5"/><path d="M8 48 C22 45 22 18 48 8 C36 25 42 35 54 34 C67 32 68 18 58 14 C82 17 87 39 68 48 C49 58 29 43 32 29 M992 48 C978 45 978 18 952 8 C964 25 958 35 946 34 C933 32 932 18 942 14 C918 17 913 39 932 48 C951 58 971 43 968 29 M8 102 C22 105 22 132 48 142 C36 125 42 115 54 116 C67 118 68 132 58 136 C82 133 87 111 68 102 C49 92 29 107 32 121 M992 102 C978 105 978 132 952 142 C964 125 958 115 946 116 C933 118 932 132 942 136 C918 133 913 111 932 102 C951 92 971 107 968 121" fill="none" stroke="#e4bd70" strokeOpacity=".72" strokeWidth="2"/><circle cx="48" cy="8" r="3" fill="#f4d994"/><circle cx="952" cy="8" r="3" fill="#f4d994"/><circle cx="48" cy="142" r="3" fill="#f4d994"/><circle cx="952" cy="142" r="3" fill="#f4d994"/></svg>
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#3b210b] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
                 <Bot className="w-5 h-5" />
@@ -267,6 +283,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             }}
             className="w-full group relative py-4 sm:py-5 px-5 sm:px-7 rounded-xl bg-gradient-to-r from-[#061b16] via-[#073b2d] to-[#061a15] hover:from-[#0b3025] hover:to-[#08271e] text-white font-bold shadow-[0_8px_22px_rgba(0,0,0,.75),inset_0_1px_3px_rgba(255,230,170,.12)] border-2 border-[#b88a43] outline outline-1 outline-offset-[-6px] outline-amber-200/20 active:scale-[.99] transition-all flex items-center justify-between cursor-pointer"
           >
+            <svg aria-hidden="true" className="pointer-events-none absolute inset-0 w-full h-full rounded-xl" viewBox="0 0 1000 150" preserveAspectRatio="none"><rect x="5" y="5" width="990" height="140" rx="13" fill="none" stroke="#f1d18a" strokeOpacity=".38" strokeWidth="1.5"/><path d="M8 48 C22 45 22 18 48 8 C36 25 42 35 54 34 C67 32 68 18 58 14 C82 17 87 39 68 48 C49 58 29 43 32 29 M992 48 C978 45 978 18 952 8 C964 25 958 35 946 34 C933 32 932 18 942 14 C918 17 913 39 932 48 C951 58 971 43 968 29 M8 102 C22 105 22 132 48 142 C36 125 42 115 54 116 C67 118 68 132 58 136 C82 133 87 111 68 102 C49 92 29 107 32 121 M992 102 C978 105 978 132 952 142 C964 125 958 115 946 116 C933 118 932 132 942 136 C918 133 913 111 932 102 C951 92 971 107 968 121" fill="none" stroke="#e4bd70" strokeOpacity=".72" strokeWidth="2"/><circle cx="48" cy="8" r="3" fill="#f4d994"/><circle cx="952" cy="8" r="3" fill="#f4d994"/><circle cx="48" cy="142" r="3" fill="#f4d994"/><circle cx="952" cy="142" r="3" fill="#f4d994"/></svg>
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#174132] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
                 <Globe className="w-5 h-5" />
@@ -288,6 +305,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             }}
             className="w-full group relative py-4 sm:py-5 px-5 sm:px-7 rounded-xl bg-gradient-to-r from-[#1b100c] via-[#352014] to-[#130b08] hover:from-[#352014] hover:to-[#21130c] text-white font-bold shadow-[0_8px_22px_rgba(0,0,0,.75),inset_0_1px_3px_rgba(255,230,170,.12)] border-2 border-[#b88a43] outline outline-1 outline-offset-[-6px] outline-amber-200/20 active:scale-[.99] transition-all flex items-center justify-between cursor-pointer"
           >
+            <svg aria-hidden="true" className="pointer-events-none absolute inset-0 w-full h-full rounded-xl" viewBox="0 0 1000 150" preserveAspectRatio="none"><rect x="5" y="5" width="990" height="140" rx="13" fill="none" stroke="#f1d18a" strokeOpacity=".38" strokeWidth="1.5"/><path d="M8 48 C22 45 22 18 48 8 C36 25 42 35 54 34 C67 32 68 18 58 14 C82 17 87 39 68 48 C49 58 29 43 32 29 M992 48 C978 45 978 18 952 8 C964 25 958 35 946 34 C933 32 932 18 942 14 C918 17 913 39 932 48 C951 58 971 43 968 29 M8 102 C22 105 22 132 48 142 C36 125 42 115 54 116 C67 118 68 132 58 136 C82 133 87 111 68 102 C49 92 29 107 32 121 M992 102 C978 105 978 132 952 142 C964 125 958 115 946 116 C933 118 932 132 942 136 C918 133 913 111 932 102 C951 92 971 107 968 121" fill="none" stroke="#e4bd70" strokeOpacity=".72" strokeWidth="2"/><circle cx="48" cy="8" r="3" fill="#f4d994"/><circle cx="952" cy="8" r="3" fill="#f4d994"/><circle cx="48" cy="142" r="3" fill="#f4d994"/><circle cx="952" cy="142" r="3" fill="#f4d994"/></svg>
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#3b210b] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
                 <Users className="w-5 h-5" />
