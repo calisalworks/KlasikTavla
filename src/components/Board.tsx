@@ -1456,9 +1456,10 @@ export const Board: React.FC<BoardProps> = ({
               <button
                 onClick={handleMenuExit}
                 title="Ana Menüye Dön"
-                className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300/80 hover:text-amber-200 border border-amber-700/40 shadow cursor-pointer transition-colors"
+                className="px-2 py-1.5 rounded-lg bg-emerald-950/90 hover:bg-emerald-800 text-emerald-300 hover:text-emerald-100 border border-emerald-500/70 shadow-[0_0_8px_rgba(16,185,129,0.18)] cursor-pointer transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap"
               >
-                <Home className="w-3.5 h-3.5" />
+                <Home className="w-3.5 h-3.5 shrink-0" />
+                <span className="text-[10px] font-bold">Menüye Dön</span>
               </button>
 
               <button
