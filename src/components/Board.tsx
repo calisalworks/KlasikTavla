@@ -1570,11 +1570,11 @@ export const Board: React.FC<BoardProps> = ({
         </div>
 
         {/* Master Board */}
-        <div className="flex-1 relative rounded-2xl p-2 bg-gradient-to-b from-[#874b21] via-[#6a3815] to-[#4e270b] border-4 border-[#3b1c06] shadow-[0_15px_35px_rgba(0,0,0,0.8),inset_0_2px_4px_rgba(255,255,255,0.2)] flex flex-row overflow-hidden">
-          <div className="flex-1 relative rounded-xl bg-gradient-to-b from-[#dcb274] via-[#cca062] to-[#b88c4e] border-2 border-[#542d11] shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)] flex flex-row overflow-hidden">
+        <div className="flex-1 relative rounded-2xl p-2 bg-gradient-to-br from-[#6f3518] via-[#3f1d10] to-[#24100b] border-4 border-[#2b130b] shadow-[0_18px_38px_rgba(0,0,0,0.82),inset_0_2px_5px_rgba(255,225,170,0.22)] flex flex-row overflow-hidden">
+          <div className="flex-1 relative rounded-xl bg-[linear-gradient(135deg,#9b6033_0%,#6c3d20_48%,#3b2116_100%)] border-2 border-[#b7864b] shadow-[inset_0_4px_14px_rgba(0,0,0,0.62),inset_0_1px_2px_rgba(255,238,200,0.32)] flex flex-row overflow-hidden">
             {/* Left Tray */}
-            <div className="flex-1 flex flex-col border-r border-[#693917]">
-              <div className="flex-1 flex flex-row border-b border-[#5e3213]/40">
+            <div className="flex-1 flex flex-col border-r border-[#bd8c4f]">
+              <div className="flex-1 flex flex-row border-b border-[#d1a56d]/45">
                 {[13, 14, 15, 16, 17, 18].map((pt, i) =>
                   renderTriangle(pt, true, i % 2 === 0)
                 )}
@@ -1587,7 +1587,7 @@ export const Board: React.FC<BoardProps> = ({
             </div>
 
             {/* Middle Bar */}
-            <div className="w-11 md:w-14 relative bg-gradient-to-r from-[#593014] via-[#48250d] to-[#593014] border-x-2 border-[#361905] shadow-[inset_0_2px_8px_rgba(0,0,0,0.8),0_0_10px_rgba(0,0,0,0.5)] flex flex-col justify-between items-center py-2 z-20 shrink-0">
+            <div className="w-11 md:w-14 relative bg-gradient-to-r from-[#2f170d] via-[#6b3b20] to-[#2f170d] border-x-2 border-[#361905] shadow-[inset_0_2px_8px_rgba(0,0,0,0.8),0_0_10px_rgba(0,0,0,0.5)] flex flex-col justify-between items-center py-2 z-20 shrink-0">
               <div className="w-8 h-4 rounded-sm bg-gradient-to-b from-[#fcd34d] via-[#d97706] to-[#92400e] border border-[#78350f] shadow-md flex items-center justify-around px-1">
                 <div className="w-1 h-1 rounded-full bg-[#451a03]" />
                 <div className="w-1.5 h-1.5 rounded-full bg-[#78350f]" />
@@ -1654,8 +1654,8 @@ export const Board: React.FC<BoardProps> = ({
             </div>
 
             {/* Right Tray */}
-            <div className="flex-1 flex flex-col border-l border-[#693917]">
-              <div className="flex-1 flex flex-row border-b border-[#5e3213]/40">
+            <div className="flex-1 flex flex-col border-l border-[#bd8c4f]">
+              <div className="flex-1 flex flex-row border-b border-[#d1a56d]/45">
                 {[19, 20, 21, 22, 23, 24].map((pt, i) =>
                   renderTriangle(pt, true, i % 2 === 0)
                 )}
