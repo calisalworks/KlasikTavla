@@ -40,6 +40,7 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { RadioControls } from './RadioControls';
+import { GameTips } from './GameTips';
 
 interface OnlineBoardProps {
   roomId: string;
@@ -48,6 +49,7 @@ interface OnlineBoardProps {
   onOpenSettings: () => void;
   onToggleMusic: () => void;
   isRadioPlaying: boolean;
+  hasEnabledRadioStations: boolean;
   radioChannel: number;
   onToggleRadio: () => void;
   onPreviousRadio: () => void;
@@ -77,6 +79,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   onOpenSettings,
   onToggleMusic,
   isRadioPlaying,
+  hasEnabledRadioStations,
   radioChannel,
   onToggleRadio,
   onPreviousRadio,
@@ -1358,13 +1361,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
       <div className="flex-1 flex flex-col p-1.5 md:p-2 bg-[#1b130e] overflow-hidden">
         {/* Top Status */}
         <div className="h-5 flex items-center justify-between px-3 text-xs text-amber-200/80 mb-0.5 select-none">
-          <div className="flex items-center gap-2 truncate">
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <span className="font-medium text-amber-100 truncate">{statusMessage}</span>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <RadioControls isPlaying={isRadioPlaying} stationIndex={radioChannel} onToggle={onToggleRadio} onPrevious={onPreviousRadio} onNext={onNextRadio} />
+          <div className="flex items-center justify-end gap-2 sm:gap-3 shrink-0">
+            <RadioControls isPlaying={isRadioPlaying} stationIndex={radioChannel} hasEnabledStations={hasEnabledRadioStations} onToggle={onToggleRadio} onPrevious={onPreviousRadio} onNext={onNextRadio} />
             <button onClick={onToggleMusic} title={settings.ambientSound ? "Müziği Kapat" : "Müziği Aç"} aria-label={settings.ambientSound ? "Müziği Kapat" : "Müziği Aç"} className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300 border border-amber-700/40 shadow cursor-pointer">{settings.ambientSound ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}</button>
             <button onClick={onOpenSettings} title="Ayarlar" aria-label="Ayarlar" className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300 border border-amber-700/40 shadow cursor-pointer"><Settings className="w-3.5 h-3.5" /></button>
             <div className="flex items-center gap-1.5 sm:gap-2 mr-1 sm:mr-2">
@@ -1698,7 +1696,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
         {/* Bottom hint and Undo bar */}
         <div className="h-6 flex items-center justify-between px-3 mt-0.5 text-[11px] text-amber-300/80 select-none bg-[#241710]/60 rounded-lg border border-amber-900/30">
           <div className="flex items-center gap-3">
-            <span>{room.status === 'waiting' ? 'Rakip oyuncu bekleniyor...' : 'Taşı sürükleyerek veya hedef haneye dokunarak oynayın.'}</span>
+            <GameTips />
 
           </div>
           <div>Masa: <strong>{room.name}</strong></div>
