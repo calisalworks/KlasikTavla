@@ -436,12 +436,12 @@ export const Board: React.FC<BoardProps> = ({
     if (win === 'white') {
       setIsAITurn(false);
       isAITurnRef.current = false;
-      setStatusMessage(`Oyuna siz başlıyorsunuz (${whiteDie} > ${blackDie})! İlk hamlenizi yapın.`);
+      setStatusMessage(`Başlangıç zarını siz kazandınız (${whiteDie} > ${blackDie}). İlk hamle için yeniden zar atın.`);
       startTurnTimer('white');
       tavlaAudio.playTurnNotification();
     } else {
       setIsAITurn(true);
-      setStatusMessage(`Yapay Zeka oyuna başlıyor (${blackDie} > ${whiteDie})...`);
+      setStatusMessage(`Yapay Zeka başlangıç zarını kazandı (${blackDie} > ${whiteDie}); ilk hamlesi için yeniden zar atıyor...`);
       startTurnTimer('black');
     }
   };
@@ -608,29 +608,17 @@ export const Board: React.FC<BoardProps> = ({
     aiTimeoutsRef.current = [];
 
     const rollTimer = setTimeout(() => {
-      // If the AI won the opening roll, those two dice are already its first move.
-      const openingDiceAlreadySet = diceRef.current.length > 0 && diceRef.current.some((die) => !die.used);
-      if (!openingDiceAlreadySet) {
-        setIsRolling(true);
-        tavlaAudio.playDiceRoll();
-      }
+      setIsRolling(true);
+      tavlaAudio.playDiceRoll();
 
       const dropTimer = setTimeout(() => {
-        const aiDice = openingDiceAlreadySet
-          ? diceRef.current.map((die) => ({ ...die }))
-          : rollDice();
+        const aiDice = rollDice();
         setDice(aiDice);
         diceRef.current = aiDice;
-        if (!openingDiceAlreadySet) {
-          setIsRolling(false);
-          tavlaAudio.playDiceDrop();
-        }
+        setIsRolling(false);
+        tavlaAudio.playDiceDrop();
 
-        setStatusMessage(
-          openingDiceAlreadySet
-            ? `Rakip başlangıç zarlarıyla oynuyor: ${aiDice[0].value} - ${aiDice[1].value}`
-            : `Rakip zar attı: ${aiDice[0].value} - ${aiDice[1].value}`
-        );
+        setStatusMessage(`Rakip ilk hamlesi için zar attı: ${aiDice[0].value} - ${aiDice[1].value}`);
 
         const currentBoardSnapshot = cloneBoard(boardRefState.current);
         const bestSteps = findBestMovesForAI(currentBoardSnapshot, aiDice, settings.aiDifficulty);
