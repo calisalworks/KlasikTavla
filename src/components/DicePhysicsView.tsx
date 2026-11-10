@@ -75,21 +75,21 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       3: [0, 4, 8],
       4: [0, 2, 6, 8],
       5: [0, 2, 4, 6, 8],
-      6: [0, 2, 3, 5, 6, 8],
+      6: [0, 3, 6, 2, 5, 8],
     };
     const activePips = pipPositions[val] || [4];
 
     return (
-      <div className="grid grid-cols-3 grid-rows-3 w-full h-full p-0.5 gap-0.5 pointer-events-none" style={{ filter: blurred ? 'blur(1.35px)' : 'none' }}>
+      <div className="grid grid-cols-3 grid-rows-3 w-full h-full p-1 gap-0 pointer-events-none" style={{ filter: blurred ? 'blur(1.05px)' : 'none' }}>
         {Array.from({ length: 9 }).map((_, i) => (
           <div key={i} className="flex items-center justify-center">
             {activePips.includes(i) && (
               <div
-                className={`w-2 h-2 rounded-full ${
-                  val === 1
-                    ? 'bg-[#171411] shadow-[inset_0_1px_1.5px_rgba(0,0,0,0.8),0_0.5px_1px_rgba(255,255,255,0.4)]'
-                    : 'bg-[#18181b] shadow-[inset_0_1px_1.5px_rgba(0,0,0,0.8),0_0.5px_1px_rgba(255,255,255,0.4)]'
-                }`}
+                className="w-[5px] h-[5px] rounded-full"
+                style={{
+                  background: 'radial-gradient(circle at 34% 28%, #39352f 0%, #171411 58%, #080706 100%)',
+                  boxShadow: 'inset 0 1px 1.2px rgba(255,255,255,0.2), inset 0 -1px 1.4px rgba(0,0,0,0.95), 0 0.5px 0.5px rgba(255,255,255,0.28)',
+                }}
               />
             )}
           </div>
@@ -112,7 +112,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         // Every throw starts at the outer edge, never at the previous landing point.
         // The dice travel at a steady pace, hit the centre bar, then rebound at half speed.
         newStates.push({
-          x: throwSide === 'right' ? 90 : -90,
+          x: throwSide === 'right' ? 118 : -118,
           y: count === 1 ? 0 : (i === 0 ? -18 : 18),
           vx: throwSide === 'right' ? -190 : 190,
           vy: count === 1 ? 0 : (i === 0 ? -8 : 8),
@@ -247,9 +247,9 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           // Friction starts after the centre-bar rebound, not during the run-up.
           if (bounced) {
-            const friction = Math.exp(-3.0 * dt);
+            const friction = Math.exp(-1.3 * dt);
             vx *= friction;
-            vy *= Math.exp(-3.0 * dt);
+            vy *= Math.exp(-1.3 * dt);
             vRotZ *= Math.exp(-2.2 * dt);
           }
 
