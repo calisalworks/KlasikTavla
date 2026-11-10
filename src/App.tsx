@@ -199,13 +199,56 @@ export default function App() {
   };
 
   // General Settings (without target score)
-  const [settings, setSettings] = useState<GameSettings>({
-    soundEnabled: true,
-    ambientSound: false,
-    autoRoll: false,
-    highlightMoves: true,
-    aiDifficulty: 'medium',
+  const [settings, setSettings] = useState<GameSettings>(() => {
+    const defaults: GameSettings = {
+      soundEnabled: true,
+      ambientSound: false,
+      autoRoll: false,
+      highlightMoves: true,
+      aiDifficulty: 'medium',
+    };
+    try {
+      const saved = localStorage.getItem('klasik-tavla-settings');
+      return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
+    } catch {
+      return defaults;
+    }
   });
+
+  // Keep user preferences between sessions.
+  useEffect(() => {
+    try {
+      localStorage.setItem('klasik-tavla-settings', JSON.stringify(settings));
+    } catch {
+      // Storage may be unavailable in private browsing.
+    }
+  }, [settings]);
+
+  // Start music only after the brand splash; pause it whenever the app is backgrounded.
+  useEffect(() => {
+    tavlaAudio.setAmbientEnabled(settings.ambientSound && !showBrandSplash);
+  }, [settings.ambientSound, showBrandSplash]);
+
+  useEffect(() => {
+    const updateVisibility = () => tavlaAudio.setAppVisible(!document.hidden);
+    updateVisibility();
+    document.addEventListener('visibilitychange', updateVisibility);
+    return () => document.removeEventListener('visibilitychange', updateVisibility);
+  }, []);
+
+  // Retry playback after the first user gesture if the browser blocks autoplay.
+  useEffect(() => {
+    if (!settings.ambientSound || showBrandSplash) return;
+    const retry = () => tavlaAudio.retryBackgroundMusic();
+    window.addEventListener('pointerdown', retry, { once: true });
+    window.addEventListener('touchstart', retry, { once: true });
+    window.addEventListener('keydown', retry, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', retry);
+      window.removeEventListener('touchstart', retry);
+      window.removeEventListener('keydown', retry);
+    };
+  }, [settings.ambientSound, showBrandSplash]);
 
   // Fullscreen support
   const toggleFullscreen = () => {
@@ -328,6 +371,7 @@ export default function App() {
             settings={settings}
             targetScore={singlePlayerTargetScore}
             onOpenSettings={() => setIsSettingsOpen(true)}
+            onToggleMusic={() => setSettings((prev) => ({ ...prev, ambientSound: !prev.ambientSound }))}
             onOpenRules={() => setIsRulesOpen(true)}
             onReturnToMenu={() => setActiveView('MENU')}
             onToggleFullscreen={toggleFullscreen}
@@ -342,6 +386,7 @@ export default function App() {
             profile={profile}
             settings={settings}
             onOpenSettings={() => setIsSettingsOpen(true)}
+            onToggleMusic={() => setSettings((prev) => ({ ...prev, ambientSound: !prev.ambientSound }))}
             onOpenRules={() => setIsSettingsOpen(true)}
             onLeaveRoom={() => {
               setOnlineRoomId(null);
