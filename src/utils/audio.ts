@@ -40,7 +40,7 @@ class TavlaAudioManager {
     if (this.ctx && !this.masterGainNode) {
       this.masterGainNode = this.ctx.createGain();
       this.masterGainNode.gain.value = this.masterVolume;
-      this.masterGainNode.connect(this.masterGainNode ?? this.ctx.destination);
+      this.masterGainNode.connect(this.ctx.destination);
     }
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume().catch(() => {});
