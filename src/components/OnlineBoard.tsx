@@ -393,7 +393,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
                     `Zarlar: ${msg.dice.map((d: Die) => d.value).join(' - ')}`
                   );
                 }
-              }, 1350);
+              }, 1750);
               break;
             }
 
@@ -1505,8 +1505,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             <div
               className="absolute inset-y-0 w-36 pointer-events-none flex flex-col items-center justify-center z-[999]"
               style={isMyTurn
-                ? { left: 'calc(50% - 4.5rem)' }
-                : { right: 'calc(50% - 4.5rem)' }}
+                ? { left: 'calc(50% + 22px)' }
+                : { right: 'calc(50% + 22px)' }}
             >
               <div className="pointer-events-none flex flex-col items-center">
                 {/* 15-Second Turn Countdown Badge on top of the thrown dice */}
