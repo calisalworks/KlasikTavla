@@ -725,7 +725,7 @@ export const Board: React.FC<BoardProps> = ({
 
           aiTimeoutsRef.current.push(startTimer);
         });
-      }, openingDiceAlreadySet ? 0 : 2000);
+      }, 2000);
       aiTimeoutsRef.current.push(dropTimer);
     }, 800);
 
@@ -1640,7 +1640,7 @@ export const Board: React.FC<BoardProps> = ({
             )}
 
             {/* Hide normal game dice completely until the one-die opening roll is completed. */}
-            {openingRoll?.isComplete && (
+            {openingRoll?.isComplete && !showExitConfirm && (
               <div
                 className="absolute inset-y-0 w-36 pointer-events-none flex items-center justify-center z-[999]"
                 style={turn === 'white'
