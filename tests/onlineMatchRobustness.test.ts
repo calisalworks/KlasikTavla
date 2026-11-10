@@ -243,6 +243,45 @@ async function runOnlineRobustnessSuite() {
   expect(secondTurnAutomaticMoves > 0, 'Otomatik zarın ardından en az bir hamle yapıldı', 'Hamle sayısı: ' + secondTurnAutomaticMoves);
   expect(secondTurnHandedOff.turn !== secondTurnColor, 'Otomatik zar ve hamlelerden sonra sıra rakibe geçti');
   expect(secondTurnHandedOff.dice.length === 0, 'Otomatik tur sonunda zarlar temizlendi');
+
+  // --- TEST 5: ART ARDA GELEN NORMAL TURLARDA ZAMANLAYICI KAYBOLMUYOR ---
+  console.log('\\n--- 5. Art Arda İki Normal Tur: Her Seferinde Yeni Zar, Otomatik Hamle ve Sıra Devri ---');
+  let previousTurn = secondTurnHandedOff.turn;
+  for (let cycle = 1; cycle <= 2; cycle++) {
+    let rollReceived = false;
+    let moveCount = 0;
+    let nextRoom: any = null;
+    const cyclePromise = new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        wsBoard1.off('message', handler);
+        wsBoard2.off('message', handler);
+        reject(new Error('Art arda otomatik tur ' + cycle + ' tamamlanmadı; sıra devri veya zar olayı eksik.'));
+      }, 30000);
+      const handler = (data: any) => {
+        const msg = JSON.parse(data.toString());
+        if (msg.type === 'game:rolled' && msg.autoPlay === true && msg.room?.turn === previousTurn) {
+          rollReceived = true;
+          expect(msg.dice?.length === 2, 'Tur ' + cycle + ': sunucu yeni iki zar gönderdi');
+        }
+        if (msg.type === 'game:moved' && msg.autoPlay === true && msg.room?.turn === previousTurn) moveCount++;
+        if (msg.type === 'game:turn_passed' && msg.room?.turn !== previousTurn) {
+          nextRoom = msg.room;
+          wsBoard1.off('message', handler);
+          wsBoard2.off('message', handler);
+          clearTimeout(timeout);
+          resolve();
+        }
+      };
+      wsBoard1.on('message', handler);
+      wsBoard2.on('message', handler);
+    });
+    await cyclePromise;
+    expect(rollReceived, 'Tur ' + cycle + ': otomatik zar olayı geldi');
+    expect(nextRoom?.turn !== previousTurn, 'Tur ' + cycle + ': sıra rakibe geçti');
+    expect(nextRoom?.dice?.length === 0, 'Tur ' + cycle + ': eski zarlar temizlendi');
+    log('Tur ' + cycle + ': otomatik hamle sayısı', 'INFO', String(moveCount));
+    previousTurn = nextRoom.turn;
+  }
   // --- TEST 4: KRİTİK TEST - İLK ZARDAN SONRA "RAKİBİNİZ ÇIKTI" HATASI OLUŞMUYOR MU? ---
   console.log('\n--- 4. Öncelikli Hata Doğrulaması: 25 Saniye Boyunca Sahte Çıkış/Terk Yok ---');
   let falseAbandonDetected = false;
