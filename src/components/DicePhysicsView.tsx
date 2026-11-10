@@ -151,17 +151,19 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         newStates.push({
           // Same repeatable throw path on every roll; only the settled face changes.
           x: throwSide === 'right' ? 58 : -58,
-          y: (i - (count - 1) / 2) * 40,
-          vx: throwSide === 'right' ? -520 : 520,
-          vy: 0,
-          z: 18,
-          vz: 75,
+          y: (i - (count - 1) / 2) * 34,
+          vx: throwSide === 'right' ? -650 : 650,
+          vy: count === 1 ? 0 : (i === 0 ? -95 : 95),
+          z: 10,
+          vz: 105,
+          // Keep the dice almost flat: spin the visible surface instead
+          // of tumbling the cubes through all six sides.
           rotX: 0,
           rotY: 0,
-          rotZ: 0,
-          vRotX: 1320,
-          vRotY: throwSide === 'right' ? 900 : -900,
-          vRotZ: 540,
+          rotZ: i === 0 ? -12 : 12,
+          vRotX: 0,
+          vRotY: 0,
+          vRotZ: i === 0 ? 760 : -690,
           displayValue: 1,
           settled: false,
         });
@@ -191,8 +193,8 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       setPhysicsStates(visibleDice.map((die, i) => {
         const target = FACE_ROTATIONS[die.value] || { rx: 0, ry: 0 };
         return {
-          x: throwSide === 'right' ? -34 : 34,
-          y: (i - (visibleDice.length - 1) / 2) * 42,
+          x: (throwSide === 'right' ? 22 : -22) + (i === 0 ? -9 : 9),
+          y: (i - (visibleDice.length - 1) / 2) * 30 + (i === 0 ? -7 : 7),
           vx: 0,
           vy: 0,
           z: 0,
@@ -215,8 +217,10 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       const target = FACE_ROTATIONS[value] || { rx: 0, ry: 0 };
       return {
         ...state,
-        x: throwSide === 'right' ? -34 : 34,
-        y: (i - (visibleDice.length - 1) / 2) * 42,
+        // Preserve where each die actually bounced; do not snap them into
+        // a perfectly aligned pair when the result arrives.
+        x: state.x,
+        y: state.y,
         z: 0,
         rotX: target.rx,
         rotY: target.ry,
@@ -289,13 +293,6 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           vRotY *= Math.pow(0.8, dt * 10);
           vRotZ *= Math.pow(0.85, dt * 10);
 
-          // Rapid tumbling display changes while in the air
-          if (Math.abs(vRotX) + Math.abs(vRotY) > 200) {
-            if (Math.random() < 0.25) {
-              displayValue = Math.floor(Math.random() * 6) + 1;
-            }
-          }
-
           // Table Collision Boundary (z = 0)
           if (z <= 0) {
             z = 0;
@@ -322,22 +319,36 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           // Table border bounds (keep dice inside central playing area)
           // Keep the dice within the visible right-side tray while allowing natural scatter.
-          const minX = throwSide === 'right' ? -48 : -64;
-          const maxX = throwSide === 'right' ? 64 : 48;
-          const maxY = 30;
-          if (x < minX) {
-            x = minX;
-            vx = Math.abs(vx) * 0.03; // gentle rebound away from the center bar
-          } else if (x > maxX) {
-            x = maxX;
-            vx = -Math.abs(vx) * 0.03;
+          const centerEdge = throwSide === 'right' ? -8 : 8;
+          const outerEdge = throwSide === 'right' ? 64 : -64;
+          const maxY = 38;
+
+          // The centre bar is a real impact point: kick the dice back with
+          // enough energy to make the rebound obvious, then let friction settle them.
+          if (throwSide === 'right' && x < centerEdge) {
+            x = centerEdge;
+            vx = Math.abs(vx) * 0.68;
+            vy += (idx === 0 ? -48 : 48);
+          } else if (throwSide === 'left' && x > centerEdge) {
+            x = centerEdge;
+            vx = -Math.abs(vx) * 0.68;
+            vy += (idx === 0 ? 48 : -48);
           }
+
+          if (throwSide === 'right' && x > outerEdge) {
+            x = outerEdge;
+            vx = -Math.abs(vx) * 0.18;
+          } else if (throwSide === 'left' && x < outerEdge) {
+            x = outerEdge;
+            vx = Math.abs(vx) * 0.18;
+          }
+
           if (y < -maxY) {
             y = -maxY;
-            vy = -vy * 0.5;
+            vy = Math.abs(vy) * 0.28;
           } else if (y > maxY) {
             y = maxY;
-            vy = -vy * 0.5;
+            vy = -Math.abs(vy) * 0.28;
           }
 
           return {
@@ -385,7 +396,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     zHeight: number,
     rolling: boolean
   ) => {
-    const size = 32; // Compact but more legible 3D dice
+    const size = 29; // Slightly smaller dice for a cleaner landing
     const half = size / 2;
 
     // Shadow calculation based on height off the board (zHeight)
@@ -425,7 +436,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `translateZ(${half}px)` }}
           >
-            {!rolling && renderFacePips(1)}
+            {renderFacePips(1)}
           </div>
 
           {/* Back Face (6) */}
@@ -435,7 +446,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `rotateY(180deg) translateZ(${half}px)` }}
           >
-            {!rolling && renderFacePips(6)}
+            {renderFacePips(6)}
           </div>
 
           {/* Right Face (3) */}
@@ -445,7 +456,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `rotateY(90deg) translateZ(${half}px)` }}
           >
-            {!rolling && renderFacePips(3)}
+            {renderFacePips(3)}
           </div>
 
           {/* Left Face (4) */}
@@ -455,7 +466,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `rotateY(-90deg) translateZ(${half}px)` }}
           >
-            {!rolling && renderFacePips(4)}
+            {renderFacePips(4)}
           </div>
 
           {/* Top Face (2) */}
@@ -465,7 +476,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `rotateX(90deg) translateZ(${half}px)` }}
           >
-            {!rolling && renderFacePips(2)}
+            {renderFacePips(2)}
           </div>
 
           {/* Bottom Face (5) */}
@@ -475,7 +486,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `rotateX(-90deg) translateZ(${half}px)` }}
           >
-            {!rolling && renderFacePips(5)}
+            {renderFacePips(5)}
           </div>
         </div>
 
