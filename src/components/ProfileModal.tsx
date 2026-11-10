@@ -402,7 +402,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             </div>
 
             {/* Hazır Profil Fotoğrafları */}
-            <div className="grid grid-cols-8 sm:grid-cols-12 lg:grid-cols-16 gap-2 pt-1">
+            <div className="grid grid-cols-8 sm:grid-cols-10 lg:grid-cols-12 gap-2 pt-1">
               {PRESET_AVATARS.map((preset) => {
                 const isSelected = profile.avatar === preset.id;
                 return (
