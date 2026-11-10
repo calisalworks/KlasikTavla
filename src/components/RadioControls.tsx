@@ -6,7 +6,7 @@ export const RADIO_STATIONS = [
   { name: 'Süper FM', url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/SUPER_FM.mp3' },
   { name: 'JoyTürk', url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_TURK_ITUNES.mp3' },
   { name: 'Metro FM', url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/METRO_FM.mp3' },
-  { name: 'Number One Türk', url: 'https://19643.live.streamtheworld.com/NUMBER1TURK_FMAAC.aac' },
+  { name: 'Alem FM', url: 'https://turkmedya.radyotvonline.net/alemfmaac' },
 ] as const;
 
 interface RadioControlsProps {
