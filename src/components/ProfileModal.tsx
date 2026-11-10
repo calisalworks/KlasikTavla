@@ -149,13 +149,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-start gap-3">
                 {/* Büyük profil çerçevesi: fotoğraf üstte, oyuncu adı hemen altında */}
-                <div className="relative flex min-w-[116px] flex-col items-center gap-1.5 rounded-xl border border-amber-600/70 bg-gradient-to-b from-[#38200f] to-[#1b0d05] px-3 py-2 shadow-[0_0_14px_rgba(180,83,9,0.22)]">
+                <div className="relative flex min-w-[148px] flex-col items-center gap-2 rounded-xl border border-amber-600/70 bg-gradient-to-b from-[#38200f] to-[#1b0d05] px-3 py-2 shadow-[0_0_14px_rgba(180,83,9,0.22)]">
                   <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                     <AvatarDisplay
                       avatar={profile.avatar}
                       name={profile.name}
                       frameId={profile.equippedFrame || 'frame-1'}
-                      size={76}
+                      size={112}
                     />
                     <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                       <Camera className="w-5 h-5 text-white" />
@@ -181,7 +181,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     </div>
                   ) : (
                     <div className="flex max-w-full items-center justify-center gap-1">
-                      <span className="max-w-[92px] truncate text-center font-bold text-amber-100 text-sm">{profile.name}</span>
+                      <span className="max-w-[120px] truncate text-center font-bold text-amber-100 text-sm">{profile.name}</span>
                       <button
                         onClick={() => setIsEditing(true)}
                         className="shrink-0 text-amber-400/80 hover:text-amber-200 p-0.5 cursor-pointer"
