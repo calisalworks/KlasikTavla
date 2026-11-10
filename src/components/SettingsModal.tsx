@@ -109,8 +109,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div className="flex items-center gap-2">
                     <Music className="w-4 h-4 text-amber-400 shrink-0" />
                     <div>
-                      <div className="font-semibold text-amber-100 text-[11px]">Sakin Ortam Sesi</div>
-                      <div className="text-[9px] text-amber-400/60">Hafif oda akustiği</div>
+                      <div className="font-semibold text-amber-100 text-[11px]">Arka Plan Müziği</div>
+                      <div className="text-[9px] text-amber-400/60">Klasik tavla müziğini aç/kapat</div>
                     </div>
                   </div>
                   <button
