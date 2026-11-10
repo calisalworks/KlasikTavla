@@ -10,6 +10,7 @@ interface DicePhysicsProps {
   onRollClick: () => void;
   className?: string;
   throwSide?: 'left' | 'right';
+  impactOffset?: number;
 }
 
 interface PhysicsDieState {
@@ -50,6 +51,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
   onRollClick,
   className = '',
   throwSide = 'right',
+  impactOffset = 52,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const animFrameRef = useRef<number | null>(null);
@@ -234,7 +236,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           // The dice stage is offset from the board centre. Stop at the inner
           // edge of the leftmost checker in the right tray (mirrored for left throws).
           // This places the impact at the visible edge of the middle bar/checker line.
-          const collisionX = throwSide === 'right' ? -52 : 52;
+          const collisionX = throwSide === 'right' ? -impactOffset : impactOffset;
           const centreHit = throwSide === 'right' ? x <= collisionX : x >= collisionX;
           if (!bounced && centreHit) {
             x = collisionX;
