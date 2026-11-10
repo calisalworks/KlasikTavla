@@ -152,19 +152,20 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         const tossHeight = 70 + Math.random() * 50; // arc height
 
         newStates.push({
-          x: (throwSide === 'right' ? 54 : -54) + (Math.random() * 8 - 4),
-          y: -110 - Math.random() * 30, // start at the outer edge and travel toward the center bar
-          vx: (throwSide === 'right' ? -1 : 1) * speed * (0.9 + Math.random() * 0.2),
-          vy: 180 + Math.random() * 120,
-          z: tossHeight,
-          vz: -100 - Math.random() * 80,
-          rotX: Math.random() * 720 - 360,
-          rotY: Math.random() * 720 - 360,
-          rotZ: Math.random() * 360,
-          vRotX: (Math.random() > 0.5 ? 1 : -1) * (1800 + Math.random() * 1600),
-          vRotY: (Math.random() > 0.5 ? 1 : -1) * (600 + Math.random() * 700),
-          vRotZ: (Math.random() > 0.5 ? 1 : -1) * (700 + Math.random() * 500),
-          displayValue: Math.floor(Math.random() * 6) + 1,
+          // Same repeatable throw path on every roll; only the settled face changes.
+          x: throwSide === 'right' ? 58 : -58,
+          y: (i - (count - 1) / 2) * 40,
+          vx: throwSide === 'right' ? -520 : 520,
+          vy: 0,
+          z: 18,
+          vz: 75,
+          rotX: 0,
+          rotY: 0,
+          rotZ: 0,
+          vRotX: 1320,
+          vRotY: throwSide === 'right' ? 900 : -900,
+          vRotZ: 540,
+          displayValue: 1,
           settled: false,
         });
       }
@@ -193,7 +194,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       setPhysicsStates(visibleDice.map((die, i) => {
         const target = FACE_ROTATIONS[die.value] || { rx: 0, ry: 0 };
         return {
-          x: throwSide === 'right' ? -56 : 56,
+          x: throwSide === 'right' ? -34 : 34,
           y: (i - (visibleDice.length - 1) / 2) * 42,
           vx: 0,
           vy: 0,
@@ -217,7 +218,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       const target = FACE_ROTATIONS[value] || { rx: 0, ry: 0 };
       return {
         ...state,
-        x: throwSide === 'right' ? -56 : 56,
+        x: throwSide === 'right' ? -34 : 34,
         y: (i - (visibleDice.length - 1) / 2) * 42,
         z: 0,
         rotX: target.rx,
@@ -324,15 +325,15 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           // Table border bounds (keep dice inside central playing area)
           // Keep the dice within the visible right-side tray while allowing natural scatter.
-          const minX = throwSide === 'right' ? -56 : -64;
-          const maxX = throwSide === 'right' ? 64 : 56;
+          const minX = throwSide === 'right' ? -48 : -64;
+          const maxX = throwSide === 'right' ? 64 : 48;
           const maxY = 30;
           if (x < minX) {
             x = minX;
-            vx = Math.abs(vx) * 0.22; // inner edge of the center bar
+            vx = Math.abs(vx) * 0.03; // gentle rebound away from the center bar
           } else if (x > maxX) {
             x = maxX;
-            vx = -Math.abs(vx) * 0.5;
+            vx = -Math.abs(vx) * 0.03;
           }
           if (y < -maxY) {
             y = -maxY;
@@ -397,7 +398,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     const shadowOffset = 4 + zHeight * 0.35;
 
     return (
-      <div className="relative select-none pointer-events-none" style={{ width: size, height: size, filter: rolling ? 'blur(7px)' : 'none', opacity: rolling ? 0.62 : 1 }}>
+      <div className="relative select-none pointer-events-none" style={{ width: size, height: size }}>
         {/* Physical Drop Shadow onto Wooden Board */}
         <div
           className="absolute rounded-lg bg-black pointer-events-none transition-transform"
@@ -427,7 +428,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `translateZ(${half}px)` }}
           >
-            {renderFacePips(1)}
+            {!rolling && renderFacePips(1)}
           </div>
 
           {/* Back Face (6) */}
@@ -437,7 +438,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `rotateY(180deg) translateZ(${half}px)` }}
           >
-            {renderFacePips(6)}
+            {!rolling && renderFacePips(6)}
           </div>
 
           {/* Right Face (3) */}
@@ -447,7 +448,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `rotateY(90deg) translateZ(${half}px)` }}
           >
-            {renderFacePips(3)}
+            {!rolling && renderFacePips(3)}
           </div>
 
           {/* Left Face (4) */}
@@ -457,7 +458,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `rotateY(-90deg) translateZ(${half}px)` }}
           >
-            {renderFacePips(4)}
+            {!rolling && renderFacePips(4)}
           </div>
 
           {/* Top Face (2) */}
@@ -467,7 +468,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `rotateX(90deg) translateZ(${half}px)` }}
           >
-            {renderFacePips(2)}
+            {!rolling && renderFacePips(2)}
           </div>
 
           {/* Bottom Face (5) */}
@@ -477,7 +478,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `rotateX(-90deg) translateZ(${half}px)` }}
           >
-            {renderFacePips(5)}
+            {!rolling && renderFacePips(5)}
           </div>
         </div>
 
@@ -497,23 +498,9 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       data-dice-rolling={isRolling ? 'true' : 'false'}
       data-roll-sequence={rollSequence}
       data-physics-dice-count={physicsStates.length}
-      className={`relative flex items-center justify-center select-none pointer-events-none overflow-hidden rounded-xl ${className}`}
+      className={`relative z-[999] flex items-center justify-center select-none pointer-events-none overflow-visible ${className}`}
       style={{ perspective: '800px' }}
     >
-      <style>{`
-        @keyframes tavla-dice-roll-fallback {
-          0% { transform: translate3d(0, -24px, 0) rotate(-22deg) scale(0.84); }
-          32% { transform: translate3d(0, 14px, 0) rotate(105deg) scale(1.12); }
-          68% { transform: translate3d(0, -8px, 0) rotate(238deg) scale(0.96); }
-          100% { transform: translate3d(0, 0, 0) rotate(360deg) scale(1); }
-        }
-        .tavla-dice-roll-fallback {
-          transform-style: preserve-3d;
-          animation: tavla-dice-roll-fallback 620ms cubic-bezier(0.2, 0.75, 0.25, 1) infinite;
-          will-change: transform;
-        }
-        .tavla-dice-roll-fallback-1 { animation-delay: -170ms; }
-      `}</style>
       {/* 1. If no dice rolled yet and player can roll: prominent CTA */}
       {dice.length === 0 && !isRolling ? (
         canRoll && (
@@ -536,7 +523,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           }`}
         >
           {/* Keep one identical stage and the same two physical dice before, during and after the roll. */}
-          <div className="relative w-36 h-24 overflow-hidden">
+          <div className="relative w-36 h-24 overflow-visible">
             {physicsStates.map((st, i) => {
               const die = dice[i];
               const targetValue = die?.value ?? st.displayValue;
@@ -549,7 +536,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
                     transform: `translate3d(${st.x}px, ${st.y}px, 0) translate(-50%, -50%)`,
                   }}
                 >
-                  <div className={isRolling ? `tavla-dice-roll-fallback tavla-dice-roll-fallback-${i}` : undefined}>
+                  <div>
                     {render3DCube(
                       isRolling ? st.displayValue : targetValue,
                       isRolling ? false : (die?.used ?? false),
