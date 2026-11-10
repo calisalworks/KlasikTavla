@@ -143,7 +143,7 @@ class TavlaAudioManager {
     const t = this.ctx.currentTime;
     const masterGain = this.ctx.createGain();
     masterGain.gain.setValueAtTime(0.35, t);
-    masterGain.connect(this.ctx.destination);
+    masterGain.connect(this.masterGainNode ?? this.ctx.destination);
 
     // 1. Wood body resonant strike (low-mid fundamental thud)
     const osc1 = this.ctx.createOscillator();
@@ -194,7 +194,7 @@ class TavlaAudioManager {
     const t = this.ctx.currentTime;
     const masterGain = this.ctx.createGain();
     masterGain.gain.setValueAtTime(0.45, t);
-    masterGain.connect(this.ctx.destination);
+    masterGain.connect(this.masterGainNode ?? this.ctx.destination);
 
     // Stronger impact body
     const osc = this.ctx.createOscillator();
@@ -286,7 +286,7 @@ class TavlaAudioManager {
 
         src.connect(filter);
         filter.connect(gain);
-        gain.connect(this.ctx.destination);
+        gain.connect(this.masterGainNode ?? this.ctx.destination);
 
         src.start(impactTime);
         src.stop(impactTime + decay);
@@ -304,7 +304,7 @@ class TavlaAudioManager {
         og.gain.exponentialRampToValueAtTime(0.001, impactTime + 0.03);
 
         osc.connect(og);
-        og.connect(this.ctx.destination);
+        og.connect(this.masterGainNode ?? this.ctx.destination);
         osc.start(impactTime);
         osc.stop(impactTime + 0.03);
       }
@@ -331,7 +331,7 @@ class TavlaAudioManager {
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
 
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(this.masterGainNode ?? this.ctx.destination);
     osc.start(t);
     osc.stop(t + 0.04);
   }
@@ -361,7 +361,7 @@ class TavlaAudioManager {
 
       src.connect(filter);
       filter.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(this.masterGainNode ?? this.ctx.destination);
       src.start(t);
       src.stop(t + 0.08);
     }
@@ -392,7 +392,7 @@ class TavlaAudioManager {
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
 
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(this.masterGainNode ?? this.ctx.destination);
     osc.start(t);
     osc.stop(t + 0.03);
   }
@@ -428,7 +428,7 @@ class TavlaAudioManager {
         gainNode.gain.exponentialRampToValueAtTime(0.0001, t + duration);
 
         osc.connect(gainNode);
-        gainNode.connect(this.ctx.destination);
+        gainNode.connect(this.masterGainNode ?? this.ctx.destination);
         osc.start(t);
         osc.stop(t + duration);
       }, offsetMs);
@@ -458,7 +458,7 @@ class TavlaAudioManager {
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
 
         osc.connect(gain);
-        gain.connect(this.ctx.destination);
+        gain.connect(this.masterGainNode ?? this.ctx.destination);
         osc.start(t);
         osc.stop(t + 0.35);
       }, idx * 110);
