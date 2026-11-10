@@ -193,7 +193,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       setPhysicsStates(visibleDice.map((die, i) => {
         const target = FACE_ROTATIONS[die.value] || { rx: 0, ry: 0 };
         return {
-          x: throwSide === 'right' ? -26 : 26,
+          x: throwSide === 'right' ? -56 : 56,
           y: (i - (visibleDice.length - 1) / 2) * 42,
           vx: 0,
           vy: 0,
@@ -217,7 +217,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       const target = FACE_ROTATIONS[value] || { rx: 0, ry: 0 };
       return {
         ...state,
-        x: throwSide === 'right' ? -26 : 26,
+        x: throwSide === 'right' ? -56 : 56,
         y: (i - (visibleDice.length - 1) / 2) * 42,
         z: 0,
         rotX: target.rx,
@@ -324,8 +324,8 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
           // Table border bounds (keep dice inside central playing area)
           // Keep the dice within the visible right-side tray while allowing natural scatter.
-          const minX = throwSide === 'right' ? -26 : -48;
-          const maxX = throwSide === 'right' ? 48 : 26;
+          const minX = throwSide === 'right' ? -56 : -64;
+          const maxX = throwSide === 'right' ? 64 : 56;
           const maxY = 30;
           if (x < minX) {
             x = minX;
