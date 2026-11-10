@@ -1,4 +1,6 @@
 import { WebSocket } from 'ws';
+import { getInitialBoard } from '../src/utils/backgammonLogic.ts';
+import { findBestMovesForPlayer } from '../src/utils/aiPlayer.ts';
 
 const BASE_URL = 'http://localhost:3000';
 const WS_URL = 'ws://localhost:3000/ws';
@@ -25,6 +27,17 @@ async function runOnlineRobustnessSuite() {
       log(name, 'FAIL', detail);
       throw new Error(`Test Failed: ${name} - ${detail || ''}`);
     }
+  }
+
+  // --- TEST 0: OTOMATİK HAMLE AI PERFORMANSI (ÇİFT ZAR) ---
+  console.log('\\n--- 0. AI Zaman Aşımı Performansı: Çift Zar ---');
+  const benchmarkBoard = getInitialBoard();
+  for (const [label, values] of [['çift 6', [6, 6, 6, 6]], ['çift 1', [1, 1, 1, 1]], ['farklı zar', [2, 5]]] as const) {
+    const benchmarkDice = values.map((value, index) => ({ value, used: false, id: 'benchmark-' + label + '-' + index }));
+    const startedAt = performance.now();
+    const selectedMoves = findBestMovesForPlayer(benchmarkBoard, 'white', benchmarkDice, 'medium');
+    const elapsedMs = performance.now() - startedAt;
+    expect(elapsedMs < 1500, 'AI ' + label + ' hamle hesabı 1.5 saniye altında tamamlandı', Math.round(elapsedMs) + ' ms; hamle: ' + selectedMoves.length);
   }
 
   // --- TEST 1: SERVER SAĞLIK KONTROLÜ (HEALTH CHECK) ---
