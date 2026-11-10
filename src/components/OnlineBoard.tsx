@@ -1502,7 +1502,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             {/* Normal two-dice UI stays hidden until the opening roll is acknowledged. */}
             {(!room.openingRoll || room.openingRollCompleted) && (
             <div
-              className="absolute inset-y-0 w-36 pointer-events-none flex flex-col items-center justify-center z-[999]"
+              className="absolute inset-y-0 w-36 pointer-events-none flex flex-col items-center justify-center z-20"
               style={isMyTurn
                 ? { left: 'calc(50% + 22px)' }
                 : { right: 'calc(50% + 22px)' }}
@@ -1553,7 +1553,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             {/* Animated Opponent Sliding Checker: Visualizes opponent dragging/moving pieces across board */}
             {opponentSliding && (
               <div
-                className="absolute pointer-events-none z-50 transition-all duration-[750ms] ease-in-out -translate-x-1/2 -translate-y-1/2"
+                className="absolute pointer-events-none z-[2000] transition-all duration-[750ms] ease-in-out -translate-x-1/2 -translate-y-1/2"
                 style={{
                   left: `${opponentSliding.progress ? opponentSliding.targetX : opponentSliding.startX}%`,
                   top: `${opponentSliding.progress ? opponentSliding.targetY : opponentSliding.startY}%`,
@@ -1718,7 +1718,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
 
       {/* Abandon Confirm Dialog */}
       {showAbandonConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[2000] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-sm rounded-2xl bg-gradient-to-b from-[#3a1a0c] to-[#241005] border-2 border-red-500/70 p-5 text-center text-amber-100 shadow-2xl">
             <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center">
               <AlertTriangle className="w-6 h-6" />
@@ -1749,7 +1749,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
 
       {/* Victory / Game Over Modal */}
       {(room.winnerInfo || abandonedNotice) && (
-        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[2000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-sm rounded-3xl bg-gradient-to-b from-[#3a2010] to-[#201006] border-2 border-amber-500/80 p-6 text-center shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
             <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-b from-amber-400 to-amber-600 flex items-center justify-center text-amber-950 shadow-lg">
               <Trophy className="w-9 h-9" />
@@ -1897,7 +1897,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
 
       {/* AFK 3-Strike Warning Modal */}
       {showAfkWarning && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[2000] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-sm rounded-3xl bg-gradient-to-b from-[#3a1b0e] via-[#2a1309] to-[#1a0a04] border-2 border-amber-500/80 p-5 text-center shadow-[0_20px_50px_rgba(0,0,0,0.95)]">
             <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-amber-500/20 border-2 border-amber-400/80 flex items-center justify-center text-amber-400 shadow-lg animate-pulse">
               <AlertTriangle className="w-8 h-8" />
@@ -1923,7 +1923,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
 
       {/* Forfeit Notice Modal */}
       {forfeitNotice && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[2000] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-sm rounded-3xl bg-gradient-to-b from-[#3a1b0e] via-[#2a1309] to-[#1a0a04] border-2 border-red-500/80 p-5 text-center shadow-[0_20px_50px_rgba(0,0,0,0.95)]">
             <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-red-500/20 border-2 border-red-400/80 flex items-center justify-center text-red-400 shadow-lg">
               <AlertTriangle className="w-8 h-8" />
