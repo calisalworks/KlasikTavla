@@ -38,6 +38,7 @@ export type TargetScore = 1 | 3 | 5;
 export interface GameSettings {
   soundEnabled: boolean;
   ambientSound: boolean;
+  ambientVolume: number;
   autoRoll: boolean;
   highlightMoves: boolean;
   aiDifficulty: AIDifficulty;
