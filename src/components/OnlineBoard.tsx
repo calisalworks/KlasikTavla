@@ -37,6 +37,8 @@ import {
   Coins,
   Sparkles,
   Clock,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 
 interface OnlineBoardProps {
@@ -44,6 +46,7 @@ interface OnlineBoardProps {
   profile: UserProfile;
   settings: GameSettings;
   onOpenSettings: () => void;
+  onToggleMusic: () => void;
   onOpenRules: () => void;
   onLeaveRoom: () => void;
   onToggleFullscreen: () => void;
@@ -67,6 +70,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   profile,
   settings,
   onOpenSettings,
+  onToggleMusic,
   onOpenRules,
   onLeaveRoom,
   onToggleFullscreen,
@@ -1335,6 +1339,15 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
                 className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300/80 hover:text-amber-200 border border-amber-700/40 shadow cursor-pointer transition-colors"
               >
                 <Maximize className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                onClick={onToggleMusic}
+                title={settings.ambientSound ? 'Arka Plan Müziğini Kapat' : 'Arka Plan Müziğini Aç'}
+                aria-label={settings.ambientSound ? 'Arka Plan Müziğini Kapat' : 'Arka Plan Müziğini Aç'}
+                className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300/80 hover:text-amber-200 border border-amber-700/40 shadow cursor-pointer transition-colors"
+              >
+                {settings.ambientSound ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
               </button>
 
               <button
