@@ -27,13 +27,15 @@ import { CheckerPiece } from './CheckerPiece';
 import { DicePhysicsView } from './DicePhysicsView';
 import { AvatarDisplay } from './AvatarDisplay';
 import { OpeningRollOverlay } from './OpeningRollOverlay';
-import { RadioControls } from './RadioControls';
+import { MasterVolumeControl, RadioControls } from './RadioControls';
 import { GameTips } from './GameTips';
 import { RotateCcw, Check, Settings, Trophy, RefreshCw, Home, AlertTriangle, Bot, Clock, Volume2, VolumeX } from 'lucide-react';
 
 interface BoardProps {
   profile?: UserProfile;
   settings: GameSettings;
+  masterVolume: number;
+  onChangeMasterVolume: (volume: number) => void;
   targetScore: TargetScore;
   onOpenSettings: () => void;
   onToggleMusic: () => void;
@@ -63,6 +65,8 @@ interface DragState {
 export const Board: React.FC<BoardProps> = ({
   profile,
   settings,
+  masterVolume,
+  onChangeMasterVolume,
   targetScore,
   onOpenSettings,
   onToggleMusic,
@@ -1523,6 +1527,7 @@ export const Board: React.FC<BoardProps> = ({
               <Home className="w-3.5 h-3.5 shrink-0" />
               <span className="text-[10px] font-bold">Menüye Dön</span>
             </button>
+            <MasterVolumeControl value={masterVolume} onChange={onChangeMasterVolume} />
           </div>
         </div>
 
