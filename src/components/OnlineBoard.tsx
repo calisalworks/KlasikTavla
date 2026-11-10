@@ -1134,15 +1134,15 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             <linearGradient id={`point-grad-online-${pointIndex}`} x1="0%" y1="0%" x2="100%" y2="100%">
               {triangleColorDark ? (
                 <>
-                  <stop offset="0%" stopColor="#965223" />
-                  <stop offset="60%" stopColor="#7a3e14" />
-                  <stop offset="100%" stopColor="#54280a" />
+                  <stop offset="0%" stopColor="#28211d" />
+                  <stop offset="60%" stopColor="#171411" />
+                  <stop offset="100%" stopColor="#080706" />
                 </>
               ) : (
                 <>
-                  <stop offset="0%" stopColor="#ecc07c" />
-                  <stop offset="60%" stopColor="#dca85d" />
-                  <stop offset="100%" stopColor="#c38d43" />
+                  <stop offset="0%" stopColor="#f5e8c9" />
+                  <stop offset="60%" stopColor="#d7bd8b" />
+                  <stop offset="100%" stopColor="#9e8053" />
                 </>
               )}
             </linearGradient>
@@ -1152,19 +1152,19 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             <polygon
               points="0,0 100,0 50,225"
               fill={`url(#point-grad-online-${pointIndex})`}
-              className="stroke-[#47220b]/30 stroke-[1.5]"
+              className="stroke-[#c9a46a]/70 stroke-[1.5]"
             />
           ) : (
             <polygon
               points="0,240 100,240 50,15"
               fill={`url(#point-grad-online-${pointIndex})`}
-              className="stroke-[#47220b]/30 stroke-[1.5]"
+              className="stroke-[#c9a46a]/70 stroke-[1.5]"
             />
           )}
         </svg>
 
         <span
-          className={`absolute text-[10px] font-bold text-amber-950/60 pointer-events-none select-none ${
+          className={`absolute text-[10px] font-bold text-[#f3dfb8]/70 pointer-events-none select-none ${
             isTopRow ? 'top-0.5' : 'bottom-0.5'
           }`}
         >
