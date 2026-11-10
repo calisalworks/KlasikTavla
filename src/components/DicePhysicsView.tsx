@@ -489,9 +489,26 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
   return (
     <div
       ref={containerRef}
+      data-dice-rolling={isRolling ? 'true' : 'false'}
+      data-roll-sequence={rollSequence}
+      data-physics-dice-count={physicsStates.length}
       className={`relative flex items-center justify-center select-none pointer-events-none overflow-hidden rounded-xl ${className}`}
       style={{ perspective: '800px' }}
     >
+      <style>{`
+        @keyframes tavla-dice-roll-fallback {
+          0% { transform: translate3d(0, -24px, 0) rotate(-22deg) scale(0.84); }
+          32% { transform: translate3d(0, 14px, 0) rotate(105deg) scale(1.12); }
+          68% { transform: translate3d(0, -8px, 0) rotate(238deg) scale(0.96); }
+          100% { transform: translate3d(0, 0, 0) rotate(360deg) scale(1); }
+        }
+        .tavla-dice-roll-fallback {
+          transform-style: preserve-3d;
+          animation: tavla-dice-roll-fallback 620ms cubic-bezier(0.2, 0.75, 0.25, 1) infinite;
+          will-change: transform;
+        }
+        .tavla-dice-roll-fallback-1 { animation-delay: -170ms; }
+      `}</style>
       {/* 1. If no dice rolled yet and player can roll: prominent CTA */}
       {dice.length === 0 && !isRolling ? (
         canRoll && (
@@ -527,14 +544,16 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
                     transform: `translate3d(${st.x}px, ${st.y}px, 0) translate(-50%, -50%)`,
                   }}
                 >
-                  {render3DCube(
-                    isRolling ? st.displayValue : targetValue,
-                    isRolling ? false : (die?.used ?? false),
-                    st.rotX,
-                    st.rotY,
-                    st.rotZ,
-                    st.z
-                  )}
+                  <div className={isRolling ? `tavla-dice-roll-fallback tavla-dice-roll-fallback-${i}` : undefined}>
+                    {render3DCube(
+                      isRolling ? st.displayValue : targetValue,
+                      isRolling ? false : (die?.used ?? false),
+                      st.rotX,
+                      st.rotY,
+                      st.rotZ,
+                      st.z
+                    )}
+                  </div>
                 </div>
               );
             })}
