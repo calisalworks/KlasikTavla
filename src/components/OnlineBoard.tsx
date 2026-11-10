@@ -38,6 +38,8 @@ import {
   Clock,
   Volume2,
   VolumeX,
+  MessageCircle,
+  Send,
 } from 'lucide-react';
 import { MasterVolumeControl, RadioControls } from './RadioControls';
 import { GameTips } from './GameTips';
@@ -62,6 +64,15 @@ interface OnlineBoardProps {
   isFullscreen: boolean;
   onRecordMatch: (result: 'win' | 'loss' | 'abandoned') => void;
   onProfileUpdated?: (profile: UserProfile) => void;
+}
+
+interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderColor: PlayerColor;
+  text: string;
+  createdAt: number;
 }
 
 interface DragState {
@@ -114,6 +125,11 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   const [matchRecorded, setMatchRecorded] = useState(false);
   const [prizeCoinsWon, setPrizeCoinsWon] = useState<number | null>(null);
   const [trophyDeltaWon, setTrophyDeltaWon] = useState<number | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatDraft, setChatDraft] = useState('');
+  const [latestChatMessage, setLatestChatMessage] = useState<ChatMessage | null>(null);
+  const chatToastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -252,6 +268,13 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
     }
   }, [room?.openingRoll, room?.openingRollCompleted, room?.status, room?.whiteScore, room?.blackScore, room?.id, shownOpeningRollKey]);
 
+  const sendChatMessage = (value = chatDraft) => {
+    const text = value.trim().slice(0, 120);
+    if (!text || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN || !roomRef.current) return;
+    wsRef.current.send(JSON.stringify({ type: 'chat:send', roomId, text }));
+    setChatDraft('');
+  };
+
   const handleOpeningDieRoll = (color: PlayerColor) => {
     if (!room || !myColor || color !== myColor || room.openingRollCompleted) return;
     const alreadyRolled = color === 'white'
@@ -298,6 +321,10 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
     tavlaAudio.setAmbientEnabled(settings.ambientSound);
   }, [settings.soundEnabled, settings.ambientSound]);
 
+  useEffect(() => () => {
+    if (chatToastTimeoutRef.current) clearTimeout(chatToastTimeoutRef.current);
+  }, []);
+
   // WebSocket Connection & Reconnection Management
   useEffect(() => {
     isUnmountedRef.current = false;
@@ -342,6 +369,21 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
           const msg = JSON.parse(event.data);
 
           switch (msg.type) {
+            case 'chat:history': {
+              setChatMessages(Array.isArray(msg.messages) ? msg.messages.slice(-60) : []);
+              break;
+            }
+
+            case 'chat:message': {
+              const incoming = msg.message as ChatMessage;
+              if (!incoming || typeof incoming.text !== 'string') break;
+              setChatMessages((previous) => [...previous.filter((item) => item.id !== incoming.id), incoming].slice(-60));
+              setLatestChatMessage(incoming);
+              if (chatToastTimeoutRef.current) clearTimeout(chatToastTimeoutRef.current);
+              chatToastTimeoutRef.current = setTimeout(() => setLatestChatMessage(null), 2600);
+              break;
+            }
+
             case 'room:joined': {
               roomRef.current = msg.room;
               setRoom(msg.room);
@@ -1251,12 +1293,11 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
           )}
 
           <div className="w-full flex flex-col items-center gap-1.5">
-            <AvatarDisplay
-              avatar={opponentPlayer?.avatar}
-              name={opponentPlayer?.name || 'Rakip'}
-              size={60}
-              className="border-2 border-amber-600/70 shadow-inner"
-            />
+            <div className="relative">
+              <AvatarDisplay avatar={opponentPlayer?.avatar} name={opponentPlayer?.name || 'Rakip'} size={60} className="border-2 border-amber-600/70 shadow-inner" />
+              <button type="button" onClick={() => setIsChatOpen(true)} disabled={!opponentPlayer} title="Rakiple sohbet et" aria-label="Sohbeti aç" className="absolute -top-1.5 -right-2 z-30 w-7 h-7 rounded-full flex items-center justify-center bg-amber-500 text-amber-950 border-2 border-[#2b1c13] shadow-lg hover:bg-amber-300 active:scale-90 disabled:opacity-40 cursor-pointer touch-manipulation"><MessageCircle className="w-4 h-4" /></button>
+              {latestChatMessage && latestChatMessage.senderId !== profile.id && <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-40 max-w-[150px] px-2 py-1 rounded-xl rounded-bl-sm bg-[#fff4d6] text-[#2a1609] text-[10px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestChatMessage.text}</div>}
+            </div>
             <div className="w-full min-w-0 text-center">
               <div className="text-xs font-bold text-amber-100 truncate tracking-wide">
                 {opponentPlayer ? opponentPlayer.name : 'Bekleniyor...'}
@@ -1324,12 +1365,11 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
           )}
 
           <div className="w-full flex flex-col items-center gap-1.5">
-            <AvatarDisplay
-              avatar={profile.avatar}
-              name={profile.name}
-              size={60}
-              className="border-2 border-amber-500/80 shadow-inner"
-            />
+            <div className="relative">
+              <AvatarDisplay avatar={profile.avatar} name={profile.name} size={60} className="border-2 border-amber-500/80 shadow-inner" />
+              <button type="button" onClick={() => setIsChatOpen(true)} title="Sohbeti aç" aria-label="Sohbeti aç" className="absolute -top-1.5 -right-2 z-30 w-7 h-7 rounded-full flex items-center justify-center bg-amber-500 text-amber-950 border-2 border-[#2b1c13] shadow-lg hover:bg-amber-300 active:scale-90 cursor-pointer touch-manipulation"><MessageCircle className="w-4 h-4" /></button>
+              {latestChatMessage && latestChatMessage.senderId === profile.id && <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-40 max-w-[150px] px-2 py-1 rounded-xl rounded-bl-sm bg-[#fff4d6] text-[#2a1609] text-[10px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestChatMessage.text}</div>}
+            </div>
             <div className="w-full min-w-0 text-center">
               <div className="text-xs font-bold text-amber-100 truncate tracking-wide">
                 {profile.name} (Siz)
@@ -1592,47 +1632,22 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
               </div>
             )}
 
-            {/* Keep both turn actions on the right with generous separation to prevent accidental Undo taps. */}
-            {isMyTurn && !room.winnerInfo &&
-              ((((room.dice.length > 0 && room.dice.every((d) => d.used)) ||
-                 (room.dice.length > 0 && !hasAnyLegalMoves(room.board, myColor, room.dice)))) ||
-               Boolean(room.undoHistory?.length)) && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-5 pointer-events-auto animate-in fade-in duration-150">
-                {((room.dice.length > 0 && room.dice.every((d) => d.used)) ||
-                  (room.dice.length > 0 && !hasAnyLegalMoves(room.board, myColor, room.dice))) && (
-                  <>
-                    <button
-                      onClick={handlePassTurn}
-                      className="px-4 py-2.5 rounded-xl bg-gradient-to-b from-emerald-500 via-emerald-600 to-emerald-800 hover:from-emerald-400 hover:to-emerald-700 text-white text-xs sm:text-sm font-black border-2 border-emerald-300 shadow-[0_0_18px_rgba(16,185,129,0.65)] active:scale-95 transition-all flex items-center gap-2 cursor-pointer backdrop-blur-md"
-                    >
-                      <Check className="w-4 h-4 text-emerald-100" />
-                      <span>TAMAM</span>
-                    </button>
-                    {autoPassSecondsLeft !== null && (
-                      <div className="text-center py-1 px-2 rounded-full bg-black/90 border border-emerald-500/70 text-[10px] font-bold text-amber-200 shadow-lg flex items-center justify-center gap-1 backdrop-blur-md">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
-                        <span>Geçiş: <strong className="text-emerald-300 font-black">{autoPassSecondsLeft}s</strong></span>
-                      </div>
-                    )}
-                  </>
-                )}
-                {room.undoHistory && room.undoHistory.length > 0 && (
-                  <button
-                    onClick={handleUndo}
-                    className="px-3 py-2 rounded-lg bg-[#302015]/90 hover:bg-[#3b291b] text-amber-200/90 text-[11px] font-semibold border border-amber-800/60 shadow-sm active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer backdrop-blur-md"
-                  >
-                    <RotateCcw className="w-3 h-3 text-amber-400/80" />
-                    <span>GERİ AL</span>
-                  </button>
-                )}
-              </div>
-            )}
+
           </div>
 
           {/* Bear-off trays (Top = Opponent, Bottom = Friendly) */}
           <div className="w-16 md:w-20 ml-2 rounded-xl bg-gradient-to-b from-[#46230b] via-[#351906] to-[#251003] border-2 border-[#542d11] p-1.5 flex flex-col justify-between items-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.7)] shrink-0">
             {/* Top (Opponent) */}
             <div className="w-full flex-1 flex flex-col items-center justify-start rounded-lg bg-[#221004] border border-[#522c11] p-1 overflow-hidden relative">
+              {isMyTurn && !room.winnerInfo &&
+                (((room.dice.length > 0 && room.dice.every((d) => d.used)) ||
+                  (room.dice.length > 0 && !hasAnyLegalMoves(room.board, myColor, room.dice))) || Boolean(room.undoHistory?.length)) && (
+                <div className="w-full flex flex-col items-center gap-1 mb-1 pointer-events-auto z-40">
+                  {((room.dice.length > 0 && room.dice.every((d) => d.used)) || (room.dice.length > 0 && !hasAnyLegalMoves(room.board, myColor, room.dice))) && <button onClick={handlePassTurn} className="w-full px-1 py-1 rounded-md bg-gradient-to-b from-emerald-500 to-emerald-800 text-white text-[9px] font-black border border-emerald-300 shadow active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"><Check className="w-3 h-3" /><span>TAMAM</span></button>}
+                  {room.undoHistory && room.undoHistory.length > 0 && <button onClick={handleUndo} className="w-full px-1 py-1 rounded-md bg-[#302015]/95 text-amber-200/90 text-[9px] font-semibold border border-amber-800/60 shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"><RotateCcw className="w-3 h-3 text-amber-400/80" /><span>GERİ AL</span></button>}
+                  {autoPassSecondsLeft !== null && <div className="text-center text-[8px] font-bold text-amber-200"><span className="text-emerald-300">Geçiş: {autoPassSecondsLeft}s</span></div>}
+                </div>
+              )}
               <div className="w-full text-center py-0.5 rounded bg-amber-950/80 border border-amber-800/40 text-[10px] font-bold text-amber-200">
                 {isBlackPlayer ? room.board.borneOff.white : room.board.borneOff.black}/15
               </div>
@@ -1965,6 +1980,18 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
       )}
 
 
+      {isChatOpen && (
+        <div className="fixed left-[136px] top-1/2 -translate-y-1/2 z-[2500] w-[min(280px,42vw)] max-h-[72vh] flex flex-col rounded-2xl bg-[#1b1009]/[0.98] border-2 border-amber-600/80 shadow-[0_18px_45px_rgba(0,0,0,0.8)] text-amber-100 pointer-events-auto touch-auto select-text" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
+          <div className="flex items-center justify-between px-3 py-2 border-b border-amber-800/60 shrink-0"><div className="min-w-0"><div className="text-xs font-black text-amber-200">Sohbet</div><div className="text-[9px] text-amber-400/60 truncate">{opponentPlayer?.name || 'Rakip oyuncu'}</div></div><button type="button" onClick={() => setIsChatOpen(false)} className="p-1 rounded-lg text-amber-300 hover:bg-amber-900/60 cursor-pointer" aria-label="Sohbeti kapat"><X className="w-4 h-4" /></button></div>
+          <div className="flex-1 min-h-[90px] overflow-y-auto p-2 space-y-1.5">
+            {chatMessages.length === 0 ? <div className="h-full min-h-[90px] flex items-center justify-center text-[10px] text-amber-400/60 text-center">Henüz mesaj yok. İlk mesajı gönderin.</div> : chatMessages.map((message) => <div key={message.id} className={message.senderId === profile.id ? "flex justify-end" : "flex justify-start"}><div className={message.senderId === profile.id ? "max-w-[88%] px-2.5 py-1.5 rounded-xl rounded-br-sm bg-amber-700/80 text-amber-50 text-[10px]" : "max-w-[88%] px-2.5 py-1.5 rounded-xl rounded-bl-sm bg-[#392416] text-amber-100 text-[10px]"}><div className="font-bold text-[9px] opacity-75 mb-0.5">{message.senderId === profile.id ? 'Siz' : message.senderName}</div><div className="break-words whitespace-pre-wrap">{message.text}</div></div></div>)}
+          </div>
+          <div className="px-2 pb-2 shrink-0"><div className="flex items-center justify-between gap-1 mb-1">{['👍','👏','😀','😂','😎','🔥','🎲','❤️'].map((emoji) => <button key={emoji} type="button" onClick={() => sendChatMessage(emoji)} className="p-1 rounded-md hover:bg-amber-900/60 text-base cursor-pointer touch-manipulation" aria-label={emoji + ' gönder'}>{emoji}</button>)}</div>
+            <form onSubmit={(event) => { event.preventDefault(); sendChatMessage(); }} className="flex items-center gap-1.5"><input value={chatDraft} onChange={(event) => setChatDraft(event.target.value.slice(0, 120))} maxLength={120} placeholder="Mesaj yaz..." className="min-w-0 flex-1 px-2.5 py-2 rounded-lg bg-black/50 border border-amber-800/70 text-amber-100 text-[11px] outline-none focus:border-amber-400 touch-auto select-text" /><button type="submit" disabled={!chatDraft.trim()} className="w-9 h-9 shrink-0 rounded-lg bg-amber-600 hover:bg-amber-500 text-amber-950 flex items-center justify-center disabled:opacity-40 cursor-pointer" aria-label="Mesajı gönder"><Send className="w-4 h-4" /></button></form>
+            <div className="text-[8px] text-amber-400/50 mt-1 text-right">Mesajlar bu masa boyunca geçmişte kalır.</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

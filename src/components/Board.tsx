@@ -1688,47 +1688,24 @@ export const Board: React.FC<BoardProps> = ({
               onComplete={handleOpeningRollComplete}
             />
 
-            {/* Turn actions stay on the right; the Undo control is deliberately secondary and separated. */}
-            {turn === 'white' && !winnerInfo && !matchWinner &&
-              (((dice.length > 0 && dice.every((d) => d.used)) ||
-                (dice.length > 0 && !hasAnyLegalMoves(board, turn, dice))) ||
-               undoHistory.length > 0) && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-5 pointer-events-auto animate-in fade-in duration-150">
-                {((dice.length > 0 && dice.every((d) => d.used)) ||
-                  (dice.length > 0 && !hasAnyLegalMoves(board, turn, dice))) && (
-                  <>
-                    <button
-                      onClick={() => passTurn(true)}
-                      className="px-4 py-2.5 rounded-xl bg-gradient-to-b from-emerald-500 via-emerald-600 to-emerald-800 hover:from-emerald-400 hover:to-emerald-700 text-white text-xs sm:text-sm font-black border-2 border-emerald-300 shadow-[0_0_18px_rgba(16,185,129,0.65)] active:scale-95 transition-all flex items-center gap-2 cursor-pointer backdrop-blur-md"
-                    >
-                      <Check className="w-4 h-4 text-emerald-100" />
-                      <span>TAMAM</span>
-                    </button>
-                    {autoPassSecondsLeft !== null && (
-                      <div className="text-center py-1 px-2 rounded-full bg-black/90 border border-emerald-500/70 text-[10px] font-bold text-amber-200 shadow-lg flex items-center justify-center gap-1 backdrop-blur-md">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
-                        <span>Geçiş: <strong className="text-emerald-300 font-black">{autoPassSecondsLeft}s</strong></span>
-                      </div>
-                    )}
-                  </>
-                )}
-                {undoHistory.length > 0 && (
-                  <button
-                    onClick={handleUndo}
-                    className="px-3 py-2 rounded-lg bg-[#302015]/90 hover:bg-[#3b291b] text-amber-200/90 text-[11px] font-semibold border border-amber-800/60 shadow-sm active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer backdrop-blur-md"
-                  >
-                    <RotateCcw className="w-3 h-3 text-amber-400/80" />
-                    <span>GERİ AL</span>
-                  </button>
-                )}
-              </div>
-            )}
+
           </div>
 
           {/* Bear-off Trays */}
           <div className="w-16 md:w-20 ml-2 rounded-xl bg-gradient-to-b from-[#46230b] via-[#351906] to-[#251003] border-2 border-[#542d11] p-1.5 flex flex-col justify-between items-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.7)] shrink-0">
             {/* Top (Black) */}
             <div className="w-full flex-1 flex flex-col items-center justify-start rounded-lg bg-[#221004] border border-[#522c11] p-1 overflow-hidden relative">
+              {turn === 'white' && !winnerInfo && !matchWinner &&
+                (((dice.length > 0 && dice.every((d) => d.used)) ||
+                  (dice.length > 0 && !hasAnyLegalMoves(board, turn, dice))) || undoHistory.length > 0) && (
+                <div className="w-full flex flex-col items-center gap-1 mb-1 pointer-events-auto z-40">
+                  {((dice.length > 0 && dice.every((d) => d.used)) || (dice.length > 0 && !hasAnyLegalMoves(board, turn, dice))) && (
+                    <button onClick={() => passTurn(true)} className="w-full px-1 py-1 rounded-md bg-gradient-to-b from-emerald-500 to-emerald-800 text-white text-[9px] font-black border border-emerald-300 shadow active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"><Check className="w-3 h-3" /><span>TAMAM</span></button>
+                  )}
+                  {undoHistory.length > 0 && <button onClick={handleUndo} className="w-full px-1 py-1 rounded-md bg-[#302015]/95 text-amber-200/90 text-[9px] font-semibold border border-amber-800/60 shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"><RotateCcw className="w-3 h-3 text-amber-400/80" /><span>GERİ AL</span></button>}
+                  {autoPassSecondsLeft !== null && <div className="text-center text-[8px] font-bold text-amber-200"><span className="text-emerald-300">Geçiş: {autoPassSecondsLeft}s</span></div>}
+                </div>
+              )}
               <div className="w-full text-center py-0.5 rounded bg-amber-950/80 border border-amber-800/40 text-[10px] font-bold text-amber-200">
                 {board.borneOff.black}/15
               </div>
