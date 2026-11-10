@@ -179,12 +179,15 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     settlingRef.current = true;
     const current = physicsStatesRef.current;
     const resultDice = diceRef.current;
-    if (resultDice.length === 0) return;
+    // Backgammon doubles provide four playable die values, but they are still
+    // represented by two physical dice. Keep the visual dice count fixed at two.
+    const visibleDice = resultDice.slice(0, Math.min(resultDice.length, 2));
+    if (visibleDice.length === 0) return;
 
     // When dice are handed in from the opening roll, this view mounts already
     // holding their results. Seed a settled 3D pose so they appear immediately.
-    if (current.length !== resultDice.length) {
-      setPhysicsStates(resultDice.map((die, i) => {
+    if (current.length !== visibleDice.length) {
+      setPhysicsStates(visibleDice.map((die, i) => {
         const target = FACE_ROTATIONS[die.value] || { rx: 0, ry: 0 };
         return {
           x: (i - (resultDice.length - 1) / 2) * 34,
