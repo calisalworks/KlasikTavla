@@ -185,6 +185,51 @@ async function runOnlineRobustnessSuite() {
   expect(currentRoomState.dice.length === 2, 'Açılış zarları ilk hamle için odada hazır');
 
   const startingTurn = currentRoomState.turn;
+
+  // Regression proof: a legal player move must reset the inactivity deadline.
+  // Wait until the original deadline is close, make one move, then verify that
+  // the old deadline does not trigger an automatic move 10 seconds later.
+  const activitySequence = findBestMovesForPlayer(
+    currentRoomState.board,
+    startingTurn as 'white' | 'black',
+    currentRoomState.dice,
+    'medium'
+  );
+  expect(activitySequence.length >= 2, 'Açılış zarlarıyla zaman aşımı öncesi en az iki yasal hamle bulundu');
+  await new Promise((resolve) => setTimeout(resolve, 12000));
+
+  const activeSocket = p1Color === startingTurn ? wsBoard1 : wsBoard2;
+  let manualMoveSeen = false;
+  let autoMoveDuringGrace = 0;
+  const observeManualMove = (data: any) => {
+    const msg = JSON.parse(data.toString());
+    if (msg.type === 'game:moved' && msg.autoPlay === true) autoMoveDuringGrace++;
+    if (msg.type === 'game:moved' && !msg.autoPlay) manualMoveSeen = true;
+  };
+  wsBoard1.on('message', observeManualMove);
+  wsBoard2.on('message', observeManualMove);
+  activeSocket.send(JSON.stringify({
+    type: 'game:move',
+    roomId: matchedRoomId,
+    from: activitySequence[0].from,
+    to: activitySequence[0].to,
+    dieValue: activitySequence[0].dieValue,
+    dieIndex: activitySequence[0].dieIndex,
+  }));
+  await new Promise<void>((resolve, reject) => {
+    const startedAt = Date.now();
+    const poll = () => {
+      if (manualMoveSeen) return resolve();
+      if (Date.now() - startedAt > 5000) return reject(new Error('Manuel hamle sunucu tarafından onaylanmadı.'));
+      setTimeout(poll, 50);
+    };
+    poll();
+  });
+  await new Promise((resolve) => setTimeout(resolve, 10000));
+  wsBoard1.off('message', observeManualMove);
+  wsBoard2.off('message', observeManualMove);
+  expect(autoMoveDuringGrace === 0, 'Manuel hamleden sonra eski zaman aşımı çalışmadı; 20 saniyelik süre yenilendi', 'Erken otomatik hamle: ' + autoMoveDuringGrace);
+
   let automaticMoves = 0;
   let handedOffRoom: any = null;
 
