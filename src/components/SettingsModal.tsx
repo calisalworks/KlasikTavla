@@ -128,6 +128,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
               </div>
 
+              {/* Music volume control */}
+              <div className="p-3 rounded-xl bg-[#1c0d05] border border-amber-900/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Music className="w-4 h-4 text-amber-400 shrink-0" />
+                    <div>
+                      <div className="font-semibold text-amber-100 text-[11px]">Müzik Ses Seviyesi</div>
+                      <div className="text-[9px] text-amber-400/60">Arka plan müziğinin sesini ayarla</div>
+                    </div>
+                  </div>
+                  <span className="text-amber-300 font-bold text-xs tabular-nums">{settings.ambientVolume ?? 12}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={settings.ambientVolume ?? 12}
+                  onChange={(event) => onUpdateSettings({ ambientVolume: Number(event.target.value) })}
+                  aria-label="Arka plan müziği ses seviyesi"
+                  className="w-full h-2 accent-amber-500 cursor-pointer"
+                />
+                <div className="flex justify-between text-[9px] text-amber-400/60">
+                  <span>0%</span>
+                  <span>100%</span>
+                </div>
+              </div>
+
               {/* 3. Hamle İpuçları (Highlight) */}
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#1c0d05] border border-amber-900/50">
                 <div className="flex items-center gap-2">
