@@ -1493,7 +1493,7 @@ export const Board: React.FC<BoardProps> = ({
       {/* 2. BOARD */}
       <div className="flex-1 flex flex-col p-1.5 md:p-2 bg-[#1b130e] overflow-hidden">
         {/* Subtle Status Bar */}
-        <div className="h-5 flex items-center justify-between px-3 text-xs text-amber-200/80 mb-0.5 select-none">
+        <div className="h-9 flex items-center justify-between px-3 text-xs text-amber-200/80 mb-0.5 select-none">
           <div className="flex items-center justify-end gap-2 shrink-0">
             <RadioControls isPlaying={isRadioPlaying} stationIndex={radioChannel} hasEnabledStations={hasEnabledRadioStations} onToggle={onToggleRadio} onPrevious={onPreviousRadio} onNext={onNextRadio} />
             <button onClick={onToggleMusic} title={settings.ambientSound ? "Müziği Kapat" : "Müziği Aç"} aria-label={settings.ambientSound ? "Müziği Kapat" : "Müziği Aç"} className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300 border border-amber-700/40 shadow cursor-pointer">{settings.ambientSound ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}</button>
