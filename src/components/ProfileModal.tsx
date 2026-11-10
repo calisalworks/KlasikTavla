@@ -127,7 +127,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 select-none">
-      <div className="w-full max-w-md max-h-[92vh] flex flex-col rounded-2xl bg-gradient-to-b from-[#2e1a0e] via-[#241309] to-[#1a0c05] border-2 border-amber-600/70 text-amber-100 shadow-[0_25px_60px_rgba(0,0,0,0.95)] overflow-hidden">
+      <div className="w-[96vw] max-w-6xl max-h-[94dvh] flex flex-col rounded-2xl bg-gradient-to-b from-[#2e1a0e] via-[#241309] to-[#1a0c05] border-2 border-amber-600/70 text-amber-100 shadow-[0_25px_60px_rgba(0,0,0,0.95)] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-amber-800/60 bg-[#25140b] shrink-0">
           <div className="flex items-center gap-2">
@@ -314,7 +314,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             </div>
 
             {/* Yatay Akışkan Çerçeve Listesi */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1">
+            <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 pt-1">
               {PROFILE_FRAMES.map((fr) => {
                 const unlocked = isFrameUnlocked(fr.id, profile.trophies || 0);
                 const isEquipped = (profile.equippedFrame || 'frame-1') === fr.id;
@@ -402,7 +402,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             </div>
 
             {/* Hazır Profil Fotoğrafları */}
-            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 pt-1">
+            <div className="grid grid-cols-8 sm:grid-cols-12 lg:grid-cols-16 gap-2 pt-1">
               {PRESET_AVATARS.map((preset) => {
                 const isSelected = profile.avatar === preset.id;
                 return (
