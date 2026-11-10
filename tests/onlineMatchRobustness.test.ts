@@ -2,8 +2,8 @@ import { WebSocket } from 'ws';
 import { getInitialBoard } from '../src/utils/backgammonLogic.ts';
 import { findBestMovesForPlayer } from '../src/utils/aiPlayer.ts';
 
-const BASE_URL = 'http://localhost:3000';
-const WS_URL = 'ws://localhost:3000/ws';
+const BASE_URL = process.env.TAVLA_BASE_URL || 'http://localhost:3000';
+const WS_URL = process.env.TAVLA_WS_URL || BASE_URL.replace(/^http/, 'ws') + '/ws';
 
 function log(step: string, status: 'PASS' | 'FAIL' | 'INFO', detail?: string) {
   const symbol = status === 'PASS' ? '✅' : status === 'FAIL' ? '❌' : 'ℹ️';
@@ -222,38 +222,50 @@ async function runOnlineRobustnessSuite() {
 
   const secondTurnColor = handedOffRoom.turn;
   let automaticRollSeen = false;
-  let secondTurnAutomaticMoves = 0;
+  const rollRecipients = new Set<string>();
+  const passRecipients = new Set<string>();
+  const automaticMovesByPlayer = { p1: 0, p2: 0 };
   let secondTurnHandedOff: any = null;
 
   const secondTimeoutPromise = new Promise<void>((resolve, reject) => {
     let timeout: ReturnType<typeof setTimeout>;
-    const handler = (data: any) => {
+    const cleanup = () => {
+      wsBoard1.off('message', handler1);
+      wsBoard2.off('message', handler2);
+      clearTimeout(timeout);
+    };
+    const makeHandler = (recipient: 'p1' | 'p2') => (data: any) => {
       const msg = JSON.parse(data.toString());
       if (msg.type === 'game:rolled' && msg.autoPlay === true && msg.room?.turn === secondTurnColor) {
         automaticRollSeen = true;
+        rollRecipients.add(recipient);
         expect((msg.dice?.length === 2 || msg.dice?.length === 4), 'Zar atılmayan turda sunucu iki veya çift zar için dört zar üretti');
       }
-      if (msg.type === 'game:moved' && msg.autoPlay === true && msg.room?.turn === secondTurnColor) secondTurnAutomaticMoves++;
+      if (msg.type === 'game:moved' && msg.autoPlay === true && msg.room?.turn === secondTurnColor) automaticMovesByPlayer[recipient]++;
       if (msg.type === 'game:turn_passed' && msg.room?.turn !== secondTurnColor) {
         secondTurnHandedOff = msg.room;
-        wsBoard1.off('message', handler);
-        wsBoard2.off('message', handler);
-        clearTimeout(timeout);
-        resolve();
+        passRecipients.add(recipient);
+        if (passRecipients.size === 2) {
+          cleanup();
+          resolve();
+        }
       }
     };
+    const handler1 = makeHandler('p1');
+    const handler2 = makeHandler('p2');
     timeout = setTimeout(() => {
-      wsBoard1.off('message', handler);
-      wsBoard2.off('message', handler);
-      reject(new Error('Zar atılmayan turda otomatik zar/hamle/sıra devri 30 saniyede tamamlanmadı.'));
+      cleanup();
+      reject(new Error('Zar atılmayan turda iki istemciye otomatik zar/hamle/sıra devri 30 saniyede tamamlanmadı.'));
     }, 30000);
-    wsBoard1.on('message', handler);
-    wsBoard2.on('message', handler);
+    wsBoard1.on('message', handler1);
+    wsBoard2.on('message', handler2);
   });
 
   await secondTimeoutPromise;
   expect(automaticRollSeen, 'Zar atılmayan turda animasyon için game:rolled olayı gönderildi');
-  expect(secondTurnAutomaticMoves > 0, 'Otomatik zarın ardından en az bir hamle yapıldı', 'Hamle sayısı: ' + secondTurnAutomaticMoves);
+  expect(rollRecipients.size === 2, 'game:rolled olayı iki WebSocket istemcisine de ulaştı', 'Alıcı sayısı: ' + rollRecipients.size);
+  expect(automaticMovesByPlayer.p1 > 0 && automaticMovesByPlayer.p2 > 0, 'Otomatik hamle olayları iki istemciye de ulaştı', 'P1: ' + automaticMovesByPlayer.p1 + ', P2: ' + automaticMovesByPlayer.p2);
+  expect(passRecipients.size === 2, 'game:turn_passed olayı iki WebSocket istemcisine de ulaştı', 'Alıcı sayısı: ' + passRecipients.size);
   expect(secondTurnHandedOff.turn !== secondTurnColor, 'Otomatik zar ve hamlelerden sonra sıra rakibe geçti');
   expect(secondTurnHandedOff.dice.length === 0, 'Otomatik tur sonunda zarlar temizlendi');
 
@@ -262,37 +274,51 @@ async function runOnlineRobustnessSuite() {
   let previousTurn = secondTurnHandedOff.turn;
   for (let cycle = 1; cycle <= 2; cycle++) {
     let rollReceived = false;
-    let moveCount = 0;
+    const rollRecipients = new Set<string>();
+    const passRecipients = new Set<string>();
+    const moveCounts = { p1: 0, p2: 0 };
     let nextRoom: any = null;
     const cyclePromise = new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        wsBoard1.off('message', handler);
-        wsBoard2.off('message', handler);
-        reject(new Error('Art arda otomatik tur ' + cycle + ' tamamlanmadı; sıra devri veya zar olayı eksik.'));
-      }, 30000);
-      const handler = (data: any) => {
+      let timeout: ReturnType<typeof setTimeout>;
+      const cleanup = () => {
+        wsBoard1.off('message', handler1);
+        wsBoard2.off('message', handler2);
+        clearTimeout(timeout);
+      };
+      const makeHandler = (recipient: 'p1' | 'p2') => (data: any) => {
         const msg = JSON.parse(data.toString());
         if (msg.type === 'game:rolled' && msg.autoPlay === true && msg.room?.turn === previousTurn) {
           rollReceived = true;
+          rollRecipients.add(recipient);
           expect((msg.dice?.length === 2 || msg.dice?.length === 4), 'Tur ' + cycle + ': sunucu yeni zarları gönderdi (2 veya 4)');
         }
-        if (msg.type === 'game:moved' && msg.autoPlay === true && msg.room?.turn === previousTurn) moveCount++;
+        if (msg.type === 'game:moved' && msg.autoPlay === true && msg.room?.turn === previousTurn) moveCounts[recipient]++;
         if (msg.type === 'game:turn_passed' && msg.room?.turn !== previousTurn) {
           nextRoom = msg.room;
-          wsBoard1.off('message', handler);
-          wsBoard2.off('message', handler);
-          clearTimeout(timeout);
-          resolve();
+          passRecipients.add(recipient);
+          if (passRecipients.size === 2) {
+            cleanup();
+            resolve();
+          }
         }
       };
-      wsBoard1.on('message', handler);
-      wsBoard2.on('message', handler);
+      const handler1 = makeHandler('p1');
+      const handler2 = makeHandler('p2');
+      timeout = setTimeout(() => {
+        cleanup();
+        reject(new Error('Art arda otomatik tur ' + cycle + ' iki istemcide tamamlanmadı; sıra devri veya zar olayı eksik.'));
+      }, 30000);
+      wsBoard1.on('message', handler1);
+      wsBoard2.on('message', handler2);
     });
     await cyclePromise;
     expect(rollReceived, 'Tur ' + cycle + ': otomatik zar olayı geldi');
+    expect(rollRecipients.size === 2, 'Tur ' + cycle + ': zar olayı iki istemciye de ulaştı');
+    expect(moveCounts.p1 > 0 && moveCounts.p2 > 0, 'Tur ' + cycle + ': otomatik hamleler iki istemciye de ulaştı');
+    expect(passRecipients.size === 2, 'Tur ' + cycle + ': sıra devri iki istemciye de ulaştı');
     expect(nextRoom?.turn !== previousTurn, 'Tur ' + cycle + ': sıra rakibe geçti');
     expect(nextRoom?.dice?.length === 0, 'Tur ' + cycle + ': eski zarlar temizlendi');
-    log('Tur ' + cycle + ': otomatik hamle sayısı', 'INFO', String(moveCount));
+    log('Tur ' + cycle + ': otomatik hamle sayısı', 'INFO', 'P1: ' + moveCounts.p1 + ', P2: ' + moveCounts.p2);
     previousTurn = nextRoom.turn;
   }
   // --- TEST 4: KRİTİK TEST - İLK ZARDAN SONRA "RAKİBİNİZ ÇIKTI" HATASI OLUŞMUYOR MU? ---
