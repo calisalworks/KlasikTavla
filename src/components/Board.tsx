@@ -1372,17 +1372,15 @@ export const Board: React.FC<BoardProps> = ({
             <div className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-[#2b1c13] animate-ping" />
           )}
 
-          <div className="flex items-center gap-2">
-            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-amber-600/70 bg-[#160f0a] flex items-center justify-center shadow-inner shrink-0">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-stone-800 to-stone-600 flex items-center justify-center text-xs font-bold text-amber-200">
-                <Bot className="w-4 h-4 text-amber-300" />
+          <div className="w-full flex flex-col items-center gap-1.5">
+            <div className="relative w-[60px] h-[60px] rounded-full overflow-hidden border-2 border-amber-600/70 bg-[#160f0a] flex items-center justify-center shadow-inner shrink-0">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-stone-800 to-stone-600 flex items-center justify-center">
+                <Bot className="w-7 h-7 text-amber-300" />
               </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-xs font-bold text-amber-100 truncate tracking-wide">
-                Yapay Zeka
-              </div>
-              <div className="text-[11px] text-amber-400/80 font-semibold flex items-center gap-1">
+            <div className="w-full min-w-0 text-center">
+              <div className="text-xs font-bold text-amber-100 truncate tracking-wide">Yapay Zeka</div>
+              <div className="text-[10px] text-amber-400/80 font-semibold flex items-center justify-center gap-1">
                 <Trophy className="w-3 h-3 text-amber-400" />
                 <span>{blackScore} Puan</span>
               </div>
@@ -1438,18 +1436,18 @@ export const Board: React.FC<BoardProps> = ({
             <div className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-[#2b1c13] animate-ping" />
           )}
 
-          <div className="flex items-center gap-2">
+          <div className="w-full flex flex-col items-center gap-1.5">
             <AvatarDisplay
               avatar={profile?.avatar}
               name={profile?.name || 'SİZ'}
-              size={38}
+              size={60}
               className="border-2 border-amber-500/80 shadow-inner"
             />
-            <div className="min-w-0 flex-1">
+            <div className="w-full min-w-0 text-center">
               <div className="text-xs font-bold text-amber-100 truncate tracking-wide">
-                {profile?.name || 'SİZ'} (Beyaz)
+                {profile?.name || 'SİZ'} (Siz)
               </div>
-              <div className="text-[11px] text-amber-400/80 font-semibold flex items-center gap-1">
+              <div className="text-[10px] text-amber-400/80 font-semibold flex items-center justify-center gap-1">
                 <Trophy className="w-3 h-3 text-amber-400" />
                 <span>{whiteScore} Puan</span>
               </div>
