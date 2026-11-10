@@ -559,7 +559,7 @@ export const Board: React.FC<BoardProps> = ({
             : `Zarlar: ${newDice[0].value} - ${newDice[1].value}. Taşı sürükleyin veya dokunun.`
         );
       }
-    }, 1150);
+    }, 1750);
   };
 
   const clearAutoPassTimers = () => {
@@ -751,7 +751,7 @@ export const Board: React.FC<BoardProps> = ({
 
           aiTimeoutsRef.current.push(startTimer);
         });
-      }, openingDiceAlreadySet ? 0 : 1150);
+      }, openingDiceAlreadySet ? 0 : 1750);
       aiTimeoutsRef.current.push(dropTimer);
     }, 800);
 
