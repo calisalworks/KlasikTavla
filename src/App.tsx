@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Board } from './components/Board';
 import { OnlineBoard } from './components/OnlineBoard';
+import { RADIO_STATIONS } from './components/RadioControls';
 import { MainMenu } from './components/MainMenu';
 import { SinglePlayerSetupModal } from './components/SinglePlayerSetupModal';
 import { OnlineLobbyModal } from './components/OnlineLobbyModal';
@@ -39,6 +40,16 @@ export default function App() {
   const [onlineRoomId, setOnlineRoomId] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile>(getUserProfile);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const radioAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [isRadioPlaying, setIsRadioPlaying] = useState(false);
+  const [radioChannel, setRadioChannel] = useState(() => {
+    try {
+      const saved = Number(localStorage.getItem('klasik-tavla-radio-channel'));
+      return Number.isInteger(saved) && saved >= 0 && saved < RADIO_STATIONS.length ? saved : 0;
+    } catch {
+      return 0;
+    }
+  });
 
   // Friend Room & URL Invite States
   const [isFriendRoomOpen, setIsFriendRoomOpen] = useState(false);
@@ -225,6 +236,57 @@ export default function App() {
     }
   }, [settings]);
 
+  const playRadioChannel = (index: number) => {
+    const audio = radioAudioRef.current;
+    if (!audio) return;
+    audio.src = RADIO_STATIONS[index].url;
+    audio.load();
+    audio.play().catch((error) => {
+      console.warn('Radyo yayını başlatılamadı:', error);
+      setIsRadioPlaying(false);
+    });
+  };
+
+  const handleToggleRadio = () => {
+    if (isRadioPlaying) {
+      radioAudioRef.current?.pause();
+      setIsRadioPlaying(false);
+      return;
+    }
+    setSettings((prev) => ({ ...prev, ambientSound: false }));
+    setIsRadioPlaying(true);
+    playRadioChannel(radioChannel);
+  };
+
+  const handleChangeRadioChannel = (direction: -1 | 1) => {
+    const nextIndex = (radioChannel + direction + RADIO_STATIONS.length) % RADIO_STATIONS.length;
+    setRadioChannel(nextIndex);
+    if (isRadioPlaying) playRadioChannel(nextIndex);
+  };
+
+  const handleToggleMusic = () => {
+    if (!settings.ambientSound) {
+      radioAudioRef.current?.pause();
+      setIsRadioPlaying(false);
+    }
+    setSettings((prev) => ({ ...prev, ambientSound: !prev.ambientSound }));
+  };
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('klasik-tavla-radio-channel', String(radioChannel));
+    } catch {
+      // Storage may be unavailable in private browsing.
+    }
+  }, [radioChannel]);
+
+  useEffect(() => {
+    if (activeView === 'MENU' && isRadioPlaying) {
+      radioAudioRef.current?.pause();
+      setIsRadioPlaying(false);
+    }
+  }, [activeView, isRadioPlaying]);
+
   // Start music only after the brand splash; pause it whenever the app is backgrounded.
   useEffect(() => {
     tavlaAudio.setAmbientEnabled(settings.ambientSound && !showBrandSplash);
@@ -336,6 +398,7 @@ export default function App() {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#120d09] font-['Plus_Jakarta_Sans',sans-serif] flex flex-col select-none touch-none">
+      <audio ref={radioAudioRef} preload="none" onError={() => setIsRadioPlaying(false)} className="hidden" />
       {showBrandSplash && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black">
           <img src="/calisal-works-intro.jpg" alt="CALISAL WORKS" className="h-full w-full object-contain" />
@@ -377,7 +440,12 @@ export default function App() {
             settings={settings}
             targetScore={singlePlayerTargetScore}
             onOpenSettings={() => setIsSettingsOpen(true)}
-            onToggleMusic={() => setSettings((prev) => ({ ...prev, ambientSound: !prev.ambientSound }))}
+            onToggleMusic={handleToggleMusic}
+            isRadioPlaying={isRadioPlaying}
+            radioChannel={radioChannel}
+            onToggleRadio={handleToggleRadio}
+            onPreviousRadio={() => handleChangeRadioChannel(-1)}
+            onNextRadio={() => handleChangeRadioChannel(1)}
             onOpenRules={() => setIsRulesOpen(true)}
             onReturnToMenu={() => setActiveView('MENU')}
             onToggleFullscreen={toggleFullscreen}
@@ -392,7 +460,12 @@ export default function App() {
             profile={profile}
             settings={settings}
             onOpenSettings={() => setIsSettingsOpen(true)}
-            onToggleMusic={() => setSettings((prev) => ({ ...prev, ambientSound: !prev.ambientSound }))}
+            onToggleMusic={handleToggleMusic}
+            isRadioPlaying={isRadioPlaying}
+            radioChannel={radioChannel}
+            onToggleRadio={handleToggleRadio}
+            onPreviousRadio={() => handleChangeRadioChannel(-1)}
+            onNextRadio={() => handleChangeRadioChannel(1)}
             onOpenRules={() => setIsSettingsOpen(true)}
             onLeaveRoom={() => {
               setOnlineRoomId(null);
