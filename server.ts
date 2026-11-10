@@ -108,40 +108,15 @@ function finalizeOpeningRoll(room: GameRoom) {
     if (fallback) clearTimeout(fallback);
     openingRollFallbacks.delete(room.id);
 
-    const firstValue = current.winner === 'white' ? current.whiteDie : current.blackDie;
-    const secondValue = current.winner === 'white' ? current.blackDie : current.whiteDie;
-    const rollId = Date.now();
+    // Opening dice only determine who starts. The winner must roll two fresh dice.
     room.turn = current.winner;
-    room.dice = [
-      { value: firstValue, used: false, id: `opening-first-${rollId}` },
-      { value: secondValue, used: false, id: `opening-second-${rollId}` },
-    ];
-    room.turnSnapshot = {
-      board: cloneBoard(room.board),
-      dice: room.dice.map((die) => ({ ...die })),
-      movesMade: [],
-    };
+    room.dice = [];
+    room.turnSnapshot = null;
     room.undoHistory = [];
     room.openingRollCompleted = true;
     room.lastActivity = Date.now();
-    const hasMoves = hasAnyLegalMoves(room.board, room.turn, room.dice);
-    if (hasMoves) scheduleTurnTimeout(room);
+    scheduleTurnTimeout(room);
     broadcastToRoom(room.id, { type: 'room:updated', room });
-
-    if (!hasMoves) {
-      const passTimer = setTimeout(() => {
-        if (rooms.get(room.id) === room && room.dice.some((die) => !die.used)) {
-          room.dice = [];
-          room.turnSnapshot = null;
-          room.undoHistory = [];
-          room.turn = room.turn === 'white' ? 'black' : 'white';
-          broadcastToRoom(room.id, { type: 'game:turn_passed', room, reason: 'Hamle yok' });
-          scheduleTurnTimeout(room);
-        }
-        passTimeouts.delete(room.id);
-      }, 1200);
-      passTimeouts.set(room.id, passTimer);
-    }
   }, 1650);
   openingRollFinalizeTimers.set(room.id, finalizeTimer);
 }
