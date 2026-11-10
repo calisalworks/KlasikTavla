@@ -1254,13 +1254,13 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             {room.turn === opponentColor ? (
               <div
                 className={`flex items-center gap-1.5 font-bold px-2 py-0.5 rounded-full border transition-all ${
-                  (turnSecondsLeft ?? 15) <= 5
+                  (turnSecondsLeft ?? 20) <= 5
                     ? 'bg-red-950/90 text-red-300 border-red-500/80 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]'
                     : 'bg-amber-950/80 text-amber-300 border-amber-500/50'
                 }`}
               >
                 <Clock className="w-3.5 h-3.5 text-amber-400" />
-                <span>{turnSecondsLeft !== null ? `${turnSecondsLeft} sn` : '15 sn'}</span>
+                <span>{turnSecondsLeft !== null ? `${turnSecondsLeft} sn` : '20 sn'}</span>
               </div>
             ) : (
               <span className="text-amber-200/50 text-[10px] font-medium">Bekliyor</span>
@@ -1326,13 +1326,13 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             {isMyTurn ? (
               <div
                 className={`flex items-center gap-1.5 font-bold px-2 py-0.5 rounded-full border transition-all ${
-                  (turnSecondsLeft ?? 15) <= 5
+                  (turnSecondsLeft ?? 20) <= 5
                     ? 'bg-red-950/95 text-red-200 border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.7)] animate-pulse'
                     : 'bg-emerald-950/80 text-emerald-300 border-emerald-500/60'
                 }`}
               >
                 <Clock className="w-3.5 h-3.5" />
-                <span>{turnSecondsLeft !== null ? `${turnSecondsLeft} sn` : '15 sn'}</span>
+                <span>{turnSecondsLeft !== null ? `${turnSecondsLeft} sn` : '20 sn'}</span>
               </div>
             ) : (
               <span className="text-amber-200/50 text-[10px] font-medium">Bekliyor</span>
