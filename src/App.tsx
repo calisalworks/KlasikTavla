@@ -224,7 +224,7 @@ export default function App() {
     const defaults: GameSettings = {
       soundEnabled: true,
       ambientSound: true,
-      ambientVolume: 12,
+      ambientVolume: 60,
       autoRoll: false,
       highlightMoves: true,
       aiDifficulty: 'medium',
@@ -249,7 +249,9 @@ export default function App() {
   const playRadioChannel = (index: number) => {
     const audio = radioAudioRef.current;
     if (!audio) return;
+    audio.pause();
     audio.src = RADIO_STATIONS[index].url;
+    audio.volume = (settings.ambientVolume ?? 60) / 100;
     audio.load();
     audio.play().catch((error) => {
       console.warn('Radyo yayını başlatılamadı:', error);
@@ -336,9 +338,11 @@ export default function App() {
     tavlaAudio.setAmbientEnabled(settings.ambientSound && !showBrandSplash);
   }, [settings.ambientSound, showBrandSplash]);
 
-  // Apply the user's saved music volume immediately, including while music is playing.
+  // One master level controls game music, internet radio and all sound effects.
   useEffect(() => {
-    tavlaAudio.setBackgroundMusicVolume(settings.ambientVolume ?? 12);
+    const volume = settings.ambientVolume ?? 60;
+    tavlaAudio.setMasterVolume(volume);
+    if (radioAudioRef.current) radioAudioRef.current.volume = volume / 100;
   }, [settings.ambientVolume]);
 
   useEffect(() => {
@@ -481,6 +485,8 @@ export default function App() {
         {activeView === 'SINGLE_PLAYER' && (
           <Board
             profile={profile}
+            masterVolume={settings.ambientVolume ?? 60}
+            onChangeMasterVolume={(volume) => setSettings((prev) => ({ ...prev, ambientVolume: volume }))}
             settings={settings}
             targetScore={singlePlayerTargetScore}
             onOpenSettings={() => setIsSettingsOpen(true)}
@@ -502,6 +508,8 @@ export default function App() {
         {activeView === 'ONLINE_BOARD' && onlineRoomId && (
           <OnlineBoard
             roomId={onlineRoomId}
+            masterVolume={settings.ambientVolume ?? 60}
+            onChangeMasterVolume={(volume) => setSettings((prev) => ({ ...prev, ambientVolume: volume }))}
             profile={profile}
             settings={settings}
             onOpenSettings={() => setIsSettingsOpen(true)}
