@@ -60,8 +60,6 @@ export const Board: React.FC<BoardProps> = ({
   onToggleMusic,
   onOpenRules,
   onReturnToMenu,
-  onToggleFullscreen,
-  isFullscreen,
   onRecordMatch,
 }) => {
   // Game state
