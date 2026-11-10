@@ -36,7 +36,7 @@ export const RadioControls: React.FC<RadioControlsProps> = ({
   const station = RADIO_STATIONS[stationIndex] ?? RADIO_STATIONS[0];
 
   return (
-    <div className="flex items-center gap-1.5 shrink-0" aria-label="İnternet radyosu">
+    <div className="flex items-center gap-1.5 shrink-0 mr-2" aria-label="İnternet radyosu">
       <button onClick={onPrevious} disabled={!hasEnabledStations} title="Önceki radyo" aria-label="Önceki radyo" className="w-8 h-8 flex items-center justify-center rounded-lg text-amber-200 bg-[#3b2517] border border-amber-600/60 hover:bg-[#56351f] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
         <ChevronLeft className="w-5 h-5" strokeWidth={3} />
       </button>
