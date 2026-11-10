@@ -29,7 +29,7 @@ import { AvatarDisplay } from './AvatarDisplay';
 import { OpeningRollOverlay } from './OpeningRollOverlay';
 import { MasterVolumeControl, RadioControls } from './RadioControls';
 import { GameTips } from './GameTips';
-import { RotateCcw, Check, Settings, Trophy, RefreshCw, Home, AlertTriangle, Bot, Clock, Volume2, VolumeX } from 'lucide-react';
+import { RotateCcw, Check, Settings, Trophy, RefreshCw, Home, AlertTriangle, Bot, Clock, Volume2, VolumeX, MessageCircle, Send, X } from 'lucide-react';
 
 interface BoardProps {
   profile?: UserProfile;
@@ -50,6 +50,13 @@ interface BoardProps {
   onToggleFullscreen: () => void;
   isFullscreen: boolean;
   onRecordMatch: (result: 'win' | 'loss' | 'abandoned') => void;
+}
+
+interface AIChatMessage {
+  id: string;
+  sender: 'player' | 'ai';
+  text: string;
+  createdAt: number;
 }
 
 interface DragState {
@@ -126,6 +133,38 @@ export const Board: React.FC<BoardProps> = ({
   const [afkStrikes, setAfkStrikes] = useState<number>(0);
   const [showAfkWarning, setShowAfkWarning] = useState<boolean>(false);
   const [forfeitNotice, setForfeitNotice] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState<AIChatMessage[]>([]);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatDraft, setChatDraft] = useState('');
+  const [latestChatMessage, setLatestChatMessage] = useState<AIChatMessage | null>(null);
+  const chatToastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const aiChatReplyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const sendChatMessage = (value = chatDraft) => {
+    const text = value.trim().slice(0, 120);
+    if (!text) return;
+    const now = Date.now();
+    const playerMessage: AIChatMessage = { id: `${now}-player`, sender: 'player', text, createdAt: now };
+    setChatMessages((previous) => [...previous, playerMessage].slice(-60));
+    setLatestChatMessage(playerMessage);
+    if (chatToastTimeoutRef.current) clearTimeout(chatToastTimeoutRef.current);
+    chatToastTimeoutRef.current = setTimeout(() => setLatestChatMessage(null), 2600);
+    setChatDraft('');
+    if (aiChatReplyTimeoutRef.current) clearTimeout(aiChatReplyTimeoutRef.current);
+    aiChatReplyTimeoutRef.current = setTimeout(() => {
+      const replies = ['🙂 Güzel hamle!', '👍 Devam edelim.', '🎲 Şans senden yana olsun!', '😎 Bakalım sıradaki hamle ne olacak.', '👏 İyi oyun!', '🔥 Rekabet kızışıyor!'];
+      const reply: AIChatMessage = { id: `${Date.now()}-ai`, sender: 'ai', text: text.length <= 3 && !/[a-zA-Z0-9ğüşöçıİĞÜŞÖÇ]/.test(text) ? '😄' : replies[Math.floor(Math.random() * replies.length)], createdAt: Date.now() };
+      setChatMessages((previous) => [...previous, reply].slice(-60));
+      setLatestChatMessage(reply);
+      if (chatToastTimeoutRef.current) clearTimeout(chatToastTimeoutRef.current);
+      chatToastTimeoutRef.current = setTimeout(() => setLatestChatMessage(null), 2600);
+    }, 850);
+  };
+
+  useEffect(() => () => {
+    if (chatToastTimeoutRef.current) clearTimeout(chatToastTimeoutRef.current);
+    if (aiChatReplyTimeoutRef.current) clearTimeout(aiChatReplyTimeoutRef.current);
+  }, []);
 
   const clearTurnTimer = () => {
     if (turnTimerRef.current) {
@@ -1393,10 +1432,14 @@ export const Board: React.FC<BoardProps> = ({
           )}
 
           <div className="w-full flex flex-col items-center gap-1.5">
-            <div className="relative w-[60px] h-[60px] rounded-full overflow-hidden border-2 border-amber-600/70 bg-[#160f0a] flex items-center justify-center shadow-inner shrink-0">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-stone-800 to-stone-600 flex items-center justify-center">
-                <Bot className="w-7 h-7 text-amber-300" />
+            <div className="relative">
+              <div className="relative w-[60px] h-[60px] rounded-full overflow-hidden border-2 border-amber-600/70 bg-[#160f0a] flex items-center justify-center shadow-inner shrink-0">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-stone-800 to-stone-600 flex items-center justify-center">
+                  <Bot className="w-7 h-7 text-amber-300" />
+                </div>
               </div>
+              <button type="button" onClick={() => setIsChatOpen(true)} title="Yapay zekâ ile sohbet et" aria-label="Sohbeti aç" className="absolute -top-1.5 -right-2 z-30 w-7 h-7 rounded-full flex items-center justify-center bg-amber-500 text-amber-950 border-2 border-[#2b1c13] shadow-lg hover:bg-amber-300 active:scale-90 cursor-pointer touch-manipulation"><MessageCircle className="w-4 h-4" /></button>
+              {latestChatMessage?.sender === 'ai' && <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-40 max-w-[150px] px-2 py-1 rounded-xl rounded-bl-sm bg-[#fff4d6] text-[#2a1609] text-[10px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestChatMessage.text}</div>}
             </div>
             <div className="w-full min-w-0 text-center">
               <div className="text-xs font-bold text-amber-100 truncate tracking-wide">Yapay Zeka</div>
@@ -1457,12 +1500,11 @@ export const Board: React.FC<BoardProps> = ({
           )}
 
           <div className="w-full flex flex-col items-center gap-1.5">
-            <AvatarDisplay
-              avatar={profile?.avatar}
-              name={profile?.name || 'SİZ'}
-              size={60}
-              className="border-2 border-amber-500/80 shadow-inner"
-            />
+            <div className="relative">
+              <AvatarDisplay avatar={profile?.avatar} name={profile?.name || 'SİZ'} size={60} className="border-2 border-amber-500/80 shadow-inner" />
+              <button type="button" onClick={() => setIsChatOpen(true)} title="Sohbeti aç" aria-label="Sohbeti aç" className="absolute -top-1.5 -right-2 z-30 w-7 h-7 rounded-full flex items-center justify-center bg-amber-500 text-amber-950 border-2 border-[#2b1c13] shadow-lg hover:bg-amber-300 active:scale-90 cursor-pointer touch-manipulation"><MessageCircle className="w-4 h-4" /></button>
+              {latestChatMessage?.sender === 'player' && <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-40 max-w-[150px] px-2 py-1 rounded-xl rounded-bl-sm bg-[#fff4d6] text-[#2a1609] text-[10px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestChatMessage.text}</div>}
+            </div>
             <div className="w-full min-w-0 text-center">
               <div className="text-xs font-bold text-amber-100 truncate tracking-wide">
                 {profile?.name || 'SİZ'} (Siz)
@@ -1933,6 +1975,18 @@ export const Board: React.FC<BoardProps> = ({
       )}
 
 
+      {isChatOpen && (
+        <div className="fixed left-[136px] top-1/2 -translate-y-1/2 z-[2500] w-[min(280px,42vw)] max-h-[72vh] flex flex-col rounded-2xl bg-[#1b1009]/[0.98] border-2 border-amber-600/80 shadow-[0_18px_45px_rgba(0,0,0,0.8)] text-amber-100 pointer-events-auto touch-auto select-text" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
+          <div className="flex items-center justify-between px-3 py-2 border-b border-amber-800/60 shrink-0"><div className="min-w-0"><div className="text-xs font-black text-amber-200">Sohbet</div><div className="text-[9px] text-amber-400/60 truncate">Yapay Zekâ</div></div><button type="button" onClick={() => setIsChatOpen(false)} className="p-1 rounded-lg text-amber-300 hover:bg-amber-900/60 cursor-pointer" aria-label="Sohbeti kapat"><X className="w-4 h-4" /></button></div>
+          <div className="flex-1 min-h-[90px] overflow-y-auto p-2 space-y-1.5">
+            {chatMessages.length === 0 ? <div className="h-full min-h-[90px] flex items-center justify-center text-[10px] text-amber-400/60 text-center">Henüz mesaj yok. İlk mesajı gönderin.</div> : chatMessages.map((message) => <div key={message.id} className={message.sender === 'player' ? "flex justify-end" : "flex justify-start"}><div className={message.sender === 'player' ? "max-w-[88%] px-2.5 py-1.5 rounded-xl rounded-br-sm bg-amber-700/80 text-amber-50 text-[10px]" : "max-w-[88%] px-2.5 py-1.5 rounded-xl rounded-bl-sm bg-[#392416] text-amber-100 text-[10px]"}><div className="font-bold text-[9px] opacity-75 mb-0.5">{message.sender === 'player' ? 'Siz' : 'Yapay Zekâ'}</div><div className="break-words whitespace-pre-wrap">{message.text}</div></div></div>)}
+          </div>
+          <div className="px-2 pb-2 shrink-0"><div className="flex items-center justify-between gap-1 mb-1">{['👍','👏','😀','😂','😎','🔥','🎲','❤️'].map((emoji) => <button key={emoji} type="button" onClick={() => sendChatMessage(emoji)} className="p-1 rounded-md hover:bg-amber-900/60 text-base cursor-pointer touch-manipulation" aria-label={emoji + ' gönder'}>{emoji}</button>)}</div>
+            <form onSubmit={(event) => { event.preventDefault(); sendChatMessage(); }} className="flex items-center gap-1.5"><input value={chatDraft} onChange={(event) => setChatDraft(event.target.value.slice(0, 120))} maxLength={120} placeholder="Mesaj yaz..." className="min-w-0 flex-1 px-2.5 py-2 rounded-lg bg-black/50 border border-amber-800/70 text-amber-100 text-[11px] outline-none focus:border-amber-400 touch-auto select-text" /><button type="submit" disabled={!chatDraft.trim()} className="w-9 h-9 shrink-0 rounded-lg bg-amber-600 hover:bg-amber-500 text-amber-950 flex items-center justify-center disabled:opacity-40 cursor-pointer" aria-label="Mesajı gönder"><Send className="w-4 h-4" /></button></form>
+            <div className="text-[8px] text-amber-400/50 mt-1 text-right">Sohbet geçmişi bu oyun boyunca saklanır.</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
