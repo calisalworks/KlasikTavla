@@ -39,13 +39,15 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import { RadioControls } from './RadioControls';
+import { MasterVolumeControl, RadioControls } from './RadioControls';
 import { GameTips } from './GameTips';
 
 interface OnlineBoardProps {
   roomId: string;
   profile: UserProfile;
   settings: GameSettings;
+  masterVolume: number;
+  onChangeMasterVolume: (volume: number) => void;
   onOpenSettings: () => void;
   onToggleMusic: () => void;
   isRadioPlaying: boolean;
@@ -76,6 +78,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   roomId,
   profile,
   settings,
+  masterVolume,
+  onChangeMasterVolume,
   onOpenSettings,
   onToggleMusic,
   isRadioPlaying,
@@ -1396,6 +1400,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             >
               Masadan Ayrıl
             </button>
+            <MasterVolumeControl value={masterVolume} onChange={onChangeMasterVolume} />
           </div>
         </div>
 
