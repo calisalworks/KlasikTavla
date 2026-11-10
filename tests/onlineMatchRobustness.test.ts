@@ -146,6 +146,7 @@ async function runOnlineRobustnessSuite() {
   console.log('\n--- 3. Açılış Zarı Zaman Aşımı: Sunucu Otomatik Oynar ve Sırayı Devreder ---');
 
   const openingReadyPromise = new Promise<void>((resolve, reject) => {
+    let timeout: ReturnType<typeof setTimeout>;
     const handler = (data: any) => {
       const msg = JSON.parse(data.toString());
       if (msg.type === 'room:updated' && msg.room?.openingRollCompleted && msg.room.dice?.length === 2) {
@@ -156,7 +157,7 @@ async function runOnlineRobustnessSuite() {
         resolve();
       }
     };
-    const timeout = setTimeout(() => {
+    timeout = setTimeout(() => {
       wsBoard1.off('message', handler);
       wsBoard2.off('message', handler);
       reject(new Error('Açılış zarları zamanında tamamlanmadı.'));
@@ -175,6 +176,7 @@ async function runOnlineRobustnessSuite() {
   let handedOffRoom: any = null;
 
   const timeoutTurnPromise = new Promise<void>((resolve, reject) => {
+    let timeout: ReturnType<typeof setTimeout>;
     const handler = (data: any) => {
       const msg = JSON.parse(data.toString());
       if (msg.type === 'game:moved' && msg.room?.turn === startingTurn) {
@@ -188,7 +190,7 @@ async function runOnlineRobustnessSuite() {
         resolve();
       }
     };
-    const timeout = setTimeout(() => {
+    timeout = setTimeout(() => {
       wsBoard1.off('message', handler);
       wsBoard2.off('message', handler);
       reject(new Error('Otomatik hamle sonrası sıra 30 saniye içinde rakibe geçmedi.'));
