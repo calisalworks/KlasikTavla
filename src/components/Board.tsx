@@ -211,7 +211,7 @@ export const Board: React.FC<BoardProps> = ({
             autoPlayTimeoutsRef.current.push(stepT);
           });
         }
-      }, 2000);
+      }, 1600);
       autoPlayTimeoutsRef.current.push(dropT);
       return;
     }
@@ -543,7 +543,7 @@ export const Board: React.FC<BoardProps> = ({
             : `Zarlar: ${newDice[0].value} - ${newDice[1].value}. Taşı sürükleyin veya dokunun.`
         );
       }
-    }, 2300);
+    }, 1900);
   };
 
   const clearAutoPassTimers = () => {
@@ -725,7 +725,7 @@ export const Board: React.FC<BoardProps> = ({
 
           aiTimeoutsRef.current.push(startTimer);
         });
-      }, 2400);
+      }, 2000);
       aiTimeoutsRef.current.push(dropTimer);
     }, 800);
 
