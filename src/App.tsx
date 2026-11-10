@@ -203,6 +203,7 @@ export default function App() {
     const defaults: GameSettings = {
       soundEnabled: true,
       ambientSound: true,
+      ambientVolume: 12,
       autoRoll: false,
       highlightMoves: true,
       aiDifficulty: 'medium',
@@ -228,6 +229,11 @@ export default function App() {
   useEffect(() => {
     tavlaAudio.setAmbientEnabled(settings.ambientSound && !showBrandSplash);
   }, [settings.ambientSound, showBrandSplash]);
+
+  // Apply the user's saved music volume immediately, including while music is playing.
+  useEffect(() => {
+    tavlaAudio.setBackgroundMusicVolume(settings.ambientVolume ?? 12);
+  }, [settings.ambientVolume]);
 
   useEffect(() => {
     const updateVisibility = () => tavlaAudio.setAppVisible(!document.hidden);
