@@ -113,7 +113,7 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
       setWhiteRolling(false);
       setWhiteSettled(true);
       tavlaAudio.playDiceDrop();
-    }, 2700);
+    }, 2000);
     return () => clearTimeout(drop);
   }, [isOpen, whiteRolled]);
 
