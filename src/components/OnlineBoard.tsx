@@ -393,7 +393,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
                     `Zarlar: ${msg.dice.map((d: Die) => d.value).join(' - ')}`
                   );
                 }
-              }, 1500);
+              }, 1750);
               break;
             }
 
