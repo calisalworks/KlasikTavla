@@ -211,12 +211,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {RADIO_STATIONS.map((station) => {
+                {RADIO_STATIONS.map((station, index) => {
                   const enabled = enabledRadioStations.includes(station.id);
                   return (
                     <div key={station.id} className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#1c0d05] border border-amber-900/50">
                       <div className="min-w-0">
-                        <div className="font-semibold text-[11px] text-amber-100">{station.name}</div>
+                        <div className="flex items-center gap-1.5 font-semibold text-[11px] text-amber-100"><span className="w-5 h-5 rounded-md bg-amber-900/70 border border-amber-600/50 text-amber-300 text-[9px] flex items-center justify-center shrink-0">{index + 1}</span><span>{station.name}</span></div>
                         <div className="flex items-center gap-1.5 text-[9px]"><span className={enabled ? 'text-amber-400/60' : 'text-stone-500'}>{enabled ? 'Kullanıma açık' : 'Kullanım dışı'}</span><span className={radioAvailability[station.id] === false ? 'font-black text-red-400' : radioAvailability[station.id] === true ? 'font-bold text-emerald-400' : 'text-amber-400/50'}>{radioAvailability[station.id] === false ? '• PASİF' : radioAvailability[station.id] === true ? '• YAYIN AKTİF' : '• KONTROL EDİLİYOR'}</span></div>
                       </div>
                       <button type="button" role="switch" aria-checked={enabled} aria-label={`${station.name} kanalını ${enabled ? 'pasif' : 'aktif'} yap`} onClick={() => onToggleRadioStation(station.id)} className={`w-10 h-6 rounded-full p-0.5 transition-colors cursor-pointer border shrink-0 ${enabled ? 'bg-amber-600 border-amber-400' : 'bg-stone-800 border-stone-600'}`}>

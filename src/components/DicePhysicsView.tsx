@@ -129,9 +129,9 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         // The dice travel at a steady pace, hit the centre bar, then rebound at half speed.
         newStates.push({
           x: throwSide === 'right' ? launchOffset : -launchOffset,
-          y: count === 1 ? 0 : (i === 0 ? -18 : 18),
+          y: count === 1 ? 0 : (i === 0 ? -9 : 9),
           vx: throwSide === 'right' ? -190 : 190,
-          vy: count === 1 ? 0 : (i === 0 ? -8 : 8),
+          vy: count === 1 ? 0 : (i === 0 ? -4 : 4),
           z: 0,
           vz: 0,
           rotX: 0,
@@ -172,7 +172,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         const target = FACE_ROTATIONS[die.value] || { rx: 0, ry: 0 };
         return {
           x: (throwSide === 'right' ? 22 : -22) + (i === 0 ? -9 : 9),
-          y: (i - (visibleDice.length - 1) / 2) * 30 + (i === 0 ? -7 : 7),
+          y: (i - (visibleDice.length - 1) / 2) * 18 + (i === 0 ? -3 : 3),
           vx: 0,
           vy: 0,
           z: 0,
@@ -444,7 +444,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       style={{
         perspective: '800px',
         transform: centerSettledDice
-          ? `translateX(${throwSide === 'right' ? -94 : 94}px)`
+          ? `translateX(${throwSide === 'right' ? -76 : 76}px)`
           : 'translateX(0px)',
         transition: isRolling
           ? 'none'

@@ -137,6 +137,13 @@ export const Board: React.FC<BoardProps> = ({
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatDraft, setChatDraft] = useState('');
   const [latestChatMessage, setLatestChatMessage] = useState<AIChatMessage | null>(null);
+  const [showBarWarning, setShowBarWarning] = useState(false);
+  const barWarningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const showBarBlockedNotice = () => {
+    setShowBarWarning(true);
+    if (barWarningTimeoutRef.current) clearTimeout(barWarningTimeoutRef.current);
+    barWarningTimeoutRef.current = setTimeout(() => setShowBarWarning(false), 2000);
+  };
   const chatToastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const aiChatReplyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -148,22 +155,25 @@ export const Board: React.FC<BoardProps> = ({
     setChatMessages((previous) => [...previous, playerMessage].slice(-60));
     setLatestChatMessage(playerMessage);
     if (chatToastTimeoutRef.current) clearTimeout(chatToastTimeoutRef.current);
-    chatToastTimeoutRef.current = setTimeout(() => setLatestChatMessage(null), 2600);
+    chatToastTimeoutRef.current = setTimeout(() => setLatestChatMessage(null), 4600);
     setChatDraft('');
+    setIsChatOpen(false);
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) document.activeElement.blur();
     if (aiChatReplyTimeoutRef.current) clearTimeout(aiChatReplyTimeoutRef.current);
     aiChatReplyTimeoutRef.current = setTimeout(() => {
-      const replies = ['🙂 Güzel hamle!', '👍 Devam edelim.', '🎲 Şans senden yana olsun!', '😎 Bakalım sıradaki hamle ne olacak.', '👏 İyi oyun!', '🔥 Rekabet kızışıyor!'];
+      const replies = ['🙂 Güzel hamle!', '👍 Devam edelim.', '🎲 Şans senden yana olsun!', '😎 Bakalım sıradaki hamle ne olacak.', '👏 İyi oyun!', '😠 Rekabet kızışıyor!'];
       const reply: AIChatMessage = { id: `${Date.now()}-ai`, sender: 'ai', text: text.length <= 3 && !/[a-zA-Z0-9ğüşöçıİĞÜŞÖÇ]/.test(text) ? '😄' : replies[Math.floor(Math.random() * replies.length)], createdAt: Date.now() };
       setChatMessages((previous) => [...previous, reply].slice(-60));
       setLatestChatMessage(reply);
       if (chatToastTimeoutRef.current) clearTimeout(chatToastTimeoutRef.current);
-      chatToastTimeoutRef.current = setTimeout(() => setLatestChatMessage(null), 2600);
+      chatToastTimeoutRef.current = setTimeout(() => setLatestChatMessage(null), 4600);
     }, 850);
   };
 
   useEffect(() => () => {
     if (chatToastTimeoutRef.current) clearTimeout(chatToastTimeoutRef.current);
     if (aiChatReplyTimeoutRef.current) clearTimeout(aiChatReplyTimeoutRef.current);
+    if (barWarningTimeoutRef.current) clearTimeout(barWarningTimeoutRef.current);
   }, []);
 
   const clearTurnTimer = () => {
@@ -933,6 +943,7 @@ export const Board: React.FC<BoardProps> = ({
     if (dice.length === 0 || dice.every((d) => d.used)) return;
     if (board.bar[turn] > 0 && from !== 'bar') {
       setStatusMessage('Kırık taşınız var! Önce kırık taşı oyuna sokmalısınız.');
+      showBarBlockedNotice();
       return;
     }
 
@@ -1012,6 +1023,7 @@ export const Board: React.FC<BoardProps> = ({
 
     if (board.bar[turn] > 0 && pointIndex !== 'bar') {
       setStatusMessage('Kırık taşınız var! Önce kırık taşı oyuna sokmalısınız.');
+      showBarBlockedNotice();
       return;
     }
 
@@ -1439,7 +1451,7 @@ export const Board: React.FC<BoardProps> = ({
                 </div>
               </div>
               <button type="button" onClick={() => setIsChatOpen(true)} title="Yapay zekâ ile sohbet et" aria-label="Sohbeti aç" className="absolute -top-1.5 -right-2 z-30 w-7 h-7 rounded-full flex items-center justify-center bg-amber-500 text-amber-950 border-2 border-[#2b1c13] shadow-lg hover:bg-amber-300 active:scale-90 cursor-pointer touch-manipulation"><MessageCircle className="w-4 h-4" /></button>
-              {latestChatMessage?.sender === 'ai' && <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-40 max-w-[150px] px-2 py-1 rounded-xl rounded-bl-sm bg-[#fff4d6] text-[#2a1609] text-[10px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestChatMessage.text}</div>}
+              {latestChatMessage?.sender === 'ai' && <div className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+8px)] z-40 max-w-[170px] px-3 py-2 rounded-xl rounded-bl-sm bg-white text-[#21170f] text-[12px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestChatMessage.text}</div>}
             </div>
             <div className="w-full min-w-0 text-center">
               <div className="text-xs font-bold text-amber-100 truncate tracking-wide">Yapay Zeka</div>
@@ -1503,7 +1515,7 @@ export const Board: React.FC<BoardProps> = ({
             <div className="relative">
               <AvatarDisplay avatar={profile?.avatar} name={profile?.name || 'SİZ'} size={60} className="border-2 border-amber-500/80 shadow-inner" />
               <button type="button" onClick={() => setIsChatOpen(true)} title="Sohbeti aç" aria-label="Sohbeti aç" className="absolute -top-1.5 -right-2 z-30 w-7 h-7 rounded-full flex items-center justify-center bg-amber-500 text-amber-950 border-2 border-[#2b1c13] shadow-lg hover:bg-amber-300 active:scale-90 cursor-pointer touch-manipulation"><MessageCircle className="w-4 h-4" /></button>
-              {latestChatMessage?.sender === 'player' && <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-40 max-w-[150px] px-2 py-1 rounded-xl rounded-bl-sm bg-[#fff4d6] text-[#2a1609] text-[10px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestChatMessage.text}</div>}
+              {latestChatMessage?.sender === 'player' && <div className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+8px)] z-40 max-w-[170px] px-3 py-2 rounded-xl rounded-bl-sm bg-white text-[#21170f] text-[12px] font-bold shadow-xl whitespace-normal text-center animate-in fade-in zoom-in-95 duration-150">{latestChatMessage.text}</div>}
             </div>
             <div className="w-full min-w-0 text-center">
               <div className="text-xs font-bold text-amber-100 truncate tracking-wide">
@@ -1738,13 +1750,12 @@ export const Board: React.FC<BoardProps> = ({
             {/* Top (Black) */}
             <div className="w-full flex-1 flex flex-col items-center justify-start rounded-lg bg-[#221004] border border-[#522c11] p-1 overflow-hidden relative">
               {turn === 'white' && !winnerInfo && !matchWinner &&
-                (((dice.length > 0 && dice.every((d) => d.used)) ||
-                  (dice.length > 0 && !hasAnyLegalMoves(board, turn, dice))) || undoHistory.length > 0) && (
+                ((dice.length > 0 && dice.every((d) => d.used)) ||
+                  (dice.length > 0 && !hasAnyLegalMoves(board, turn, dice))) && (
                 <div className="w-full flex flex-col items-center gap-1 mb-1 pointer-events-auto z-40">
                   {((dice.length > 0 && dice.every((d) => d.used)) || (dice.length > 0 && !hasAnyLegalMoves(board, turn, dice))) && (
                     <button onClick={() => passTurn(true)} className="w-full px-1 py-1 rounded-md bg-gradient-to-b from-emerald-500 to-emerald-800 text-white text-[9px] font-black border border-emerald-300 shadow active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"><Check className="w-3 h-3" /><span>TAMAM</span></button>
                   )}
-                  {undoHistory.length > 0 && <button onClick={handleUndo} className="w-full px-1 py-1 rounded-md bg-[#302015]/95 text-amber-200/90 text-[9px] font-semibold border border-amber-800/60 shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"><RotateCcw className="w-3 h-3 text-amber-400/80" /><span>GERİ AL</span></button>}
                   {autoPassSecondsLeft !== null && <div className="text-center text-[8px] font-bold text-amber-200"><span className="text-emerald-300">Geçiş: {autoPassSecondsLeft}s</span></div>}
                 </div>
               )}
@@ -1777,6 +1788,7 @@ export const Board: React.FC<BoardProps> = ({
                   : 'bg-[#221004] border border-[#522c11]'
               } ${dragState?.hoveredTarget === 'off' && canSelectedBearOff ? 'scale-105 bg-emerald-900/90' : ''}`}
             >
+              {undoHistory.length > 0 && <div className="w-full flex justify-center mb-1 pointer-events-auto z-40"><button onClick={handleUndo} className="w-full px-1 py-1 rounded-md bg-[#302015]/95 text-amber-200/90 text-[9px] font-semibold border border-amber-800/60 shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"><RotateCcw className="w-3 h-3 text-amber-400/80" /><span>GERİ AL</span></button></div>}
               {canSelectedBearOff && (
                 <div className="absolute top-2 inset-x-1 text-center py-0.5 rounded bg-emerald-700 text-[10px] font-black text-white">
                   TOPLA
@@ -1975,13 +1987,15 @@ export const Board: React.FC<BoardProps> = ({
       )}
 
 
+      {showBarWarning && <div className="fixed inset-0 z-[2400] flex items-center justify-center pointer-events-none"><div className="px-5 py-3 rounded-xl bg-[#24150c]/95 border-2 border-amber-400 text-amber-100 text-sm font-black shadow-2xl animate-in fade-in zoom-in-95">Kırık taşınız var! Önce onu oyuna sokun.</div></div>}
+
       {isChatOpen && (
-        <div className="fixed left-[136px] top-1/2 -translate-y-1/2 z-[2500] w-[min(280px,42vw)] max-h-[72vh] flex flex-col rounded-2xl bg-[#1b1009]/[0.98] border-2 border-amber-600/80 shadow-[0_18px_45px_rgba(0,0,0,0.8)] text-amber-100 pointer-events-auto touch-auto select-text" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
+        <div className="fixed left-[136px] top-2 z-[2500] w-[min(280px,42vw)] max-h-[72vh] flex flex-col rounded-2xl bg-[#1b1009]/[0.98] border-2 border-amber-600/80 shadow-[0_18px_45px_rgba(0,0,0,0.8)] text-amber-100 pointer-events-auto touch-auto select-text" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
           <div className="flex items-center justify-between px-3 py-2 border-b border-amber-800/60 shrink-0"><div className="min-w-0"><div className="text-xs font-black text-amber-200">Sohbet</div><div className="text-[9px] text-amber-400/60 truncate">Yapay Zekâ</div></div><button type="button" onClick={() => setIsChatOpen(false)} className="p-1 rounded-lg text-amber-300 hover:bg-amber-900/60 cursor-pointer" aria-label="Sohbeti kapat"><X className="w-4 h-4" /></button></div>
           <div className="flex-1 min-h-[90px] overflow-y-auto p-2 space-y-1.5">
             {chatMessages.length === 0 ? <div className="h-full min-h-[90px] flex items-center justify-center text-[10px] text-amber-400/60 text-center">Henüz mesaj yok. İlk mesajı gönderin.</div> : chatMessages.map((message) => <div key={message.id} className={message.sender === 'player' ? "flex justify-end" : "flex justify-start"}><div className={message.sender === 'player' ? "max-w-[88%] px-2.5 py-1.5 rounded-xl rounded-br-sm bg-amber-700/80 text-amber-50 text-[10px]" : "max-w-[88%] px-2.5 py-1.5 rounded-xl rounded-bl-sm bg-[#392416] text-amber-100 text-[10px]"}><div className="font-bold text-[9px] opacity-75 mb-0.5">{message.sender === 'player' ? 'Siz' : 'Yapay Zekâ'}</div><div className="break-words whitespace-pre-wrap">{message.text}</div></div></div>)}
           </div>
-          <div className="px-2 pb-2 shrink-0"><div className="flex items-center justify-between gap-1 mb-1">{['👍','👏','😀','😂','😎','🔥','🎲','❤️'].map((emoji) => <button key={emoji} type="button" onClick={() => sendChatMessage(emoji)} className="p-1 rounded-md hover:bg-amber-900/60 text-base cursor-pointer touch-manipulation" aria-label={emoji + ' gönder'}>{emoji}</button>)}</div>
+          <div className="px-2 pb-2 shrink-0"><div className="flex items-center justify-between gap-1 mb-1">{['👍','👏','😀','😂','😎','😠','🎲','❤️'].map((emoji) => <button key={emoji} type="button" onClick={() => sendChatMessage(emoji)} className="p-1 rounded-md hover:bg-amber-900/60 text-base cursor-pointer touch-manipulation" aria-label={emoji + ' gönder'}>{emoji}</button>)}</div>
             <form onSubmit={(event) => { event.preventDefault(); sendChatMessage(); }} className="flex items-center gap-1.5"><input value={chatDraft} onChange={(event) => setChatDraft(event.target.value.slice(0, 120))} maxLength={120} placeholder="Mesaj yaz..." className="min-w-0 flex-1 px-2.5 py-2 rounded-lg bg-black/50 border border-amber-800/70 text-amber-100 text-[11px] outline-none focus:border-amber-400 touch-auto select-text" /><button type="submit" disabled={!chatDraft.trim()} className="w-9 h-9 shrink-0 rounded-lg bg-amber-600 hover:bg-amber-500 text-amber-950 flex items-center justify-center disabled:opacity-40 cursor-pointer" aria-label="Mesajı gönder"><Send className="w-4 h-4" /></button></form>
             <div className="text-[8px] text-amber-400/50 mt-1 text-right">Sohbet geçmişi bu oyun boyunca saklanır.</div>
           </div>
