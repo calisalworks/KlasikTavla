@@ -158,6 +158,7 @@ export const OpeningRollOverlay: React.FC<OpeningRollOverlayProps> = ({
           <DicePhysicsView
             dice={[die]}
             isRolling={rolling}
+            throwSide={isMySide ? 'right' : 'left'}
             canRoll={false}
             onRollClick={() => undefined}
             className="scale-90"
