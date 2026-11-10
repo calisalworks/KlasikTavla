@@ -11,6 +11,7 @@ interface DicePhysicsProps {
   className?: string;
   throwSide?: 'left' | 'right';
   impactOffset?: number;
+  launchOffset?: number;
 }
 
 interface PhysicsDieState {
@@ -52,6 +53,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
   className = '',
   throwSide = 'right',
   impactOffset = 52,
+  launchOffset = 118,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const animFrameRef = useRef<number | null>(null);
@@ -114,7 +116,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         // Every throw starts at the outer edge, never at the previous landing point.
         // The dice travel at a steady pace, hit the centre bar, then rebound at half speed.
         newStates.push({
-          x: throwSide === 'right' ? 118 : -118,
+          x: throwSide === 'right' ? launchOffset : -launchOffset,
           y: count === 1 ? 0 : (i === 0 ? -18 : 18),
           vx: throwSide === 'right' ? -190 : 190,
           vy: count === 1 ? 0 : (i === 0 ? -8 : 8),
@@ -136,7 +138,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       setPhysicsStates(newStates);
       lastTimeRef.current = performance.now();
     }
-  }, [isRolling, rollSequence, throwSide]);
+  }, [isRolling, rollSequence, throwSide, launchOffset]);
 
   // Stop immediately on the result face. Do not run a second rotation after the dice land.
   useEffect(() => {
