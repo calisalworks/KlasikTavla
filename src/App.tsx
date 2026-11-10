@@ -284,21 +284,20 @@ export default function App() {
   };
 
   const handleToggleRadioStation = (stationId: string) => {
-    setEnabledRadioStations((previous) => {
-      const next = previous.includes(stationId) ? previous.filter((id) => id !== stationId) : [...previous, stationId];
-      const changedIndex = RADIO_STATIONS.findIndex((station) => station.id === stationId);
-      if (stationId === RADIO_STATIONS[radioChannel].id && !next.includes(stationId)) {
-        const nextEnabledIndex = RADIO_STATIONS.findIndex((station) => next.includes(station.id));
-        if (nextEnabledIndex < 0) {
-          radioAudioRef.current?.pause();
-          setIsRadioPlaying(false);
-        } else {
-          setRadioChannel(nextEnabledIndex);
-          if (isRadioPlaying) playRadioChannel(nextEnabledIndex);
-        }
+    const next = enabledRadioStations.includes(stationId)
+      ? enabledRadioStations.filter((id) => id !== stationId)
+      : [...enabledRadioStations, stationId];
+    setEnabledRadioStations(next);
+    if (stationId === RADIO_STATIONS[radioChannel].id && !next.includes(stationId)) {
+      const nextEnabledIndex = RADIO_STATIONS.findIndex((station) => next.includes(station.id));
+      if (nextEnabledIndex < 0) {
+        radioAudioRef.current?.pause();
+        setIsRadioPlaying(false);
+      } else {
+        setRadioChannel(nextEnabledIndex);
+        if (isRadioPlaying) playRadioChannel(nextEnabledIndex);
       }
-      return next;
-    });
+    }
   };
 
   const handleToggleMusic = () => {
