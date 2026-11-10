@@ -63,6 +63,18 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
 
   // Dynamic physics states for the two visible physical dice
   const [physicsStates, setPhysicsStates] = useState<PhysicsDieState[]>([]);
+  const [centerSettledDice, setCenterSettledDice] = useState(false);
+
+  // Only regular two-dice rolls move toward the board centre. Delay the move
+  // after the result appears, then ease into the new position more gently.
+  useEffect(() => {
+    if (isRolling || dice.length < 2) {
+      setCenterSettledDice(false);
+      return;
+    }
+    const delay = window.setTimeout(() => setCenterSettledDice(true), 400);
+    return () => window.clearTimeout(delay);
+  }, [isRolling, dice.length, rollSequence]);
   const physicsStatesRef = useRef<PhysicsDieState[]>([]);
   const diceRef = useRef(dice);
   physicsStatesRef.current = physicsStates;
@@ -431,12 +443,12 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       className={`relative z-[999] flex items-center justify-center select-none pointer-events-none overflow-visible ${className}`}
       style={{
         perspective: '800px',
-        transform: dice.length > 0 && !isRolling
+        transform: centerSettledDice
           ? `translateX(${throwSide === 'right' ? -94 : 94}px)`
           : 'translateX(0px)',
         transition: isRolling
           ? 'none'
-          : 'transform 480ms cubic-bezier(0.22, 1, 0.36, 1)',
+          : 'transform 760ms cubic-bezier(0.22, 1, 0.36, 1)',
       }}
     >
       {/* 1. If no dice rolled yet and player can roll: prominent CTA */}
