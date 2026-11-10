@@ -354,7 +354,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           {/* Front Face (1) */}
           <div
             className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#fffdf4] via-[#f1e5c9] to-[#c4ad84] border border-[#fff4dc] shadow-[inset_0_2px_3px_rgba(255,255,255,0.98),inset_0_-3px_5px_rgba(15,23,42,0.2),0_1px_2px_rgba(15,23,42,0.16)] flex items-center justify-center ${
-              isUsed ? 'opacity-35 grayscale' : ''
+              ''
             }`}
             style={{ transform: `translateZ(${half}px)` }}
           >
@@ -364,7 +364,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           {/* Back Face (6) */}
           <div
             className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#fff9e9] via-[#e9dcc0] to-[#bda77f] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.22)] flex items-center justify-center ${
-              isUsed ? 'opacity-35 grayscale' : ''
+              ''
             }`}
             style={{ transform: `rotateY(180deg) translateZ(${half}px)` }}
           >
@@ -374,7 +374,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           {/* Right Face (3) */}
           <div
             className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#fffaf0] via-[#eadfc9] to-[#c4ad87] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.2)] flex items-center justify-center ${
-              isUsed ? 'opacity-35 grayscale' : ''
+              ''
             }`}
             style={{ transform: `rotateY(90deg) translateZ(${half}px)` }}
           >
@@ -384,7 +384,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           {/* Left Face (4) */}
           <div
             className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#fff9e9] via-[#e9dcc0] to-[#bda77f] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.22)] flex items-center justify-center ${
-              isUsed ? 'opacity-35 grayscale' : ''
+              ''
             }`}
             style={{ transform: `rotateY(-90deg) translateZ(${half}px)` }}
           >
@@ -394,7 +394,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           {/* Top Face (2) */}
           <div
             className={`absolute inset-0 rounded-xl bg-gradient-to-br from-white via-[#f1f5f9] to-[#cbd5e1] border border-white shadow-[inset_0_2px_3px_rgba(255,255,255,0.98),inset_0_-3px_5px_rgba(15,23,42,0.2)] flex items-center justify-center ${
-              isUsed ? 'opacity-35 grayscale' : ''
+              ''
             }`}
             style={{ transform: `rotateX(90deg) translateZ(${half}px)` }}
           >
@@ -404,7 +404,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           {/* Bottom Face (5) */}
           <div
             className={`absolute inset-0 rounded-xl bg-gradient-to-br from-[#e9dcc1] via-[#d5c29f] to-[#a68d66] border border-[#f8edda] shadow-[inset_0_2px_3px_rgba(255,255,255,0.92),inset_0_-3px_5px_rgba(15,23,42,0.22)] flex items-center justify-center ${
-              isUsed ? 'opacity-35 grayscale' : ''
+              ''
             }`}
             style={{ transform: `rotateX(-90deg) translateZ(${half}px)` }}
           >
@@ -415,7 +415,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         {/* Used diagonal check indicator badge */}
         {isUsed && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-            <div className="w-6 h-1 bg-red-600/80 rounded rotate-45 shadow" />
+            <div className="absolute left-1/2 -bottom-1.5 -translate-x-1/2 w-7 h-[2px] bg-red-600 rounded-full shadow-[0_0_3px_rgba(220,38,38,0.8)]" />
           </div>
         )}
       </div>
@@ -429,7 +429,15 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       data-roll-sequence={rollSequence}
       data-physics-dice-count={physicsStates.length}
       className={`relative z-[999] flex items-center justify-center select-none pointer-events-none overflow-visible ${className}`}
-      style={{ perspective: '800px' }}
+      style={{
+        perspective: '800px',
+        transform: dice.length > 0 && !isRolling
+          ? `translateX(${throwSide === 'right' ? -94 : 94}px)`
+          : 'translateX(0px)',
+        transition: isRolling
+          ? 'none'
+          : 'transform 480ms cubic-bezier(0.22, 1, 0.36, 1)',
+      }}
     >
       {/* 1. If no dice rolled yet and player can roll: prominent CTA */}
       {dice.length === 0 && !isRolling ? (
