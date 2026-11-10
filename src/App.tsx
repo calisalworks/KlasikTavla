@@ -486,6 +486,7 @@ export default function App() {
             onOpenSettings={() => setIsSettingsOpen(true)}
             onToggleMusic={handleToggleMusic}
             isRadioPlaying={isRadioPlaying}
+            hasEnabledRadioStations={enabledRadioStations.length > 0}
             radioChannel={radioChannel}
             onToggleRadio={handleToggleRadio}
             onPreviousRadio={() => handleChangeRadioChannel(-1)}
@@ -506,6 +507,7 @@ export default function App() {
             onOpenSettings={() => setIsSettingsOpen(true)}
             onToggleMusic={handleToggleMusic}
             isRadioPlaying={isRadioPlaying}
+            hasEnabledRadioStations={enabledRadioStations.length > 0}
             radioChannel={radioChannel}
             onToggleRadio={handleToggleRadio}
             onPreviousRadio={() => handleChangeRadioChannel(-1)}
