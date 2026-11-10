@@ -253,6 +253,7 @@ export default function App() {
       setIsRadioPlaying(false);
       return;
     }
+    tavlaAudio.setAmbientEnabled(false);
     setSettings((prev) => ({ ...prev, ambientSound: false }));
     setIsRadioPlaying(true);
     playRadioChannel(radioChannel);
