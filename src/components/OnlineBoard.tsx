@@ -1502,7 +1502,12 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
 
             {/* Normal two-dice UI stays hidden until the opening roll is acknowledged. */}
             {(!room.openingRoll || room.openingRollCompleted) && (
-            <div className="absolute inset-y-0 right-0 w-1/2 pointer-events-none flex flex-col items-center justify-center z-30">
+            <div
+              className="absolute inset-y-0 w-36 pointer-events-none flex flex-col items-center justify-center z-30"
+              style={isMyTurn
+                ? { left: 'calc(50% + 22px)' }
+                : { right: 'calc(50% + 22px)' }}
+            >
               <div className="pointer-events-auto flex flex-col items-center">
                 {/* 15-Second Turn Countdown Badge on top of the thrown dice */}
                 {turnSecondsLeft !== null && isMyTurn && room.dice.length > 0 && room.dice.some((d) => !d.used) && !room.winnerInfo && (
@@ -1523,6 +1528,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
                   dice={room.dice}
                   isRolling={isRolling}
                   rollSequence={rollAnimationSequence}
+                  throwSide={isMyTurn ? 'right' : 'left'}
                   canRoll={Boolean(isMyTurn && !isOpeningRollOpen && (!room.openingRoll || room.openingRollCompleted === true) && room.dice.length === 0 && !room.winnerInfo)}
                   onRollClick={handleRollDice}
                 />
