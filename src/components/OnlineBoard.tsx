@@ -1503,7 +1503,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             {/* Normal two-dice UI stays hidden until the opening roll is acknowledged. */}
             {(!room.openingRoll || room.openingRollCompleted) && (
             <div
-              className="absolute inset-y-0 w-36 pointer-events-none flex flex-col items-center justify-center z-30"
+              className="absolute inset-y-0 w-36 pointer-events-none flex flex-col items-center justify-center z-[999]"
               style={isMyTurn
                 ? { left: 'calc(50% + 22px)' }
                 : { right: 'calc(50% + 22px)' }}
