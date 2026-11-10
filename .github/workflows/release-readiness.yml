@@ -64,6 +64,7 @@ jobs:
       VITE_ADMOB_MODE: test
       VITE_ADMOB_ANDROID_APP_ID: ca-app-pub-3940256099942544~3347511713
       VITE_ADMOB_REWARDED_AD_UNIT_ID: ca-app-pub-3940256099942544/5224354917
+      VITE_WS_SERVER_URL: wss://klasik-tavla-staging.onrender.com
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
