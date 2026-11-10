@@ -1380,7 +1380,7 @@ export const Board: React.FC<BoardProps> = ({
       className="relative w-full h-full flex flex-row items-stretch select-none overflow-hidden bg-[#181310] touch-none"
     >
       {/* 1. LEFT SIDE PANEL */}
-      <div className="w-36 md:w-44 flex flex-col gap-2 py-2.5 px-2 bg-[#221711] border-r border-[#3f291b] shadow-2xl z-20 shrink-0">
+      <div className="w-32 md:w-40 flex flex-col gap-2 py-2.5 px-2 bg-[#221711] border-r border-[#3f291b] shadow-2xl z-20 shrink-0">
         {/* Top: Opponent Card */}
         <div
           className={`relative flex flex-col justify-between flex-1 min-h-0 p-2 rounded-2xl border transition-all ${
@@ -1507,7 +1507,7 @@ export const Board: React.FC<BoardProps> = ({
       {/* 2. BOARD */}
       <div className="flex-1 flex flex-col p-1.5 md:p-2 bg-[#1b130e] overflow-hidden">
         {/* Subtle Status Bar */}
-        <div className="h-6 flex items-center justify-between px-3 text-xs text-amber-200/80 mb-1 select-none">
+        <div className="h-5 flex items-center justify-between px-3 text-xs text-amber-200/80 mb-0.5 select-none">
           <div className="flex items-center gap-2 truncate">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
             <span className="font-medium text-amber-100 truncate">{statusMessage}</span>
@@ -1786,7 +1786,7 @@ export const Board: React.FC<BoardProps> = ({
         </div>
 
         {/* Bottom controls */}
-        <div className="h-7 flex items-center justify-between px-3 mt-1 text-[11px] text-amber-300/80 select-none bg-[#241710]/60 rounded-lg border border-amber-900/30">
+        <div className="h-6 flex items-center justify-between px-3 mt-0.5 text-[11px] text-amber-300/80 select-none bg-[#241710]/60 rounded-lg border border-amber-900/30">
           <div className="flex items-center gap-3">
             <span>Taşı sürükleyin veya hedef haneye dokunun</span>
             {turn === 'white' && undoHistory.length > 0 && !winnerInfo && (
