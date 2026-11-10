@@ -150,7 +150,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               <div className="flex items-start gap-3">
                 {/* Büyük profil çerçevesi: fotoğraf üstte, oyuncu adı hemen altında */}
                 <div className="relative flex min-w-[116px] flex-col items-center gap-2 rounded-xl border border-amber-600/70 bg-gradient-to-b from-[#38200f] to-[#1b0d05] px-2 py-2 shadow-[0_0_14px_rgba(180,83,9,0.22)]">
-                  <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                  <div className="relative group w-[76px] h-[76px] scale-[1.2] cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                     <AvatarDisplay
                       avatar={profile.avatar}
                       name={profile.name}
