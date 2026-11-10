@@ -80,7 +80,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     const activePips = pipPositions[val] || [4];
 
     return (
-      <div className="grid grid-cols-3 grid-rows-3 w-full h-full p-1 gap-0 pointer-events-none" style={{ filter: 'none' }}>
+      <div className="grid grid-cols-3 grid-rows-3 w-full h-full p-1 gap-0 pointer-events-none" style={{ filter: blurred ? 'blur(1.05px)' : 'none' }}>
         {Array.from({ length: 9 }).map((_, i) => (
           <div key={i} className="flex items-center justify-center">
             {activePips.includes(i) && (
