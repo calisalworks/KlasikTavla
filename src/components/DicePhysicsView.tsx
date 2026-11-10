@@ -27,6 +27,8 @@ interface PhysicsDieState {
   vRotZ: number;
   displayValue: number;
   settled: boolean;
+  bounced: boolean;
+  age: number;
 }
 
 // 3D face rotations for standard d6
@@ -38,46 +40,6 @@ const FACE_ROTATIONS: Record<number, { rx: number; ry: number }> = {
   4: { rx: 0, ry: 90 },
   5: { rx: 90, ry: 0 },
   6: { rx: 180, ry: 0 },
-};
-
-// Keep the two physical dice from intersecting. The collision is resolved in
-// the table plane, so dice bounce apart instead of visually stacking.
-const resolveDiceCollision = (states: PhysicsDieState[], bounce: boolean): PhysicsDieState[] => {
-  if (states.length < 2) return states;
-  const next = states.map((state) => ({ ...state }));
-  const a = next[0];
-  const b = next[1];
-  const minDistance = 40; // 32px dice plus a small visible gap
-  let dx = b.x - a.x;
-  let dy = b.y - a.y;
-  let distance = Math.hypot(dx, dy);
-  if (distance >= minDistance) return states;
-  if (distance < 0.001) {
-    dx = 1;
-    dy = 0;
-    distance = 1;
-  }
-  const nx = dx / distance;
-  const ny = dy / distance;
-  const overlap = minDistance - distance;
-  // Split the correction evenly so neither die is privileged.
-  a.x -= nx * overlap * 0.5;
-  a.y -= ny * overlap * 0.5;
-  b.x += nx * overlap * 0.5;
-  b.y += ny * overlap * 0.5;
-
-  if (bounce) {
-    const relativeNormalSpeed = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
-    if (relativeNormalSpeed < 0) {
-      const impulse = -(1 + 0.58) * relativeNormalSpeed * 0.5;
-      a.vx -= impulse * nx;
-      a.vy -= impulse * ny;
-      b.vx += impulse * nx;
-      b.vy += impulse * ny;
-      // Keep the collision physical, but do not inject a fresh spin near the stop.
-    }
-  }
-  return next;
 };
 
 export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
@@ -106,7 +68,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
   const lastImpactSoundRef = useRef<number>(0);
 
   // Render pips for a face
-  const renderFacePips = (val: number) => {
+  const renderFacePips = (val: number, blurred = false) => {
     const pipPositions: Record<number, number[]> = {
       1: [4],
       2: [0, 8],
@@ -118,7 +80,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     const activePips = pipPositions[val] || [4];
 
     return (
-      <div className="grid grid-cols-3 grid-rows-3 w-full h-full p-0.5 gap-0.5 pointer-events-none">
+      <div className="grid grid-cols-3 grid-rows-3 w-full h-full p-0.5 gap-0.5 pointer-events-none" style={{ filter: blurred ? 'blur(1.35px)' : 'none' }}>
         {Array.from({ length: 9 }).map((_, i) => (
           <div key={i} className="flex items-center justify-center">
             {activePips.includes(i) && (
@@ -147,25 +109,25 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
       const newStates: PhysicsDieState[] = [];
 
       for (let i = 0; i < count; i++) {
-        // A single repeatable physical throw path is used for every roll.
+        // Every throw starts at the outer edge, never at the previous landing point.
+        // The dice travel at a steady pace, hit the centre bar, then rebound at half speed.
         newStates.push({
-          // Same repeatable throw path on every roll; only the settled face changes.
-          x: throwSide === 'right' ? 58 : -58,
-          y: (i - (count - 1) / 2) * 34,
-          vx: throwSide === 'right' ? -650 : 650,
-          vy: count === 1 ? 0 : (i === 0 ? -95 : 95),
-          z: 10,
-          vz: 105,
-          // Keep the dice almost flat: spin the visible surface instead
-          // of tumbling the cubes through all six sides.
+          x: throwSide === 'right' ? 62 : -62,
+          y: count === 1 ? 0 : (i === 0 ? -18 : 18),
+          vx: throwSide === 'right' ? -190 : 190,
+          vy: count === 1 ? 0 : (i === 0 ? -8 : 8),
+          z: 0,
+          vz: 0,
           rotX: 0,
           rotY: 0,
-          rotZ: i === 0 ? -12 : 12,
+          rotZ: i === 0 ? -8 : 8,
           vRotX: 0,
           vRotY: 0,
-          vRotZ: i === 0 ? 760 : -690,
+          vRotZ: i === 0 ? 620 : -590,
           displayValue: 1,
           settled: false,
+          bounced: false,
+          age: 0,
         });
       }
 
@@ -207,6 +169,10 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
           vRotZ: 0,
           displayValue: die.value,
           settled: true,
+          bounced: true,
+          age: 0,
+          bounced: true,
+          age: 0,
         };
       }));
       return;
@@ -233,11 +199,14 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         vRotZ: 0,
         displayValue: value,
         settled: true,
+        bounced: true,
+        age: state.age,
       };
     }));
   }, [isRolling, dice.length, throwSide]);
 
-  // RequestAnimationFrame physics simulation loop
+  // Time-based roll: approach the centre bar, rebound at half speed,
+  // then naturally lose momentum while the top face keeps spinning.
   useEffect(() => {
     if (!isRolling) {
       if (animFrameRef.current) {
@@ -248,141 +217,88 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     }
 
     const step = (time: number) => {
-      const dt = Math.min((time - (lastTimeRef.current || time)) / 1000, 0.05);
+      const dt = Math.min((time - (lastTimeRef.current || time)) / 1000, 0.032);
       lastTimeRef.current = time;
 
       setPhysicsStates((prev) => {
         if (settlingRef.current) return prev;
-        let changed = false;
-        const next = prev.map((die, idx) => {
+        return prev.map((die, idx) => {
           if (die.settled) return die;
-          changed = true;
 
-          let {
-            x,
-            y,
-            vx,
-            vy,
-            z,
-            vz,
-            rotX,
-            rotY,
-            rotZ,
-            vRotX,
-            vRotY,
-            vRotZ,
-            displayValue,
-          } = die;
+          let { x, y, vx, vy, z, vz, rotZ, vRotZ, age, bounced } = die;
+          age += dt;
 
-          // Apply gravity
-          const gravity = 850; // px/s^2
-          vz -= gravity * dt;
-          z += vz * dt;
-
-          // Velocity and damping
+          // Smooth travel toward the centre. The bar collision reverses the
+          // horizontal velocity with exactly half of the incoming speed.
           x += vx * dt;
           y += vy * dt;
-          vx *= Math.pow(0.85, dt * 10);
-          vy *= Math.pow(0.85, dt * 10);
 
-          // 3D Rotations
-          rotX += vRotX * dt;
-          rotY += vRotY * dt;
-          rotZ += vRotZ * dt;
-          vRotX *= Math.pow(0.8, dt * 10);
-          vRotY *= Math.pow(0.8, dt * 10);
-          vRotZ *= Math.pow(0.85, dt * 10);
-
-          // Table Collision Boundary (z = 0)
-          if (z <= 0) {
-            z = 0;
-            // Impact restitution based on force:
-            const impactForce = Math.abs(vz);
-            if (impactForce > 40) {
-              // Bounce
-              vz = -vz * 0.45; // 45% bounce energy retention
-              vx += (Math.random() - 0.5) * 80;
-              vy += (Math.random() - 0.5) * 80;
-
-              // Play impact sound proportional to velocity (throttle to avoid audio spam)
-              const now = performance.now();
-              if (now - lastImpactSoundRef.current > 75 && impactForce > 90) {
-                lastImpactSoundRef.current = now;
-                tavlaAudio.playDiceDrop();
-              }
-            } else {
-              // Rest
-              vz = 0;
-              z = 0;
+          const centreHit = throwSide === 'right' ? x <= 0 : x >= 0;
+          if (!bounced && centreHit) {
+            x = 0;
+            vx = throwSide === 'right' ? 95 : -95;
+            vy += idx === 0 ? -13 : 13;
+            vz = 52;
+            bounced = true;
+            const now = performance.now();
+            if (now - lastImpactSoundRef.current > 120) {
+              lastImpactSoundRef.current = now;
+              tavlaAudio.playDiceDrop();
             }
           }
 
-          // Table border bounds (keep dice inside central playing area)
-          // Keep the dice within the visible right-side tray while allowing natural scatter.
-          const centerEdge = throwSide === 'right' ? -8 : 8;
-          const outerEdge = throwSide === 'right' ? 64 : -64;
-          const maxY = 38;
-
-          // The centre bar is a real impact point: kick the dice back with
-          // enough energy to make the rebound obvious, then let friction settle them.
-          if (throwSide === 'right' && x < centerEdge) {
-            x = centerEdge;
-            vx = Math.abs(vx) * 0.68;
-            vy += (idx === 0 ? -48 : 48);
-          } else if (throwSide === 'left' && x > centerEdge) {
-            x = centerEdge;
-            vx = -Math.abs(vx) * 0.68;
-            vy += (idx === 0 ? 48 : -48);
+          // Friction starts after the centre-bar rebound, not during the run-up.
+          if (bounced) {
+            const friction = Math.exp(-2.15 * dt);
+            vx *= friction;
+            vy *= Math.exp(-2.4 * dt);
+            vRotZ *= Math.exp(-0.42 * dt);
           }
 
-          if (throwSide === 'right' && x > outerEdge) {
-            x = outerEdge;
-            vx = -Math.abs(vx) * 0.18;
-          } else if (throwSide === 'left' && x < outerEdge) {
-            x = outerEdge;
-            vx = Math.abs(vx) * 0.18;
+          // A small, visible tabletop hop accompanies the horizontal rebound.
+          if (z > 0 || vz > 0) {
+            vz -= 760 * dt;
+            z += vz * dt;
+            if (z <= 0) {
+              z = 0;
+              if (Math.abs(vz) > 18) {
+                vz = -vz * 0.24;
+              } else {
+                vz = 0;
+              }
+            }
           }
 
-          if (y < -maxY) {
-            y = -maxY;
-            vy = Math.abs(vy) * 0.28;
-          } else if (y > maxY) {
-            y = maxY;
-            vy = -Math.abs(vy) * 0.28;
-          }
+          rotZ += vRotZ * dt;
+          const displayValue = (Math.floor(age * 13 + idx * 2) % 6) + 1;
+
+          // Finish only after the rebound has visibly travelled and all
+          // horizontal and rotational movement has nearly faded out.
+          const settled = bounced && age > 1.25 &&
+            Math.abs(vx) < 7 && Math.abs(vy) < 5 && Math.abs(vRotZ) < 42 &&
+            z === 0 && Math.abs(vz) < 1;
 
           return {
-            x,
-            y,
-            vx,
-            vy,
-            z,
-            vz,
-            rotX,
-            rotY,
-            rotZ,
-            vRotX,
-            vRotY,
-            vRotZ,
+            ...die,
+            x, y, vx, vy, z, vz, rotZ, vRotZ,
+            rotX: 0,
+            rotY: 0,
+            vRotX: 0,
+            vRotY: 0,
             displayValue,
-            settled: false,
+            bounced,
+            age,
+            settled,
           };
         });
-
-        // Resolve contact after integrating both dice for this frame.
-        // This creates a real bounce and prevents either die passing through the other.
-        return resolveDiceCollision(next, true);
       });
 
       animFrameRef.current = requestAnimationFrame(step);
     };
 
     animFrameRef.current = requestAnimationFrame(step);
-
     return () => {
-      if (animFrameRef.current) {
-        cancelAnimationFrame(animFrameRef.current);
-      }
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
   }, [isRolling, rollSequence, throwSide]);
 
@@ -396,7 +312,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
     zHeight: number,
     rolling: boolean
   ) => {
-    const size = 29; // Slightly smaller dice for a cleaner landing
+    const size = 28; // Slightly smaller dice for a cleaner landing
     const half = size / 2;
 
     // Shadow calculation based on height off the board (zHeight)
@@ -436,7 +352,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `translateZ(${half}px)` }}
           >
-            {renderFacePips(1)}
+            {renderFacePips(rolling ? value : 1, rolling)}
           </div>
 
           {/* Back Face (6) */}
@@ -446,7 +362,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `rotateY(180deg) translateZ(${half}px)` }}
           >
-            {renderFacePips(6)}
+            {renderFacePips(rolling ? value : 6, rolling)}
           </div>
 
           {/* Right Face (3) */}
@@ -456,7 +372,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `rotateY(90deg) translateZ(${half}px)` }}
           >
-            {renderFacePips(3)}
+            {renderFacePips(rolling ? value : 3, rolling)}
           </div>
 
           {/* Left Face (4) */}
@@ -466,7 +382,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `rotateY(-90deg) translateZ(${half}px)` }}
           >
-            {renderFacePips(4)}
+            {renderFacePips(rolling ? value : 4, rolling)}
           </div>
 
           {/* Top Face (2) */}
@@ -476,7 +392,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `rotateX(90deg) translateZ(${half}px)` }}
           >
-            {renderFacePips(2)}
+            {renderFacePips(rolling ? value : 2, rolling)}
           </div>
 
           {/* Bottom Face (5) */}
@@ -486,7 +402,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
             }`}
             style={{ transform: `rotateX(-90deg) translateZ(${half}px)` }}
           >
-            {renderFacePips(5)}
+            {renderFacePips(rolling ? value : 5, rolling)}
           </div>
         </div>
 
