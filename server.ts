@@ -382,7 +382,7 @@ function scheduleTurnTimeout(room: GameRoom) {
     } else {
       room.blackTimeouts = (room.blackTimeouts || 0) + 1;
     }
-    const strikes = timedOutColor === 'white' ? room.whiteTimeouts : room.blackTimeouts;
+    const strikes = (timedOutColor === 'white' ? room.whiteTimeouts : room.blackTimeouts) ?? 0;
 
     if (strikes >= 4) {
       const winnerColor: PlayerColor = timedOutColor === 'white' ? 'black' : 'white';
