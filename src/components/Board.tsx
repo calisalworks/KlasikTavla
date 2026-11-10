@@ -65,6 +65,11 @@ export const Board: React.FC<BoardProps> = ({
   // Game state
   const [board, setBoard] = useState<BoardState>(getInitialBoard);
   const [turn, setTurn] = useState<PlayerColor>('white');
+  // Keep turn ownership synchronous for delayed timeout/AI callbacks. React
+  // state updates are asynchronous, so callbacks must not infer the active
+  // player from a stale render closure.
+  const turnRef = useRef<PlayerColor>('white');
+  turnRef.current = turn;
   const [dice, setDice] = useState<Die[]>([]);
   const [isRolling, setIsRolling] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState<number | 'bar' | null>(null);
@@ -151,11 +156,16 @@ export const Board: React.FC<BoardProps> = ({
     if (currentDice.length === 0 || unusedDice.length === 0) {
       // Oyuncu 20 saniye içinde zar atmadı: Zarları otomatik at ve en iyi hamleleri yap
       const rolled = rollDice();
-      setDice(rolled);
-      diceRef.current = rolled;
+      // Use the same visible physics roll as a manual roll. The result is
+      // committed only after the animation window, so the dice cannot simply
+      // appear on their final faces without moving.
+      setIsRolling(true);
       tavlaAudio.playDiceRoll();
 
       const dropT = setTimeout(() => {
+        setDice(rolled);
+        diceRef.current = rolled;
+        setIsRolling(false);
         tavlaAudio.playDiceDrop();
         const currentB = cloneBoard(boardRefState.current);
         const moves = findBestMovesForPlayer(currentB, 'white', rolled, 'medium');
@@ -201,7 +211,7 @@ export const Board: React.FC<BoardProps> = ({
             autoPlayTimeoutsRef.current.push(stepT);
           });
         }
-      }, 500);
+      }, 1150);
       autoPlayTimeoutsRef.current.push(dropT);
       return;
     }
@@ -583,7 +593,14 @@ export const Board: React.FC<BoardProps> = ({
     diceRef.current = [];
     setUndoHistory([]);
 
-    const nextPlayer: PlayerColor = turn === 'white' ? 'black' : 'white';
+    const currentPlayer = turnRef.current;
+    const nextPlayer: PlayerColor = currentPlayer === 'white' ? 'black' : 'white';
+
+    // Publish the new owner before scheduling any more asynchronous work.
+    // The AI effect claims its own guard after this render; leaving an old
+    // guard value here can otherwise strand the game on the opponent's turn.
+    turnRef.current = nextPlayer;
+    isAITurnRef.current = false;
     setTurn(nextPlayer);
 
     startTurnTimer(nextPlayer);
@@ -593,7 +610,6 @@ export const Board: React.FC<BoardProps> = ({
       setStatusMessage('Rakip düşünüyor ve zar atıyor...');
     } else {
       setIsAITurn(false);
-      isAITurnRef.current = false;
       setStatusMessage('Sıra Sizde. Zarları atın.');
     }
   };
