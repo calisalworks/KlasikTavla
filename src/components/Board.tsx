@@ -211,7 +211,7 @@ export const Board: React.FC<BoardProps> = ({
             autoPlayTimeoutsRef.current.push(stepT);
           });
         }
-      }, 2000);
+      }, 2400);
       autoPlayTimeoutsRef.current.push(dropT);
       return;
     }
@@ -725,7 +725,7 @@ export const Board: React.FC<BoardProps> = ({
 
           aiTimeoutsRef.current.push(startTimer);
         });
-      }, 2000);
+      }, 2400);
       aiTimeoutsRef.current.push(dropTimer);
     }, 800);
 
