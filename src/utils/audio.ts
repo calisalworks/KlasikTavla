@@ -7,7 +7,8 @@ class TavlaAudioManager {
   private ctx: AudioContext | null = null;
   private soundEnabled: boolean = true;
   private ambientEnabled: boolean = false;
-  private ambientNode: AudioNode | null = null;
+  private backgroundMusic: HTMLAudioElement | null = null;
+  private appVisible: boolean = true;
 
   constructor() {
     // Lazily initialized on first user interaction
@@ -56,10 +57,48 @@ class TavlaAudioManager {
   public setAmbientEnabled(enabled: boolean) {
     this.ambientEnabled = enabled;
     if (enabled) {
-      this.startAmbient();
+      this.playBackgroundMusic();
     } else {
-      this.stopAmbient();
+      this.pauseBackgroundMusic();
     }
+  }
+
+  public setAppVisible(visible: boolean) {
+    this.appVisible = visible;
+    if (!visible) {
+      this.pauseBackgroundMusic();
+    } else if (this.ambientEnabled) {
+      this.playBackgroundMusic();
+    }
+  }
+
+  private playBackgroundMusic() {
+    if (!this.ambientEnabled || !this.appVisible || typeof window === 'undefined') return;
+    try {
+      if (!this.backgroundMusic) {
+        this.backgroundMusic = new Audio('/Klasiktavlamain.mp3');
+        this.backgroundMusic.loop = true;
+        this.backgroundMusic.preload = 'auto';
+        this.backgroundMusic.volume = 0.12;
+      }
+      if (this.backgroundMusic.paused) {
+        this.backgroundMusic.play().catch(() => {
+          // Browser autoplay restrictions are handled by the next user interaction.
+        });
+      }
+    } catch {
+      // Ignore unavailable audio playback.
+    }
+  }
+
+  private pauseBackgroundMusic() {
+    if (this.backgroundMusic && !this.backgroundMusic.paused) {
+      this.backgroundMusic.pause();
+    }
+  }
+
+  public retryBackgroundMusic() {
+    if (this.ambientEnabled && this.appVisible) this.playBackgroundMusic();
   }
 
   /**
@@ -412,49 +451,7 @@ class TavlaAudioManager {
     });
   }
 
-  /**
-   * Soft ambient cafe/room warmth (calm and subtle)
-   */
-  private startAmbient() {
-    this.initContext();
-    if (!this.ctx || this.ambientNode) return;
-    try {
-      // Gentle pink noise filtered like distant cozy room atmosphere
-      const buffer = this.createNoiseBuffer(2);
-      if (!buffer) return;
-      const noiseSource = this.ctx.createBufferSource();
-      noiseSource.buffer = buffer;
-      noiseSource.loop = true;
-
-      const filter = this.ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(280, this.ctx.currentTime);
-
-      const gain = this.ctx.createGain();
-      gain.gain.setValueAtTime(0.02, this.ctx.currentTime);
-
-      noiseSource.connect(filter);
-      filter.connect(gain);
-      gain.connect(this.ctx.destination);
-
-      noiseSource.start();
-      this.ambientNode = noiseSource;
-    } catch {
-      // ignore
-    }
-  }
-
-  private stopAmbient() {
-    if (this.ambientNode) {
-      try {
-        (this.ambientNode as AudioBufferSourceNode).stop();
-        this.ambientNode.disconnect();
-      } catch {
-        // ignore
-      }
-      this.ambientNode = null;
-    }
-  }
+  // Background music is streamed from the MP3 in public/.
 }
 
 export const tavlaAudio = new TavlaAudioManager();
