@@ -3,6 +3,7 @@ name: Signed Google Play closed-test bundle
 on:
   push:
     branches:
+      - development
       - fix/dice-roll-animation-right-tray
     paths:
       - ".github/workflows/signed-play-test-bundle.yml"
