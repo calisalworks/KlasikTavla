@@ -211,7 +211,7 @@ export const Board: React.FC<BoardProps> = ({
             autoPlayTimeoutsRef.current.push(stepT);
           });
         }
-      }, 2700);
+      }, 2000);
       autoPlayTimeoutsRef.current.push(dropT);
       return;
     }
@@ -432,6 +432,7 @@ export const Board: React.FC<BoardProps> = ({
     diceRef.current = [];
     setTurnSnapshot(null);
     setTurn(win);
+    turnRef.current = win;
 
     if (win === 'white') {
       setIsAITurn(false);
@@ -627,6 +628,7 @@ export const Board: React.FC<BoardProps> = ({
           setStatusMessage('Rakip hamle yapamadı. Sıra sizde!');
           const noMoveTimer = setTimeout(() => {
             setTurn('white');
+            turnRef.current = 'white';
             setIsAITurn(false);
             isAITurnRef.current = false;
             setDice([]);
@@ -707,6 +709,7 @@ export const Board: React.FC<BoardProps> = ({
             if (idx === bestSteps.length - 1) {
               const finishTimer = setTimeout(() => {
                 setTurn('white');
+                turnRef.current = 'white';
                 setIsAITurn(false);
                 isAITurnRef.current = false;
                 setDice([]);
@@ -722,7 +725,7 @@ export const Board: React.FC<BoardProps> = ({
 
           aiTimeoutsRef.current.push(startTimer);
         });
-      }, openingDiceAlreadySet ? 0 : 2700);
+      }, openingDiceAlreadySet ? 0 : 2000);
       aiTimeoutsRef.current.push(dropTimer);
     }, 800);
 
