@@ -377,7 +377,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
                   // Start turn timer for active player!
                   startTurnTimer(msg.room.turn);
                 }
-              }, 400);
+              }, 1250);
               break;
             }
 
@@ -405,7 +405,9 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
               }
 
               clearAutoPassTimers();
-              if (myColor && msg.room.turn === myColor && !msg.room.winnerInfo) {
+              // Server timeout moves are followed by a server-authoritative turn_passed event.
+              // Never start a second client-side auto-pass countdown for those moves.
+              if (!msg.autoPlay && myColor && msg.room.turn === myColor && !msg.room.winnerInfo) {
                 const hasRemaining = hasAnyLegalMoves(msg.room.board, myColor, msg.room.dice);
                 const allUsed = msg.room.dice.every((d: Die) => d.used);
                 if (allUsed || !hasRemaining) {
