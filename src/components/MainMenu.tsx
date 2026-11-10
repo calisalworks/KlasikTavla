@@ -310,11 +310,11 @@ export const MainMenu: React.FC<MainMenuProps> = ({
               <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-[#fff0b0] via-[#b98332] to-[#59320e] border-2 border-[#f8df91] flex items-center justify-center text-[#3b210b] group-hover:scale-105 transition-transform shadow-[0_3px_10px_rgba(0,0,0,.8),inset_0_1px_3px_rgba(255,255,255,.8)]">
                 <Users className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <span className="font-extrabold text-[#f6e8c7] text-xl sm:text-2xl tracking-wide font-['Cinzel',serif]">
+              <span className="font-extrabold text-[#f6e8c7] text-base sm:text-xl tracking-wide font-['Cinzel',serif]">
                 Arkadaşınla Oyna
               </span>
             </div>
-            <span className="text-sm sm:text-lg font-black text-[#e9c77c] group-hover:translate-x-1 transition-transform">
+            <span className="text-xs sm:text-base font-black text-[#e9c77c] group-hover:translate-x-1 transition-transform">
               GİRİŞ →
             </span>
           </button>
