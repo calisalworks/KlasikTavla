@@ -1230,18 +1230,18 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             <div className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-[#2b1c13] animate-ping" />
           )}
 
-          <div className="flex items-center gap-2">
+          <div className="w-full flex flex-col items-center gap-1.5">
             <AvatarDisplay
               avatar={opponentPlayer?.avatar}
               name={opponentPlayer?.name || 'Rakip'}
-              size={36}
+              size={60}
               className="border-2 border-amber-600/70 shadow-inner"
             />
-            <div className="min-w-0 flex-1">
+            <div className="w-full min-w-0 text-center">
               <div className="text-xs font-bold text-amber-100 truncate tracking-wide">
                 {opponentPlayer ? opponentPlayer.name : 'Bekleniyor...'}
               </div>
-              <div className="text-[10px] text-amber-400/80 font-semibold flex items-center gap-1">
+              <div className="text-[10px] text-amber-400/80 font-semibold flex items-center justify-center gap-1">
                 <span>{opponentColor === 'white' ? 'Beyaz' : 'Siyah'}</span>
                 <span>•</span>
                 <span>{opponentColor === 'white' ? room.whiteScore : room.blackScore} Puan</span>
@@ -1303,18 +1303,18 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             <div className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-[#2b1c13] animate-ping" />
           )}
 
-          <div className="flex items-center gap-2">
+          <div className="w-full flex flex-col items-center gap-1.5">
             <AvatarDisplay
               avatar={profile.avatar}
               name={profile.name}
-              size={36}
+              size={60}
               className="border-2 border-amber-500/80 shadow-inner"
             />
-            <div className="min-w-0 flex-1">
+            <div className="w-full min-w-0 text-center">
               <div className="text-xs font-bold text-amber-100 truncate tracking-wide">
                 {profile.name} (Siz)
               </div>
-              <div className="text-[10px] text-amber-300/80 flex items-center gap-1 font-semibold">
+              <div className="text-[10px] text-amber-300/80 flex items-center justify-center gap-1 font-semibold">
                 <Coins className="w-3 h-3 text-amber-400" />
                 <span>{profile.coins?.toLocaleString() ?? '1,000'}</span>
               </div>
