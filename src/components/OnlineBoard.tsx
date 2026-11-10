@@ -209,15 +209,14 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
 
   useEffect(() => {
     if (!room || !room.openingRoll || room.status !== 'playing') return;
-    // The server is authoritative: once the first client completes the roll,
-    // close the other client's animation too and reveal the shared first-move dice.
+    // Opening dice only determine who starts; the winner rolls again for move one.
     if (room.openingRollCompleted) {
       setIsOpeningRollOpen(false);
-      if (room.dice.length > 0 && myColor) {
+      if (myColor) {
         setStatusMessage(
           room.turn === myColor
-            ? 'Başlangıç atışını kazandınız. Bu iki zar ilk hamlenizde kullanılacak.'
-            : 'Rakibiniz başlangıç atışını kazandı. Bu iki zar ilk hamlesinde kullanılacak.'
+            ? 'Başlangıç zarını kazandınız. İlk hamle için yeniden zar atın.'
+            : 'Rakibiniz başlangıç zarını kazandı. İlk hamlesi için yeniden zar atacak.'
         );
       }
       const openingKey = `${room.id}_${room.whiteScore}_${room.blackScore}_${room.openingRoll.whiteDie}_${room.openingRoll.blackDie}`;
