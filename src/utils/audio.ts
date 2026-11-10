@@ -7,7 +7,8 @@ class TavlaAudioManager {
   private ctx: AudioContext | null = null;
   private soundEnabled: boolean = true;
   private ambientEnabled: boolean = false;
-  private backgroundMusicVolume: number = 0.12;
+  private masterVolume: number = 0.6;
+  private masterGainNode: GainNode | null = null;
   private backgroundMusic: HTMLAudioElement | null = null;
   private appVisible: boolean = true;
 
@@ -36,6 +37,11 @@ class TavlaAudioManager {
         }
       }
     }
+    if (this.ctx && !this.masterGainNode) {
+      this.masterGainNode = this.ctx.createGain();
+      this.masterGainNode.gain.value = this.masterVolume;
+      this.masterGainNode.connect(this.masterGainNode ?? this.ctx.destination);
+    }
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume().catch(() => {});
     }
@@ -44,7 +50,7 @@ class TavlaAudioManager {
       try {
         this.cachedDiceAudio = new Audio('/dice-roll.mp3');
         this.cachedDiceAudio.preload = 'auto';
-        this.cachedDiceAudio.volume = 0.9;
+        this.cachedDiceAudio.volume = this.masterVolume;
       } catch {
         // ignore
       }
@@ -55,10 +61,11 @@ class TavlaAudioManager {
     this.soundEnabled = enabled;
   }
 
-  public setBackgroundMusicVolume(volumePercent: number) {
-    const normalized = Math.max(0, Math.min(100, volumePercent)) / 100;
-    this.backgroundMusicVolume = normalized;
-    if (this.backgroundMusic) this.backgroundMusic.volume = normalized;
+  public setMasterVolume(volumePercent: number) {
+    this.masterVolume = Math.max(0, Math.min(100, volumePercent)) / 100;
+    if (this.masterGainNode) this.masterGainNode.gain.setTargetAtTime(this.masterVolume, this.ctx?.currentTime ?? 0, 0.025);
+    if (this.cachedDiceAudio) this.cachedDiceAudio.volume = this.masterVolume;
+    if (this.backgroundMusic) this.backgroundMusic.volume = this.masterVolume;
   }
 
   public setAmbientEnabled(enabled: boolean) {
@@ -86,7 +93,7 @@ class TavlaAudioManager {
         this.backgroundMusic = new Audio('/Klasiktavlamain.mp3');
         this.backgroundMusic.loop = true;
         this.backgroundMusic.preload = 'auto';
-        this.backgroundMusic.volume = this.backgroundMusicVolume;
+        this.backgroundMusic.volume = this.masterVolume;
       }
       if (this.backgroundMusic.paused) {
         this.backgroundMusic.play().catch(() => {
