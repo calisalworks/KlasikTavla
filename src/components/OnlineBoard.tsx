@@ -77,6 +77,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   const [room, setRoom] = useState<GameRoom | null>(null);
   const [myColor, setMyColor] = useState<PlayerColor | null>(null);
   const [isRolling, setIsRolling] = useState(false);
+  const [rollAnimationSequence, setRollAnimationSequence] = useState(0);
   const [selectedPoint, setSelectedPoint] = useState<number | 'bar' | null>(null);
   const [validDestinations, setValidDestinations] = useState<LegalMoveInfo[]>([]);
   const validDestinationsRef = useRef<LegalMoveInfo[]>([]);
@@ -371,6 +372,9 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
               }
               roomRef.current = msg.room;
               setRoom(msg.room);
+              // A unique sequence retriggers physics even if consecutive roll events
+              // arrive before the previous boolean animation state has settled.
+              setRollAnimationSequence((sequence) => sequence + 1);
               setIsRolling(true);
               tavlaAudio.playDiceRoll();
               rollAnimationTimeoutRef.current = setTimeout(() => {
@@ -1555,6 +1559,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
                 <DicePhysicsView
                   dice={room.dice}
                   isRolling={isRolling}
+                  rollSequence={rollAnimationSequence}
                   canRoll={Boolean(isMyTurn && !isOpeningRollOpen && (!room.openingRoll || room.openingRollCompleted === true) && room.dice.length === 0 && !room.winnerInfo)}
                   onRollClick={handleRollDice}
                 />
