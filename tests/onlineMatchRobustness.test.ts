@@ -237,7 +237,7 @@ async function runOnlineRobustnessSuite() {
     let timeout: ReturnType<typeof setTimeout>;
     const handler = (data: any) => {
       const msg = JSON.parse(data.toString());
-      if (msg.type === 'game:moved' && msg.room?.turn === startingTurn) {
+      if (msg.type === 'game:moved' && msg.autoPlay === true && msg.room?.turn === startingTurn) {
         automaticMoves++;
       }
       if (msg.type === 'game:turn_passed' && msg.room?.turn !== startingTurn) {
