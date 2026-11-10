@@ -7,6 +7,7 @@ class TavlaAudioManager {
   private ctx: AudioContext | null = null;
   private soundEnabled: boolean = true;
   private ambientEnabled: boolean = false;
+  private backgroundMusicVolume: number = 0.12;
   private backgroundMusic: HTMLAudioElement | null = null;
   private appVisible: boolean = true;
 
@@ -54,6 +55,12 @@ class TavlaAudioManager {
     this.soundEnabled = enabled;
   }
 
+  public setBackgroundMusicVolume(volumePercent: number) {
+    const normalized = Math.max(0, Math.min(100, volumePercent)) / 100;
+    this.backgroundMusicVolume = normalized;
+    if (this.backgroundMusic) this.backgroundMusic.volume = normalized;
+  }
+
   public setAmbientEnabled(enabled: boolean) {
     this.ambientEnabled = enabled;
     if (enabled) {
@@ -79,7 +86,7 @@ class TavlaAudioManager {
         this.backgroundMusic = new Audio('/Klasiktavlamain.mp3');
         this.backgroundMusic.loop = true;
         this.backgroundMusic.preload = 'auto';
-        this.backgroundMusic.volume = 0.12;
+        this.backgroundMusic.volume = this.backgroundMusicVolume;
       }
       if (this.backgroundMusic.paused) {
         this.backgroundMusic.play().catch(() => {
