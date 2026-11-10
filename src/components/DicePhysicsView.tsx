@@ -371,7 +371,7 @@ export const DicePhysicsView: React.FC<DicePhysicsProps> = ({
         cancelAnimationFrame(animFrameRef.current);
       }
     };
-  }, [isRolling]);
+  }, [isRolling, rollSequence]);
 
   // Dice face renderer for 3D cube representation
   const render3DCube = (
