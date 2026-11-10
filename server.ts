@@ -491,7 +491,7 @@ function scheduleTurnTimeout(room: GameRoom) {
       const hasMoves = hasAnyLegalMoves(room.board, timedOutColor, dice);
       broadcastToRoom(room.id, { type: 'game:rolled', dice, hasMoves, autoPlay: true, room });
       // Let both clients finish the physical dice animation before the first automatic checker move.
-      setTimeout(() => completeTimedOutTurn(room, timedOutColor), 1400);
+      setTimeout(() => completeTimedOutTurn(room, timedOutColor), 1750);
       return;
     }
 
