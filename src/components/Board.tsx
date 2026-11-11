@@ -351,11 +351,27 @@ export const Board: React.FC<BoardProps> = ({
     });
   };
 
-  // Single-player mode has no turn countdown: neither the player nor the AI
-  // is forced to move or penalized for taking longer.
-  const startTurnTimer = (_activeTurn: PlayerColor) => {
+  // In single-player mode, the human player has no move deadline.
+  // Keep a visible countdown for the AI as a safeguard/indicator if it gets stuck.
+  const startTurnTimer = (activeTurn: PlayerColor) => {
     clearTurnTimer();
-    setTurnSecondsLeft(null);
+    if (activeTurn === 'white') {
+      setTurnSecondsLeft(null);
+      return;
+    }
+
+    setTurnSecondsLeft(20);
+    let remaining = 20;
+    turnTimerRef.current = setInterval(() => {
+      remaining -= 1;
+      setTurnSecondsLeft(remaining);
+      if (remaining <= 0) {
+        if (turnTimerRef.current) {
+          clearInterval(turnTimerRef.current);
+          turnTimerRef.current = null;
+        }
+      }
+    }, 1000);
   };
 
   const selectedAtRef = useRef<{ point: number | 'bar' | null; timestamp: number }>({
@@ -1491,7 +1507,7 @@ export const Board: React.FC<BoardProps> = ({
                 }`}
               >
                 <Clock className="w-3.5 h-3.5 text-amber-400" />
-                <span>Hamle yapıyor</span>
+                <span>{turnSecondsLeft !== null ? `${turnSecondsLeft} sn · Hamle yapıyor` : 'Hamle yapıyor'}</span>
               </div>
             ) : (
               <span className="text-amber-200/50 text-[10px] font-medium">Bekliyor</span>
