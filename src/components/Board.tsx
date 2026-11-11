@@ -129,6 +129,8 @@ export const Board: React.FC<BoardProps> = ({
   const boardRef = useRef<HTMLDivElement>(null);
   const ghostRef = useRef<HTMLDivElement>(null);
   const pointerCoordsRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  // Coalesce high-frequency pointer events to one hit-test/update per animation frame.
+  const dragMoveFrameRef = useRef<number | null>(null);
 
   // Double click tracker for fast bearing-off
   const lastPointClickTimeRef = useRef<{ point: number | 'bar'; time: number }>({ point: 0, time: 0 });
@@ -1071,25 +1073,37 @@ export const Board: React.FC<BoardProps> = ({
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    const active = dragStateRef.current;
-    if (!active) return;
-    const x = e.clientX, y = e.clientY;
-    pointerCoordsRef.current = { x, y };
-    const dx = x - active.startX, dy = y - active.startY;
-    const isDragging = active.isDragging || Math.hypot(dx, dy) >= 2;
-    if (ghostRef.current && isDragging) {
-      const local = getGhostLocalPosition(x, y);
-      ghostRef.current.style.transform = `translate3d(${local.x}px, ${local.y}px, 0) translate(-50%, -50%)`;
-    }
-    const hoveredTarget = isDragging ? findDropTarget(x, y, validDestinationsRef.current) : null;
-    const next: DragState = { ...active, currentX: x, currentY: y, isDragging, hoveredTarget };
-    dragStateRef.current = next;
-    if (isDragging !== active.isDragging || hoveredTarget !== active.hoveredTarget) {
-      setDragState(next);
-    }
+    if (!dragStateRef.current) return;
+    // Keep the latest coordinates immediately, but avoid repeated layout reads,
+    // DOM hit-tests and React work for every hardware pointer event.
+    pointerCoordsRef.current = { x: e.clientX, y: e.clientY };
+    if (dragMoveFrameRef.current !== null) return;
+
+    dragMoveFrameRef.current = requestAnimationFrame(() => {
+      dragMoveFrameRef.current = null;
+      const active = dragStateRef.current;
+      if (!active) return;
+      const { x, y } = pointerCoordsRef.current;
+      const dx = x - active.startX, dy = y - active.startY;
+      const isDragging = active.isDragging || Math.hypot(dx, dy) >= 2;
+      if (ghostRef.current && isDragging) {
+        const local = getGhostLocalPosition(x, y);
+        ghostRef.current.style.transform = `translate3d(${local.x}px, ${local.y}px, 0) translate(-50%, -50%)`;
+      }
+      const hoveredTarget = isDragging ? findDropTarget(x, y, validDestinationsRef.current) : null;
+      const next: DragState = { ...active, currentX: x, currentY: y, isDragging, hoveredTarget };
+      dragStateRef.current = next;
+      if (isDragging !== active.isDragging || hoveredTarget !== active.hoveredTarget) {
+        setDragState(next);
+      }
+    });
   };
 
   const finishPointerDrag = (clientX: number, clientY: number) => {
+    if (dragMoveFrameRef.current !== null) {
+      cancelAnimationFrame(dragMoveFrameRef.current);
+      dragMoveFrameRef.current = null;
+    }
     const active = dragStateRef.current;
     if (!active) return;
     const dx = clientX - active.startX, dy = clientY - active.startY;
@@ -1512,7 +1526,7 @@ export const Board: React.FC<BoardProps> = ({
       ref={boardRef}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onPointerCancel={() => { dragStateRef.current = null; setDragState(null); }}
+      onPointerCancel={() => { if (dragMoveFrameRef.current !== null) cancelAnimationFrame(dragMoveFrameRef.current); dragMoveFrameRef.current = null; dragStateRef.current = null; setDragState(null); }}
       className="relative w-full h-full flex flex-row items-stretch select-none overflow-hidden bg-[#181310] touch-none"
     >
       {/* 1. LEFT SIDE PANEL */}
