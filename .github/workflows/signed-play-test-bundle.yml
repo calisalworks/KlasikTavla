@@ -32,6 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # This workflow is only for closed testing; Google sample ad IDs are intentional.
+      # Rebuild responsive UI after the latest development commit.
       ADMOB_AD_MODE: test
       ADMOB_ANDROID_APP_ID: ca-app-pub-3940256099942544~3347511713
       VITE_ADMOB_MODE: test
