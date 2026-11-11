@@ -11,7 +11,6 @@ import {
   canBearOff,
   getLegalMovesForPosition,
   hasAnyLegalMoves,
-  hasOpenBarEntry,
   LegalMoveInfo,
 } from '../utils/backgammonLogic';
 import { tavlaAudio } from '../utils/audio';
