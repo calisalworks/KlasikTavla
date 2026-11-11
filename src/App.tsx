@@ -34,9 +34,8 @@ export default function App() {
   const [viewportLayout, setViewportLayout] = useState({ scale: 1, canvasWidth: 1024 });
 
   // Uniformly enlarge the complete game UI while keeping the viewport edge-to-edge.
-  // A 540px logical design height gives a modest 6.7% size increase over the
-  // previous 576px layout; width still follows each device's actual aspect ratio.
-  const DESIGN_HEIGHT = 540;
+  // A 510px logical design height enlarges the complete UI while preserving proportions; width still follows each device's actual aspect ratio.
+  const DESIGN_HEIGHT = 510;
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) return;
