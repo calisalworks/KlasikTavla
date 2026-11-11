@@ -195,7 +195,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
       </div>
 
       {/* Main Wood Craft Menu Board */}
-      <div className="relative z-10 w-full max-w-2xl max-h-[calc(100dvh-5.5rem)] overflow-hidden overscroll-contain px-2 sm:px-5 py-1 sm:py-2 flex flex-col items-center">
+      <div className="relative z-10 w-full max-w-2xl max-h-[calc(576px-5.5rem)] overflow-hidden overscroll-contain px-2 sm:px-5 py-1 sm:py-2 flex flex-col items-center">
         {/* Header / Title (Küçültülmüş ve yukarı taşınmış Klasik Tavla) */}
         <div className="text-center mb-1 sm:mb-2 mt-0 relative shrink-0">
           <svg aria-hidden="true" className="mx-auto mb-0.5 w-28 sm:w-52 h-4 sm:h-5 text-amber-300" viewBox="0 0 420 55" fill="none"><path d="M8 29 H145 C164 29 174 10 190 10 C203 10 205 24 210 29 C215 24 217 10 230 10 C246 10 256 29 275 29 H412 M25 36 H155 M265 36 H395" stroke="#c99a4c" strokeWidth="1.5"/><path d="M210 2 C196 18 196 37 210 49 C224 37 224 18 210 2Z" stroke="#f1d58d" strokeWidth="1.5"/><path d="M185 29 Q197 12 210 29 Q223 12 235 29 M198 40 Q210 50 222 40" stroke="#e4bd70" strokeWidth="1.4"/><circle cx="210" cy="28" r="4" fill="#e7c16e"/><circle cx="145" cy="29" r="2.5" fill="#e7c16e"/><circle cx="275" cy="29" r="2.5" fill="#e7c16e"/></svg>
