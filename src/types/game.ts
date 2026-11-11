@@ -42,7 +42,6 @@ export interface GameSettings {
   autoRoll: boolean;
   highlightMoves: boolean;
   aiDifficulty: AIDifficulty;
-  uiTheme?: 'default' | 'dark' | 'light';
 }
 
 export type RoomTierId = 'beginner' | 'casual' | 'master' | 'pro';
