@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Board } from './components/Board';
+import { Board, SavedSinglePlayerGame } from './components/Board';
 import { OnlineBoard } from './components/OnlineBoard';
 import { RADIO_STATIONS } from './components/RadioControls';
 import { MainMenu } from './components/MainMenu';
@@ -93,6 +93,14 @@ export default function App() {
 
   // Modals
   const [isSingleSetupOpen, setIsSingleSetupOpen] = useState(false);
+  const [isResumePromptOpen, setIsResumePromptOpen] = useState(false);
+  const [resumeSinglePlayer, setResumeSinglePlayer] = useState(false);
+  const [savedSinglePlayerGame, setSavedSinglePlayerGame] = useState<SavedSinglePlayerGame | null>(() => {
+    try {
+      const raw = localStorage.getItem('klasik-tavla-single-player-save');
+      return raw ? JSON.parse(raw) as SavedSinglePlayerGame : null;
+    } catch { return null; }
+  });
   const [isOnlineLobbyOpen, setIsOnlineLobbyOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -425,7 +433,30 @@ export default function App() {
     }
   };
 
+  const handleOpenSinglePlayer = () => {
+    try {
+      const raw = localStorage.getItem('klasik-tavla-single-player-save');
+      const saved = raw ? JSON.parse(raw) as SavedSinglePlayerGame : null;
+      if (saved?.board && saved?.turn && !saved.matchWinner) {
+        setSavedSinglePlayerGame(saved);
+        setIsResumePromptOpen(true);
+      } else {
+        setIsSingleSetupOpen(true);
+      }
+    } catch { setIsSingleSetupOpen(true); }
+  };
+
+  const handleSaveSinglePlayerGame = (game: SavedSinglePlayerGame | null) => {
+    setSavedSinglePlayerGame(game);
+    try {
+      if (game) localStorage.setItem('klasik-tavla-single-player-save', JSON.stringify(game));
+      else localStorage.removeItem('klasik-tavla-single-player-save');
+    } catch { /* Keep the current session playable if storage is unavailable. */ }
+  };
+
   const handleStartSinglePlayer = (score: TargetScore, difficulty: AIDifficulty) => {
+    handleSaveSinglePlayerGame(null);
+    setResumeSinglePlayer(false);
     setSinglePlayerTargetScore(score);
     setSettings((prev) => ({ ...prev, aiDifficulty: difficulty }));
     setIsSingleSetupOpen(false);
@@ -488,7 +519,7 @@ export default function App() {
       <main className="flex-1 w-full h-full min-w-0 min-h-0 relative overflow-hidden">
         {activeView === 'MENU' && (
           <MainMenu
-            onStartSinglePlayer={() => setIsSingleSetupOpen(true)}
+            onStartSinglePlayer={handleOpenSinglePlayer}
             onOpenOnlineLobby={() => setIsOnlineLobbyOpen(true)}
             onOpenFriendRoom={() => setIsFriendRoomOpen(true)}
             onOpenProfile={() => setIsProfileOpen(true)}
@@ -527,6 +558,8 @@ export default function App() {
             onToggleFullscreen={toggleFullscreen}
             isFullscreen={isFullscreen}
             onRecordMatch={handleRecordMatch}
+            initialSavedGame={resumeSinglePlayer ? savedSinglePlayerGame : null}
+            onSaveGame={handleSaveSinglePlayerGame}
           />
           </div>
         )}
@@ -560,6 +593,20 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {isResumePromptOpen && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl border-2 border-amber-600/70 bg-gradient-to-b from-[#2e1a0e] to-[#1a0c05] p-5 text-amber-100 shadow-2xl">
+            <h2 className="mb-2 text-center text-lg font-bold">Yarım Kalan Oyun</h2>
+            <p className="mb-5 text-center text-sm text-amber-200/80">Önceki tek kişilik oyununuz kayıtlı. Nasıl devam etmek istersiniz?</p>
+            <div className="flex flex-col gap-2">
+              <button onClick={() => { setIsResumePromptOpen(false); setResumeSinglePlayer(true); setActiveView('SINGLE_PLAYER'); }} className="rounded-xl border border-amber-300/70 bg-amber-600 px-4 py-3 text-sm font-bold text-white">Devam Et</button>
+              <button onClick={() => { setIsResumePromptOpen(false); setResumeSinglePlayer(false); setIsSingleSetupOpen(true); }} className="rounded-xl border border-amber-800/70 bg-[#2b170c] px-4 py-3 text-sm font-bold text-amber-200">Yeni Oyun Başlat</button>
+              <button onClick={() => setIsResumePromptOpen(false)} className="rounded-xl px-4 py-2 text-xs text-amber-300/70">Vazgeç</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 1. Single Player Game Setup (Hedef Puan 1, 3, 5) */}
       <SinglePlayerSetupModal
