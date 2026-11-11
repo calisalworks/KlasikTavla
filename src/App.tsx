@@ -30,6 +30,30 @@ import { StatusBar } from '@capacitor/status-bar';
 
 export default function App() {
   const [activeView, setActiveView] = useState<'MENU' | 'SINGLE_PLAYER' | 'ONLINE_BOARD'>('MENU');
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [viewportScale, setViewportScale] = useState(1);
+
+  // Render every screen on one fixed 16:9 design canvas. Scale the complete
+  // interface uniformly so board pieces, controls and touch targets stay aligned.
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const updateScale = () => {
+      const width = viewport.clientWidth;
+      const height = viewport.clientHeight;
+      if (width > 0 && height > 0) setViewportScale(Math.min(width / 1024, height / 576));
+    };
+    updateScale();
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateScale) : null;
+    observer?.observe(viewport);
+    window.addEventListener('resize', updateScale);
+    window.visualViewport?.addEventListener('resize', updateScale);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', updateScale);
+      window.visualViewport?.removeEventListener('resize', updateScale);
+    };
+  }, []);
 
   // CALISAL WORKS marka açılışı — Harf Yolu ile aynı görsel, 3,5 saniye.
   const [showBrandSplash, setShowBrandSplash] = useState(true);
@@ -503,7 +527,9 @@ export default function App() {
   };
 
   return (
-    <div className="relative w-[100dvw] h-[100dvh] overflow-hidden bg-[#120d09] font-['Plus_Jakarta_Sans',sans-serif] flex flex-col select-none touch-none">
+    <div ref={viewportRef} className="relative w-[100dvw] h-[100dvh] overflow-hidden bg-[#120d09]">
+      <div className="absolute left-1/2 top-1/2 overflow-hidden" style={{ width: 1024, height: 576, transform: `translate(-50%, -50%) scale(${viewportScale})`, transformOrigin: 'center center' }}>
+      <div className="relative w-full h-full overflow-hidden bg-[#120d09] font-['Plus_Jakarta_Sans',sans-serif] flex flex-col select-none touch-none">
       <audio ref={radioAudioRef} preload="none" onError={() => { setIsRadioPlaying(false); const failedId = RADIO_STATIONS[radioChannel]?.id; if (failedId) setRadioAvailability((previous) => ({ ...previous, [failedId]: false })); }} className="hidden" />
       {showBrandSplash && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black">
@@ -696,6 +722,8 @@ export default function App() {
         coinsEarned={celebrationData?.coinsEarned || 0}
         newBalance={celebrationData?.newBalance || 0}
       />
+      </div>
+      </div>
     </div>
   );
 }
