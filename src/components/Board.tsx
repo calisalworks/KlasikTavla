@@ -1744,7 +1744,7 @@ export const Board: React.FC<BoardProps> = ({
             )}
 
             {/* Hide normal game dice completely until the one-die opening roll is completed. */}
-            {openingRoll?.isComplete && !showExitConfirm && (
+            {(!openingRoll || openingRoll.isComplete) && !showExitConfirm && (
               <div
                 className="absolute inset-y-0 w-36 pointer-events-none flex items-center justify-center z-20"
                 style={turn === 'white'
