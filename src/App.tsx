@@ -31,17 +31,20 @@ import { StatusBar } from '@capacitor/status-bar';
 export default function App() {
   const [activeView, setActiveView] = useState<'MENU' | 'SINGLE_PLAYER' | 'ONLINE_BOARD'>('MENU');
   const viewportRef = useRef<HTMLDivElement>(null);
-  const [viewportScale, setViewportScale] = useState(1);
+  const [viewportLayout, setViewportLayout] = useState({ scale: 1, canvasWidth: 1024 });
 
-  // Render every screen on one fixed 16:9 design canvas. Scale the complete
-  // interface uniformly so board pieces, controls and touch targets stay aligned.
+  // Use the full device viewport. The design height stays fixed while its
+  // logical width follows the device aspect ratio, avoiding side gutters.
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) return;
     const updateScale = () => {
       const width = viewport.clientWidth;
       const height = viewport.clientHeight;
-      if (width > 0 && height > 0) setViewportScale(Math.min(width / 1024, height / 576));
+      if (width > 0 && height > 0) {
+        const scale = height / 576;
+        setViewportLayout({ scale, canvasWidth: width / scale });
+      }
     };
     updateScale();
     const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateScale) : null;
@@ -528,7 +531,7 @@ export default function App() {
 
   return (
     <div ref={viewportRef} className="relative w-[100dvw] h-[100dvh] overflow-hidden bg-[#120d09]">
-      <div className="absolute left-1/2 top-1/2 overflow-hidden" style={{ width: 1024, height: 576, transform: `translate(-50%, -50%) scale(${viewportScale})`, transformOrigin: 'center center' }}>
+      <div className="absolute left-1/2 top-1/2 overflow-hidden" style={{ width: viewportLayout.canvasWidth, height: 576, transform: `translate(-50%, -50%) scale(${viewportLayout.scale})`, transformOrigin: 'center center' }}>
       <div className="relative w-full h-full overflow-hidden bg-[#120d09] font-['Plus_Jakarta_Sans',sans-serif] flex flex-col select-none touch-none">
       <audio ref={radioAudioRef} preload="none" onError={() => { setIsRadioPlaying(false); const failedId = RADIO_STATIONS[radioChannel]?.id; if (failedId) setRadioAvailability((previous) => ({ ...previous, [failedId]: false })); }} className="hidden" />
       {showBrandSplash && (
