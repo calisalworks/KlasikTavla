@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Board, SavedSinglePlayerGame } from './components/Board';
 import { OnlineBoard } from './components/OnlineBoard';
 import { RADIO_STATIONS } from './components/RadioControls';
@@ -439,6 +439,7 @@ export default function App() {
       const saved = raw ? JSON.parse(raw) as SavedSinglePlayerGame : null;
       if (saved?.board && saved?.turn && !saved.matchWinner) {
         setSavedSinglePlayerGame(saved);
+        setSinglePlayerTargetScore(saved.targetScore ?? 3);
         setIsResumePromptOpen(true);
       } else {
         setIsSingleSetupOpen(true);
@@ -446,13 +447,13 @@ export default function App() {
     } catch { setIsSingleSetupOpen(true); }
   };
 
-  const handleSaveSinglePlayerGame = (game: SavedSinglePlayerGame | null) => {
+  const handleSaveSinglePlayerGame = useCallback((game: SavedSinglePlayerGame | null) => {
     setSavedSinglePlayerGame(game);
     try {
       if (game) localStorage.setItem('klasik-tavla-single-player-save', JSON.stringify(game));
       else localStorage.removeItem('klasik-tavla-single-player-save');
     } catch { /* Keep the current session playable if storage is unavailable. */ }
-  };
+  }, []);
 
   const handleStartSinglePlayer = (score: TargetScore, difficulty: AIDifficulty) => {
     handleSaveSinglePlayerGame(null);
