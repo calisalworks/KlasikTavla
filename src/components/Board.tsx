@@ -867,6 +867,19 @@ export const Board: React.FC<BoardProps> = ({
     };
   }, [turn, winnerInfo, matchWinner, settings.aiDifficulty, openingRoll]);
 
+  // A blocked bar entry is an automatic pass even when auto-roll is disabled.
+  useEffect(() => {
+    if ((openingRoll && !openingRoll.isComplete) || turn !== 'white' || dice.length > 0 || isRolling || winnerInfo || matchWinner) return;
+    if (board.bar.white <= 0 || hasOpenBarEntry(board, 'white')) return;
+    const timer = setTimeout(() => {
+      setStatusMessage('Bütün yollar kapalı. Sıra rakibe geçiyor.');
+      showBarBlockedNotice('Bütün yollar kapalı');
+      if (pendingAutoPassTimeoutRef.current) clearTimeout(pendingAutoPassTimeoutRef.current);
+      pendingAutoPassTimeoutRef.current = setTimeout(() => passTurn(), 1500);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [board, turn, dice, isRolling, winnerInfo, matchWinner, openingRoll]);
+
   // Auto roll for player
   useEffect(() => {
     if (!(openingRoll && !openingRoll.isComplete) && autoRoll && turn === 'white' && dice.length === 0 && !isRolling && !winnerInfo && !matchWinner) {
