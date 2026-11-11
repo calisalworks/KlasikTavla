@@ -31,6 +31,21 @@ import { MasterVolumeControl, RadioControls } from './RadioControls';
 import { GameTips } from './GameTips';
 import { RotateCcw, Check, Settings, Trophy, RefreshCw, Home, AlertTriangle, Bot, Clock, Volume2, VolumeX, MessageCircle, Send, X } from 'lucide-react';
 
+export interface SavedSinglePlayerGame {
+  board: BoardState;
+  turn: PlayerColor;
+  dice: Die[];
+  whiteScore: number;
+  blackScore: number;
+  openingRoll: { whiteDie: number; blackDie: number; winner: PlayerColor; ties: { white: number; black: number }[]; whiteRolled: boolean; blackRolled: boolean; isComplete: boolean } | null;
+  winnerInfo: { winner: PlayerColor; winType: 'normal' | 'mars' | 'katmerli'; points: number } | null;
+  matchWinner: PlayerColor | null;
+  turnSnapshot: TurnSnapshot | null;
+  undoHistory: TurnSnapshot[];
+  statusMessage: string;
+  savedAt: number;
+}
+
 interface BoardProps {
   profile?: UserProfile;
   settings: GameSettings;
@@ -50,6 +65,8 @@ interface BoardProps {
   onToggleFullscreen: () => void;
   isFullscreen: boolean;
   onRecordMatch: (result: 'win' | 'loss' | 'abandoned') => void;
+  initialSavedGame?: SavedSinglePlayerGame | null;
+  onSaveGame: (game: SavedSinglePlayerGame | null) => void;
 }
 
 interface AIChatMessage {
@@ -86,16 +103,18 @@ export const Board: React.FC<BoardProps> = ({
   onOpenRules,
   onReturnToMenu,
   onRecordMatch,
+  initialSavedGame,
+  onSaveGame,
 }) => {
   // Game state
-  const [board, setBoard] = useState<BoardState>(getInitialBoard);
-  const [turn, setTurn] = useState<PlayerColor>('white');
+  const [board, setBoard] = useState<BoardState>(() => initialSavedGame?.board ?? getInitialBoard());
+  const [turn, setTurn] = useState<PlayerColor>(() => initialSavedGame?.turn ?? 'white');
   // Keep turn ownership synchronous for delayed timeout/AI callbacks. React
   // state updates are asynchronous, so callbacks must not infer the active
   // player from a stale render closure.
   const turnRef = useRef<PlayerColor>('white');
   turnRef.current = turn;
-  const [dice, setDice] = useState<Die[]>([]);
+  const [dice, setDice] = useState<Die[]>(() => initialSavedGame?.dice ?? []);
   const [isRolling, setIsRolling] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState<number | 'bar' | null>(null);
   const [validDestinations, setValidDestinations] = useState<LegalMoveInfo[]>([]);
@@ -333,6 +352,10 @@ export const Board: React.FC<BoardProps> = ({
 
   const startTurnTimer = (activeTurn: PlayerColor) => {
     clearTurnTimer();
+    if (activeTurn === 'black') {
+      setTurnSecondsLeft(null);
+      return;
+    }
     setTurnSecondsLeft(20);
     let rem = 20;
     turnTimerRef.current = setInterval(() => {
@@ -355,23 +378,19 @@ export const Board: React.FC<BoardProps> = ({
   const justSelectedRef = useRef<number | 'bar' | null>(null);
 
   // Turn history for "GERİ AL" (Undo)
-  const [turnSnapshot, setTurnSnapshot] = useState<TurnSnapshot | null>(null);
-  const [undoHistory, setUndoHistory] = useState<TurnSnapshot[]>([]);
+  const [turnSnapshot, setTurnSnapshot] = useState<TurnSnapshot | null>(() => initialSavedGame?.turnSnapshot ?? null);
+  const [undoHistory, setUndoHistory] = useState<TurnSnapshot[]>(() => initialSavedGame?.undoHistory ?? []);
 
   // Scores
-  const [whiteScore, setWhiteScore] = useState(0);
-  const [blackScore, setBlackScore] = useState(0);
-  const [winnerInfo, setWinnerInfo] = useState<{
-    winner: PlayerColor;
-    winType: 'normal' | 'mars' | 'katmerli';
-    points: number;
-  } | null>(null);
-  const [matchWinner, setMatchWinner] = useState<PlayerColor | null>(null);
+  const [whiteScore, setWhiteScore] = useState(() => initialSavedGame?.whiteScore ?? 0);
+  const [blackScore, setBlackScore] = useState(() => initialSavedGame?.blackScore ?? 0);
+  const [winnerInfo, setWinnerInfo] = useState<SavedSinglePlayerGame['winnerInfo']>(() => initialSavedGame?.winnerInfo ?? null);
+  const [matchWinner, setMatchWinner] = useState<PlayerColor | null>(() => initialSavedGame?.matchWinner ?? null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [hasRecordedMatch, setHasRecordedMatch] = useState(false);
 
   // Status message
-  const [statusMessage, setStatusMessage] = useState<string>('Zarları atarak oyuna başlayın');
+  const [statusMessage, setStatusMessage] = useState<string>(() => initialSavedGame?.statusMessage ?? 'Zarları atarak oyuna başlayın');
   const [autoRoll, setAutoRoll] = useState<boolean>(settings.autoRoll);
 
   // AI turn flag
@@ -427,6 +446,7 @@ export const Board: React.FC<BoardProps> = ({
   };
 
   const [openingRoll, setOpeningRoll] = useState<OpeningRollState | null>(() => {
+    if (initialSavedGame) return initialSavedGame.openingRoll;
     const ties: { white: number; black: number }[] = [];
     let w = 0;
     let b = 0;
@@ -477,7 +497,7 @@ export const Board: React.FC<BoardProps> = ({
   };
 
   useEffect(() => {
-    startOpeningRoll();
+    if (!initialSavedGame) startOpeningRoll();
     return () => {
       clearTurnTimer();
       clearAutoPassTimers();
@@ -516,6 +536,15 @@ export const Board: React.FC<BoardProps> = ({
       startTurnTimer('black');
     }
   };
+
+  // Persist the complete single-player position so leaving the game or closing the app never loses progress.
+  useEffect(() => {
+    if (matchWinner) {
+      onSaveGame(null);
+      return;
+    }
+    onSaveGame({ board, turn, dice, whiteScore, blackScore, openingRoll, winnerInfo, matchWinner, turnSnapshot, undoHistory, statusMessage, savedAt: Date.now() });
+  }, [board, turn, dice, whiteScore, blackScore, openingRoll, winnerInfo, matchWinner, turnSnapshot, undoHistory, statusMessage, onSaveGame]);
 
   // Sound sync
   useEffect(() => {
@@ -1475,7 +1504,7 @@ export const Board: React.FC<BoardProps> = ({
                 }`}
               >
                 <Clock className="w-3.5 h-3.5 text-amber-400" />
-                <span>{turnSecondsLeft !== null ? `${turnSecondsLeft} sn` : '20 sn'}</span>
+                <span>Hamle yapıyor</span>
               </div>
             ) : (
               <span className="text-amber-200/50 text-[10px] font-medium">Bekliyor</span>
