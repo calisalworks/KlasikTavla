@@ -32,6 +32,7 @@ import { GameTips } from './GameTips';
 import { RotateCcw, Check, Settings, Trophy, RefreshCw, Home, AlertTriangle, Bot, Clock, Volume2, VolumeX, MessageCircle, Send, X } from 'lucide-react';
 
 export interface SavedSinglePlayerGame {
+  targetScore: TargetScore;
   board: BoardState;
   turn: PlayerColor;
   dice: Die[];
@@ -543,7 +544,7 @@ export const Board: React.FC<BoardProps> = ({
       onSaveGame(null);
       return;
     }
-    onSaveGame({ board, turn, dice, whiteScore, blackScore, openingRoll, winnerInfo, matchWinner, turnSnapshot, undoHistory, statusMessage, savedAt: Date.now() });
+    onSaveGame({ targetScore, board, turn, dice, whiteScore, blackScore, openingRoll, winnerInfo, matchWinner, turnSnapshot, undoHistory, statusMessage, savedAt: Date.now() });
   }, [board, turn, dice, whiteScore, blackScore, openingRoll, winnerInfo, matchWinner, turnSnapshot, undoHistory, statusMessage, onSaveGame]);
 
   // Sound sync
