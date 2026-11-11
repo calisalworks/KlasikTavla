@@ -531,7 +531,7 @@ export default function App() {
   };
 
   return (
-    <div ref={viewportRef} className="relative w-[100dvw] h-[100dvh] overflow-hidden bg-[#120d09]">
+    <div ref={viewportRef} className="app-viewport relative overflow-hidden bg-[#120d09]">
       <div className="absolute left-1/2 top-1/2 overflow-hidden" style={{ width: viewportLayout.canvasWidth, height: DESIGN_HEIGHT, transform: `translate(-50%, -50%) scale(${viewportLayout.scale})`, transformOrigin: 'center center' }}>
       <div className="relative w-full h-full overflow-hidden bg-[#120d09] font-['Plus_Jakarta_Sans',sans-serif] flex flex-col select-none touch-none">
       <audio ref={radioAudioRef} preload="none" onError={() => { setIsRadioPlaying(false); const failedId = RADIO_STATIONS[radioChannel]?.id; if (failedId) setRadioAvailability((previous) => ({ ...previous, [failedId]: false })); }} className="hidden" />
