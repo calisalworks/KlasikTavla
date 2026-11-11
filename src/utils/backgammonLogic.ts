@@ -496,6 +496,23 @@ export function hasAnyLegalMoves(board: BoardState, player: PlayerColor, dice: D
 }
 
 /**
+ * Checks whether at least one entry point is available for a checker on the bar,
+ * regardless of the dice values. A point occupied by two or more opposing
+ * checkers is blocked; an empty point, own point, or opposing blot is enterable.
+ */
+export function hasOpenBarEntry(board: BoardState, player: PlayerColor): boolean {
+  const opponent: PlayerColor = player === 'white' ? 'black' : 'white';
+  const entryPoints = player === 'white'
+    ? [19, 20, 21, 22, 23, 24]
+    : [1, 2, 3, 4, 5, 6];
+
+  return entryPoints.some((point) => {
+    const target = board.points[point];
+    return target.color !== opponent || target.count < 2;
+  });
+}
+
+/**
  * Executes a move on the board state, returning new board state and info
  */
 export function applyMove(
