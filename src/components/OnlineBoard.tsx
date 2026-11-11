@@ -11,6 +11,7 @@ import {
   canBearOff,
   getLegalMovesForPosition,
   hasAnyLegalMoves,
+  hasOpenBarEntry,
   LegalMoveInfo,
 } from '../utils/backgammonLogic';
 import { tavlaAudio } from '../utils/audio';
@@ -132,8 +133,10 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
   const [latestPlayerChatMessage, setLatestPlayerChatMessage] = useState<ChatMessage | null>(null);
   const [latestOpponentChatMessage, setLatestOpponentChatMessage] = useState<ChatMessage | null>(null);
   const [showBarWarning, setShowBarWarning] = useState(false);
+  const [barWarningMessage, setBarWarningMessage] = useState('Kırık taşınız var! Önce onu oyuna sokun.');
   const barWarningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const showBarBlockedNotice = () => {
+  const showBarBlockedNotice = (message = 'Kırık taşınız var! Önce onu oyuna sokun.') => {
+    setBarWarningMessage(message);
     setShowBarWarning(true);
     if (barWarningTimeoutRef.current) clearTimeout(barWarningTimeoutRef.current);
     barWarningTimeoutRef.current = setTimeout(() => setShowBarWarning(false), 2000);
@@ -442,6 +445,12 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
                 setRoom(msg.room);
               }
               setStatusMessage('Rakip yeniden bağlandı! Oyun devam ediyor.');
+              break;
+            }
+
+            case 'game:bar_blocked': {
+              setStatusMessage('Bütün yollar kapalı. Sıra diğer oyuncuya geçiyor.');
+              showBarBlockedNotice('Bütün yollar kapalı');
               break;
             }
 
@@ -1301,13 +1310,13 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
         <div
           className={`relative flex flex-col justify-between flex-1 min-h-0 p-2 rounded-2xl border transition-all ${
             room.turn === opponentColor
-              ? 'bg-[#3b2416] border-amber-500/80 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
+              ? 'bg-emerald-900/55 border-emerald-400/90 shadow-[0_0_15px_rgba(16,185,129,0.28)]'
               : 'bg-[#2b1c13] border-[#442c1e]'
           }`}
         >
-          {room.turn === opponentColor && turnSecondsLeft !== null && (
+          {room.turn === opponentColor && (
             <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              <rect x="1" y="1" width="98" height="98" rx="12" fill="none" stroke={turnSecondsLeft <= 5 ? "#ef4444" : "#10b981"} strokeWidth="2" pathLength="100" strokeDasharray="100 100" strokeDashoffset={100 - turnProgress} strokeLinecap="butt" style={{ transition: "stroke-dashoffset 1s linear, stroke 150ms linear" }} />
+              <rect x="1" y="1" width="98" height="98" rx="12" fill="none" stroke="#10b981" strokeWidth="2" pathLength="100" strokeDasharray="100 100" strokeDashoffset={turnSecondsLeft !== null ? 100 - turnProgress : 0} strokeLinecap="butt" style={{ transition: "stroke-dashoffset 1s linear, stroke 150ms linear" }} />
             </svg>
           )}
           {room.turn === opponentColor && (
@@ -1332,24 +1341,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             </div>
           </div>
 
-          <div className="mt-1.5 pt-1 border-t border-[#442d1f] flex items-center justify-between text-[11px]">
-            {room.turn === opponentColor ? (
-              <div
-                className={`flex items-center gap-1.5 font-bold px-2 py-0.5 rounded-full border transition-all ${
-                  (turnSecondsLeft ?? 20) <= 5
-                    ? 'bg-red-950/90 text-red-300 border-red-500/80 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]'
-                    : 'bg-amber-950/80 text-amber-300 border-amber-500/50'
-                }`}
-              >
-                <Clock className="w-3.5 h-3.5 text-amber-400" />
-                <span>{turnSecondsLeft !== null ? `${turnSecondsLeft} sn` : '20 sn'}</span>
-              </div>
-            ) : (
-              <span className="text-amber-200/50 text-[10px] font-medium">Bekliyor</span>
-            )}
-            <span className={room.turn === opponentColor ? 'text-emerald-400 font-bold text-[10px]' : 'text-amber-200/40 text-[10px]'}>
-              {room.turn === opponentColor ? 'Sıra onda' : 'Sıra değil'}
-            </span>
+          <div className="mt-1.5 pt-1 border-t border-emerald-400/30 flex items-center justify-center text-[11px] min-h-5">
+            {room.turn === opponentColor && <span className="text-emerald-100 font-extrabold tracking-wide">Oynuyor</span>}
           </div>
         </div>
 
@@ -1373,11 +1366,11 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
         <div
           className={`relative flex flex-col justify-between flex-1 min-h-0 p-2 rounded-2xl border transition-all ${
             isMyTurn
-              ? 'bg-[#3b2416] border-amber-500/80 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
+              ? 'bg-emerald-900/55 border-emerald-400/90 shadow-[0_0_15px_rgba(16,185,129,0.28)]'
               : 'bg-[#2b1c13] border-[#442c1e]'
           }`}
         >
-          {isMyTurn && turnSecondsLeft !== null && (
+          {isMyTurn && (
             <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               <rect x="1" y="1" width="98" height="98" rx="12" fill="none" stroke={turnSecondsLeft <= 5 ? "#ef4444" : "#10b981"} strokeWidth="2" pathLength="100" strokeDasharray="100 100" strokeDashoffset={100 - turnProgress} strokeLinecap="butt" style={{ transition: "stroke-dashoffset 1s linear, stroke 150ms linear" }} />
             </svg>
@@ -1403,24 +1396,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
             </div>
           </div>
 
-          <div className="mt-1.5 pt-1 border-t border-[#442d1f] flex items-center justify-between text-[11px]">
-            {isMyTurn ? (
-              <div
-                className={`flex items-center gap-1.5 font-bold px-2 py-0.5 rounded-full border transition-all ${
-                  (turnSecondsLeft ?? 20) <= 5
-                    ? 'bg-red-950/95 text-red-200 border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.7)] animate-pulse'
-                    : 'bg-emerald-950/80 text-emerald-300 border-emerald-500/60'
-                }`}
-              >
-                <Clock className="w-3.5 h-3.5" />
-                <span>{turnSecondsLeft !== null ? `${turnSecondsLeft} sn` : '20 sn'}</span>
-              </div>
-            ) : (
-              <span className="text-amber-200/50 text-[10px] font-medium">Bekliyor</span>
-            )}
-            <span className={isMyTurn ? 'text-emerald-400 font-bold text-[10px]' : 'text-amber-200/40 text-[10px]'}>
-              {isMyTurn ? 'Sıra Sizde' : 'Sıra değil'}
-            </span>
+          <div className="mt-1.5 pt-1 border-t border-emerald-400/30 flex items-center justify-center text-[11px] min-h-5">
+            {isMyTurn && <span className="text-emerald-100 font-extrabold tracking-wide">Oynuyor</span>}
           </div>
         </div>
       </div>
@@ -2002,7 +1979,7 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
       )}
 
 
-      {showBarWarning && <div className="fixed inset-0 z-[2400] flex items-center justify-center pointer-events-none"><div className="px-5 py-3 rounded-xl bg-[#24150c]/95 border-2 border-amber-400 text-amber-100 text-sm font-black shadow-2xl animate-in fade-in zoom-in-95">Kırık taşınız var! Önce onu oyuna sokun.</div></div>}
+      {showBarWarning && <div className="fixed inset-0 z-[2400] flex items-center justify-center pointer-events-none"><div className="px-5 py-3 rounded-xl bg-[#24150c]/95 border-2 border-amber-400 text-amber-100 text-sm font-black shadow-2xl animate-in fade-in zoom-in-95">{barWarningMessage}</div></div>}
 
       {isChatOpen && (
         <div className="fixed left-[136px] top-2 z-[2500] w-[min(280px,42vw)] max-h-[72vh] flex flex-col rounded-2xl bg-[#1b1009]/[0.98] border-2 border-amber-600/80 shadow-[0_18px_45px_rgba(0,0,0,0.8)] text-amber-100 pointer-events-auto touch-auto select-text" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
