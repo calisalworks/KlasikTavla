@@ -1428,8 +1428,8 @@ export const OnlineBoard: React.FC<OnlineBoardProps> = ({
       {/* 2. BOARD */}
       <div className="flex-1 flex flex-col p-1.5 md:p-2 bg-[#1b130e] overflow-hidden">
         {/* Top Status */}
-        <div className="h-9 flex items-center justify-between px-3 text-xs text-amber-200/80 mb-0.5 select-none">
-          <div className="flex items-center justify-end gap-2 sm:gap-3 shrink-0">
+        <div className="min-h-9 h-auto flex flex-wrap items-center justify-end px-2 py-1 text-xs text-amber-200/80 mb-0.5 select-none">
+          <div className="w-full min-w-0 flex flex-wrap items-center justify-end gap-1.5">
             <RadioControls isPlaying={isRadioPlaying} stationIndex={radioChannel} hasEnabledStations={hasEnabledRadioStations} onToggle={onToggleRadio} onPrevious={onPreviousRadio} onNext={onNextRadio} />
             <button onClick={onToggleMusic} title={settings.ambientSound ? "Müziği Kapat" : "Müziği Aç"} aria-label={settings.ambientSound ? "Müziği Kapat" : "Müziği Aç"} className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300 border border-amber-700/40 shadow cursor-pointer">{settings.ambientSound ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}</button>
             <button onClick={onOpenSettings} title="Ayarlar" aria-label="Ayarlar" className="p-1.5 rounded-lg bg-[#2e1d13] hover:bg-[#3e271a] text-amber-300 border border-amber-700/40 shadow cursor-pointer"><Settings className="w-3.5 h-3.5" /></button>
