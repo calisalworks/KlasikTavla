@@ -52,7 +52,7 @@ interface MasterVolumeControlProps {
 }
 
 export const MasterVolumeControl: React.FC<MasterVolumeControlProps> = ({ value, onChange }) => (
-  <label className="h-9 flex items-center gap-1.5 px-2 rounded-lg bg-[#2e1d13] border border-amber-700/50 text-amber-300 shrink-0" title="Müzik, radyo ve zar ses seviyesi">
+  <label className="h-9 min-w-0 max-w-full flex items-center gap-1.5 px-2 rounded-lg bg-[#2e1d13] border border-amber-700/50 text-amber-300 shrink" title="Müzik, radyo ve zar ses seviyesi">
     <Volume2 className="w-4 h-4 shrink-0" />
     <input
       type="range"
@@ -62,7 +62,7 @@ export const MasterVolumeControl: React.FC<MasterVolumeControlProps> = ({ value,
       value={value}
       onChange={(event) => onChange(Number(event.target.value))}
       aria-label="Ortak ses seviyesi"
-      className="w-[116px] h-5 accent-amber-400 cursor-pointer touch-manipulation"
+      className="w-[clamp(2.75rem,10vw,7.25rem)] min-w-0 h-5 accent-amber-400 cursor-pointer touch-manipulation"
     />
     <span className="w-7 text-right text-[10px] tabular-nums">{value}%</span>
   </label>
