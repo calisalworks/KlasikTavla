@@ -86,7 +86,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
     <div className="relative w-full h-full flex items-center justify-center bg-[#090707] p-3 sm:p-5 select-none overflow-hidden" style={{ backgroundImage: 'radial-gradient(ellipse at 50% 48%, rgba(74,39,19,.58) 0%, rgba(24,13,10,.78) 43%, rgba(5,5,7,.98) 100%), repeating-linear-gradient(135deg, rgba(196,151,76,.035) 0px, rgba(196,151,76,.035) 1px, transparent 1px, transparent 7px)' }}>
       <div className="pointer-events-none absolute inset-3 sm:inset-5 border border-amber-700/50 shadow-[inset_0_0_45px_rgba(0,0,0,.9),0_0_18px_rgba(180,123,48,.12)] rounded-sm" />
       <div className="pointer-events-none absolute inset-5 sm:inset-8 border border-amber-300/15 rounded-sm" />
-      <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[70vw] h-[50vh] rounded-full bg-amber-500/5 blur-3xl" />
+      <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[716px] h-[288px] rounded-full bg-amber-500/5 blur-3xl" />
       <svg aria-hidden="true" className="pointer-events-none absolute inset-0 w-full h-full opacity-75" viewBox="0 0 1200 800" preserveAspectRatio="none">
         <defs>
           <linearGradient id="menuGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fff0b0"/><stop offset=".38" stopColor="#c99543"/><stop offset=".72" stopColor="#7b4b1b"/><stop offset="1" stopColor="#f3d88a"/></linearGradient>
