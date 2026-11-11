@@ -241,7 +241,6 @@ export default function App() {
       autoRoll: false,
       highlightMoves: true,
       aiDifficulty: 'medium',
-      uiTheme: 'default',
     };
     try {
       const saved = localStorage.getItem('klasik-tavla-settings');
@@ -472,7 +471,7 @@ export default function App() {
   };
 
   return (
-    <div data-ui-theme={settings.uiTheme ?? 'default'} className="relative w-screen h-screen overflow-hidden bg-[#120d09] font-['Plus_Jakarta_Sans',sans-serif] flex flex-col select-none touch-none">
+    <div className="relative w-screen h-screen overflow-hidden bg-[#120d09] font-['Plus_Jakarta_Sans',sans-serif] flex flex-col select-none touch-none">
       <audio ref={radioAudioRef} preload="none" onError={() => { setIsRadioPlaying(false); const failedId = RADIO_STATIONS[radioChannel]?.id; if (failedId) setRadioAvailability((previous) => ({ ...previous, [failedId]: false })); }} className="hidden" />
       {showBrandSplash && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black">
@@ -486,7 +485,7 @@ export default function App() {
       />
 
       {/* Main Viewport Router */}
-      <main className="flex-1 w-full h-full relative overflow-hidden">
+      <main className="flex-1 w-full h-full relative overflow-hidden flex items-center justify-center">
         {activeView === 'MENU' && (
           <MainMenu
             onStartSinglePlayer={() => setIsSingleSetupOpen(true)}
@@ -508,6 +507,7 @@ export default function App() {
         )}
 
         {activeView === 'SINGLE_PLAYER' && (
+          <div className="game-stage">
           <Board
             profile={profile}
             masterVolume={settings.ambientVolume ?? 60}
@@ -528,9 +528,11 @@ export default function App() {
             isFullscreen={isFullscreen}
             onRecordMatch={handleRecordMatch}
           />
+          </div>
         )}
 
         {activeView === 'ONLINE_BOARD' && onlineRoomId && (
+          <div className="game-stage">
           <OnlineBoard
             roomId={onlineRoomId}
             masterVolume={settings.ambientVolume ?? 60}
@@ -555,6 +557,7 @@ export default function App() {
             onRecordMatch={handleRecordMatch}
             onProfileUpdated={setProfile}
           />
+          </div>
         )}
       </main>
 
