@@ -11,6 +11,7 @@ import {
   evaluateWin,
   getInitialBoard,
   hasAnyLegalMoves,
+  hasOpenBarEntry,
   rollDice,
 } from './src/utils/backgammonLogic.ts';
 import { Die, GameRoom, PlayerColor, RoomPlayer, RoomTierId, TargetScore } from './src/types/game.ts';
@@ -446,6 +447,35 @@ function completeTimedOutTurn(room: GameRoom, timedOutColor: PlayerColor) {
   applyNextMove();
 }
 
+// A player with a checker on the bar cannot roll when all six entry points
+// are blocked by two or more opposing checkers. The server owns this pass.
+function passBlockedBarTurn(room: GameRoom, blockedColor: PlayerColor) {
+  const activeTurnTimer = turnTimeouts.get(room.id);
+  if (activeTurnTimer) {
+    clearTimeout(activeTurnTimer);
+    turnTimeouts.delete(room.id);
+  }
+  const previousPassTimer = passTimeouts.get(room.id);
+  if (previousPassTimer) clearTimeout(previousPassTimer);
+
+  broadcastToRoom(room.id, { type: 'game:bar_blocked', color: blockedColor, room });
+  const passTimer = setTimeout(() => {
+    if (rooms.get(room.id) !== room || room.status !== 'playing' || room.winnerInfo || room.turn !== blockedColor) {
+      passTimeouts.delete(room.id);
+      return;
+    }
+    room.dice = [];
+    room.turnSnapshot = null;
+    room.undoHistory = [];
+    room.turn = blockedColor === 'white' ? 'black' : 'white';
+    room.lastActivity = Date.now();
+    passTimeouts.delete(room.id);
+    broadcastToRoom(room.id, { type: 'game:turn_passed', room, reason: 'Bütün yollar kapalı' });
+    scheduleTurnTimeout(room);
+  }, 1500);
+  passTimeouts.set(room.id, passTimer);
+}
+
 // Every turn gets a server-owned deadline. If the player has not rolled yet,
 // the server rolls, broadcasts the normal dice animation event, then auto-plays.
 function scheduleTurnTimeout(room: GameRoom) {
@@ -458,6 +488,10 @@ function scheduleTurnTimeout(room: GameRoom) {
     if (rooms.get(room.id) !== room || room.status !== 'playing' || room.winnerInfo) return;
 
     const timedOutColor = room.turn;
+    if (room.board.bar[timedOutColor] > 0 && !hasOpenBarEntry(room.board, timedOutColor)) {
+      passBlockedBarTurn(room, timedOutColor);
+      return;
+    }
     if (timedOutColor === 'white') room.whiteTimeouts = (room.whiteTimeouts || 0) + 1;
     else room.blackTimeouts = (room.blackTimeouts || 0) + 1;
     const strikes = (timedOutColor === 'white' ? room.whiteTimeouts : room.blackTimeouts) ?? 0;
@@ -1459,6 +1493,10 @@ wss.on('connection', (ws) => {
           // Do not allow another roll until the previous turn is explicitly passed and its dice are cleared.
           // Even when every die is used, the server may still be waiting to broadcast game:turn_passed.
           if (room.dice.length > 0) return;
+          if (room.board.bar[myColor] > 0 && !hasOpenBarEntry(room.board, myColor)) {
+            passBlockedBarTurn(room, myColor);
+            return;
+          }
 
           if (myColor === 'white') room.whiteTimeouts = 0;
           if (myColor === 'black') room.blackTimeouts = 0;
