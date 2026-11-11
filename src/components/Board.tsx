@@ -1056,6 +1056,20 @@ export const Board: React.FC<BoardProps> = ({
     setDragState(initial);
   };
 
+  // The drag ghost is fixed inside the transformed game canvas, so convert
+  // screen coordinates back into that canvas' local coordinate space.
+  const getGhostLocalPosition = (clientX: number, clientY: number) => {
+    const host = ghostRef.current?.parentElement;
+    if (!host) return { x: clientX, y: clientY };
+    const rect = host.getBoundingClientRect();
+    const scaleX = host.offsetWidth > 0 ? rect.width / host.offsetWidth : 1;
+    const scaleY = host.offsetHeight > 0 ? rect.height / host.offsetHeight : 1;
+    return {
+      x: (clientX - rect.left) / (scaleX || 1),
+      y: (clientY - rect.top) / (scaleY || 1),
+    };
+  };
+
   const handlePointerMove = (e: React.PointerEvent) => {
     const active = dragStateRef.current;
     if (!active) return;
@@ -1064,7 +1078,8 @@ export const Board: React.FC<BoardProps> = ({
     const dx = x - active.startX, dy = y - active.startY;
     const isDragging = active.isDragging || Math.hypot(dx, dy) >= 2;
     if (ghostRef.current && isDragging) {
-      ghostRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
+      const local = getGhostLocalPosition(x, y);
+      ghostRef.current.style.transform = `translate3d(${local.x}px, ${local.y}px, 0) translate(-50%, -50%)`;
     }
     const hoveredTarget = isDragging ? findDropTarget(x, y, validDestinationsRef.current) : null;
     const next: DragState = { ...active, currentX: x, currentY: y, isDragging, hoveredTarget };
@@ -1885,7 +1900,7 @@ export const Board: React.FC<BoardProps> = ({
             position: 'fixed',
             left: 0,
             top: 0,
-            transform: `translate3d(${dragState.currentX}px, ${dragState.currentY}px, 0) translate(-50%, -50%)`,
+            transform: 'translate3d(0px, 0px, 0) translate(-50%, -50%)',
             willChange: 'transform',
             pointerEvents: 'none',
             zIndex: 1000,
